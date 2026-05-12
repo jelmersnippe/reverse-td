@@ -1,0 +1,20 @@
+BasedOnStyle: Microsoft
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: true
+
+BreakBeforeBraces: Attach
+
+AllowShortIfStatementsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: true
+
+ColumnLimit: 120
+
+PointerAlignment: Left
+
+SpaceBeforeParens: ControlStatements
+
+SortIncludes: true
