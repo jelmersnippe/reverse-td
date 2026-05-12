@@ -35,7 +35,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
-add_compile_options(-Wno-missing-field-initializers)
+add_compile_options(-Wmissing-field-initializers)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

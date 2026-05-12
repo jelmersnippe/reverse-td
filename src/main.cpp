@@ -11,7 +11,12 @@ const int PLAYER_STARTING_HEALTH = 10;
 const int PLAYER_SIZE = 50;
 const int PLAYER_SPEED = 200;
 
-// Player with movement and shooting
+const int PROJECTILE_RADIUS = 20;
+const int PROJECTILE_SPEED = 1000;
+
+const int FIRE_RATE = 100;
+const int TIME_BETWEEN_SHOTS = FIRE_RATE / 60;
+
 // Following camera (?)
 // Simple enemies
 // Dropping turrets
@@ -20,10 +25,47 @@ const int PLAYER_SPEED = 200;
 void Update(GameState& state) {
     const float delta_time = GetFrameTime();
 
-    const Vector2 normalized_direction = Vector2Normalize(state.player_direction);
+    state.time_since_last_shot += delta_time;
 
-    state.player_position.x += normalized_direction.x * PLAYER_SPEED * delta_time;
-    state.player_position.y += normalized_direction.y * PLAYER_SPEED * delta_time;
+    const Vector2 normalized_direction = Vector2Normalize(state.player_direction);
+    state.player_position += normalized_direction * PLAYER_SPEED * delta_time;
+
+    for (const Input& input : state.inputs) {
+        switch (input) {
+            case Input::FireWeapon:
+                if (state.time_since_last_shot < TIME_BETWEEN_SHOTS) continue;
+
+                state.projectiles.push_back(
+                    {.velocity = Vector2Normalize(Vector2Subtract(GetMousePosition(), state.player_position)) *
+                                 PROJECTILE_SPEED,
+                     .position = state.player_position + Vector2{.x = PLAYER_SIZE / 2, .y = PLAYER_SIZE / 2},
+                     .life_time = 2.0});
+                state.time_since_last_shot = 0;
+                break;
+            default:
+                throw "Unrecognized input";
+        }
+    }
+
+    state.inputs.clear();
+
+    std::vector<size_t> projectileIndexesToRemove = {};
+    for (size_t i = 0; i < state.projectiles.size(); i++) {
+        Projectile& projectile = state.projectiles[i];
+
+        projectile.time_alive += delta_time;
+
+        if (projectile.time_alive >= projectile.life_time) {
+            projectileIndexesToRemove.push_back(i);
+            continue;
+        }
+
+        projectile.position += projectile.velocity * delta_time;
+    }
+
+    for (const size_t index : projectileIndexesToRemove) {
+        state.projectiles.erase(state.projectiles.begin() + index);
+    }
 };
 
 void Draw(const GameState& state) {
@@ -31,6 +73,10 @@ void Draw(const GameState& state) {
     ClearBackground(WHITE);
 
     DrawRectangle(state.player_position.x, state.player_position.y, PLAYER_SIZE, PLAYER_SIZE, GREEN);
+
+    for (const Projectile& projectile : state.projectiles) {
+        DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_RADIUS, YELLOW);
+    }
 
     EndDrawing();
 }
@@ -43,11 +89,13 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_W)) { player_direction.y -= 1; }
     if (IsKeyDown(KEY_S)) { player_direction.y += 1; }
 
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::FireWeapon); }
+
     state.player_direction = player_direction;
 }
 
 int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sokoban");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
     InitAudioDevice();
     SetTargetFPS(TARGET_FPS);
 
