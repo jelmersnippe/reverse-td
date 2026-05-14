@@ -18,6 +18,8 @@ const int ENEMY_SPEED = 100;
 const int ENEMY_SIZE = 20;
 const int ENEMY_ATTACK_RANGE = 5;
 
+const int SPAWNER_SIZE = 100;
+
 const int PROJECTILE_SPEED = 1000;
 const int PROJECTILE_SIZE = 5;
 
@@ -31,6 +33,9 @@ const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;
 void DrawHealth(const Vector2& position, const Health& health) {
     const std::string health_text = std::format("{}/{}", health.current, health.max);
     const int text_width = MeasureText(health_text.c_str(), 12);
+
+    DrawRectangle(position.x - 10, position.y, 20, 5, RED);
+    DrawRectangle(position.x - 10, position.y, 20 * ((float)health.current / (float)health.max), 5, GREEN);
     DrawText(health_text.c_str(), position.x - text_width / 2, position.y, 12, BLACK);
 }
 
@@ -63,8 +68,10 @@ void Update(GameState& state) {
     state.inputs.clear();
 
     std::vector<size_t> enemy_indexes_to_remove = {};
+    std::vector<size_t> spawner_indexes_to_remove = {};
     std::vector<size_t> projectile_indexes_to_remove = {};
     for (size_t projectile_index = 0; projectile_index < state.projectiles.size(); projectile_index++) {
+        bool hit = false;
         Projectile& projectile = state.projectiles[projectile_index];
 
         projectile.time_alive += delta_time;
@@ -86,16 +93,35 @@ void Update(GameState& state) {
             // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
             // TODO: This only checks center point of projectile. Should also check radius. So cylender/rectangle for
             // path
-            const bool hit_enemy =
-                CheckCollisionCircleLine(enemy.position, ENEMY_SIZE, old_position, projectile.position);
+            hit = CheckCollisionCircleLine(enemy.position, ENEMY_SIZE, old_position, projectile.position);
 
-            if (!hit_enemy) continue;
+            if (!hit) continue;
 
             enemy.health.current -= projectile.damage;
 
             if (enemy.health.current <= 0) { enemy_indexes_to_remove.push_back(enemy_index); }
 
             projectile_indexes_to_remove.push_back(projectile_index);
+            break;
+        }
+
+        if (hit) continue;
+
+        for (size_t spawner_index = 0; spawner_index < state.spawners.size(); spawner_index++) {
+            Spawner& spawner = state.spawners[spawner_index];
+
+            hit = CheckCollisionPointRec(
+                projectile.position,
+                {.x = spawner.position.x, .y = spawner.position.y, .width = SPAWNER_SIZE, .height = SPAWNER_SIZE});
+
+            if (!hit) continue;
+
+            spawner.health.current -= projectile.damage;
+
+            if (spawner.health.current <= 0) { spawner_indexes_to_remove.push_back(spawner_index); }
+
+            projectile_indexes_to_remove.push_back(projectile_index);
+            break;
         }
     }
 
@@ -107,9 +133,14 @@ void Update(GameState& state) {
         state.enemies.erase(state.enemies.begin() + index);
     }
 
+    for (const size_t index : spawner_indexes_to_remove) {
+        state.spawners.erase(state.spawners.begin() + index);
+    }
+
     for (size_t i = 0; i < state.enemies.size(); i++) {
         Enemy& enemy = state.enemies[i];
 
+        // TODO: Fix enemy converging
         if (Vector2Distance(state.player_position, enemy.position) <=
             (PLAYER_SIZE / 2) + (ENEMY_SIZE / 2) + ENEMY_ATTACK_RANGE) {
             // If in range -> stand still and attack
@@ -128,6 +159,31 @@ void Update(GameState& state) {
         enemy.time_since_last_attack += delta_time;
     }
 
+    for (Spawner& spawner : state.spawners) {
+        if (!spawner.initial_spawn_happened) {
+            for (int i = 0; i < spawner.initial_spawn; i++) {
+                state.enemies.push_back(
+                    {.position = spawner.position + Vector2{.x = static_cast<float>(30 * i), .y = 0},
+                     .health = {.max = 3, .current = 3}});
+            }
+
+            spawner.initial_spawn_happened = true;
+            continue;
+        }
+
+        if (spawner.time_since_last_spawn >= spawner.spawn_cooldown) {
+            for (int i = 0; i < spawner.spawn_amount; i++) {
+                state.enemies.push_back(
+                    {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
+                     .health = {.max = 3, .current = 3}});
+            }
+
+            spawner.time_since_last_spawn = 0;
+        }
+
+        spawner.time_since_last_spawn += delta_time;
+    }
+
     // TODO: Should show a death state / restart the game
     if (state.player_health.current <= 0) { CloseWindow(); }
 };
@@ -138,7 +194,7 @@ void Draw(const GameState& state) {
 
     DrawRectangle(state.player_position.x - PLAYER_SIZE / 2, state.player_position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                   PLAYER_SIZE, GREEN);
-    DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 5}, state.player_health);
+    DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 10}, state.player_health);
 
     for (const Projectile& projectile : state.projectiles) {
         DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_SIZE, YELLOW);
@@ -146,7 +202,16 @@ void Draw(const GameState& state) {
 
     for (const Enemy& enemy : state.enemies) {
         DrawCircle(enemy.position.x, enemy.position.y, ENEMY_SIZE, RED);
-        DrawHealth(enemy.position - Vector2{.x = 0, .y = ENEMY_SIZE / 2 + 5}, enemy.health);
+        DrawHealth(enemy.position - Vector2{.x = 0, .y = ENEMY_SIZE / 2 + 10}, enemy.health);
+    }
+
+    for (const Spawner& spawner : state.spawners) {
+        DrawRectangleLines(spawner.position.x, spawner.position.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
+        const int text_width = MeasureText("Spawner", 12);
+        DrawText("Spawner", spawner.position.x - text_width / 2 + SPAWNER_SIZE / 2,
+                 spawner.position.y + SPAWNER_SIZE / 2, 12, BLACK);
+
+        DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, spawner.health);
     }
 
     EndDrawing();
@@ -173,7 +238,7 @@ int main() {
     GameState state = {.player_position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                        .player_health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
 
-    state.enemies.push_back({.health = {.max = 3, .current = 3}});
+    state.spawners.push_back({.position = {.x = 200, .y = 200}, .health = {.max = 20, .current = 20}});
 
     while (!WindowShouldClose()) {
         HandleInput(state);
