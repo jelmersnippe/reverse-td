@@ -72,6 +72,8 @@ struct Projectile {
 };
 
 struct GameState {
+    bool should_exit = false;
+
     Vector2 player_position = {};
     Health player_health = {};
     Vector2 player_direction = {};
@@ -84,6 +86,8 @@ struct GameState {
 
     float difficulty_scale = 1;
     Camera2D camera = {};
+
+    int currency = 0;
 };
 
 template <typename T> EntityHandle CreateEntity(EntityPool<T>& pool, T entity) {
