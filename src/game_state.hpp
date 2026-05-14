@@ -17,6 +17,8 @@ struct Enemy {
     Vector2 position = {};
     Health health = {};
     int damage = 1;
+    float attack_cooldown = 1;
+    float time_since_last_attack = 0;
 };
 
 struct Projectile {
