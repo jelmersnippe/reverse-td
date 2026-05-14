@@ -48,4 +48,6 @@ struct GameState {
     std::vector<Projectile> projectiles = {};
     std::vector<Enemy> enemies = {};
     std::vector<Spawner> spawners = {};
+
+    float difficulty_scale = 1;
 };

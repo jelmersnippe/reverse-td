@@ -6,8 +6,8 @@
 
 #include "game_state.hpp"
 
-const int SCREEN_WIDTH = 600;
-const int SCREEN_HEIGHT = 600;
+const int SCREEN_WIDTH = 1200;
+const int SCREEN_HEIGHT = 800;
 const int TARGET_FPS = 60;
 
 const int PLAYER_STARTING_HEALTH = 10;
@@ -99,7 +99,10 @@ void Update(GameState& state) {
 
             enemy.health.current -= projectile.damage;
 
-            if (enemy.health.current <= 0) { enemy_indexes_to_remove.push_back(enemy_index); }
+            if (enemy.health.current <= 0) {
+                enemy_indexes_to_remove.push_back(enemy_index);
+                state.difficulty_scale += 0.05;
+            }
 
             projectile_indexes_to_remove.push_back(projectile_index);
             break;
@@ -118,7 +121,10 @@ void Update(GameState& state) {
 
             spawner.health.current -= projectile.damage;
 
-            if (spawner.health.current <= 0) { spawner_indexes_to_remove.push_back(spawner_index); }
+            if (spawner.health.current <= 0) {
+                spawner_indexes_to_remove.push_back(spawner_index);
+                state.difficulty_scale += 0.2;
+            }
 
             projectile_indexes_to_remove.push_back(projectile_index);
             break;
@@ -171,11 +177,14 @@ void Update(GameState& state) {
             continue;
         }
 
-        if (spawner.time_since_last_spawn >= spawner.spawn_cooldown) {
-            for (int i = 0; i < spawner.spawn_amount; i++) {
+        if (spawner.time_since_last_spawn >= (spawner.spawn_cooldown / state.difficulty_scale)) {
+            const int spawn_count = static_cast<int>((float)spawner.spawn_amount * state.difficulty_scale);
+            for (int i = 0; i < spawn_count; i++) {
                 state.enemies.push_back(
                     {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
-                     .health = {.max = 3, .current = 3}});
+                     .health = {.max = static_cast<int>(3 * state.difficulty_scale),
+                                .current = static_cast<int>(3 * state.difficulty_scale)},
+                     .damage = static_cast<int>(1 * state.difficulty_scale)});
             }
 
             spawner.time_since_last_spawn = 0;
@@ -196,8 +205,9 @@ void Draw(const GameState& state) {
                   PLAYER_SIZE, GREEN);
     DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 10}, state.player_health);
 
+    // TODO: Cull stuff outside of the screen
     for (const Projectile& projectile : state.projectiles) {
-        DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_SIZE, YELLOW);
+        DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_SIZE, ORANGE);
     }
 
     for (const Enemy& enemy : state.enemies) {
@@ -213,6 +223,10 @@ void Draw(const GameState& state) {
 
         DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, spawner.health);
     }
+
+    const std::string difficulty_text = std::format("Difficulty scale: {}", state.difficulty_scale);
+    const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
+    DrawText(difficulty_text.c_str(), SCREEN_WIDTH / 2 - difficulty_text_width / 2, 30, 20, BLACK);
 
     EndDrawing();
 }
@@ -238,7 +252,15 @@ int main() {
     GameState state = {.player_position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                        .player_health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
 
-    state.spawners.push_back({.position = {.x = 200, .y = 200}, .health = {.max = 20, .current = 20}});
+    state.spawners.push_back({.position = {.x = -200, .y = 200},
+                              .health = {.max = 20, .current = 20},
+                              .spawn_amount = 2,
+                              .initial_spawn = 2});
+    state.spawners.push_back({.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
+    state.spawners.push_back(
+        {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
+    state.spawners.push_back(
+        {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
 
     while (!WindowShouldClose()) {
         HandleInput(state);
