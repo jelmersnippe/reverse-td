@@ -12,11 +12,19 @@ enum class Input {
     FireWeapon,
 };
 
+struct Enemy {
+    Vector2 velocity = {};
+    Vector2 position = {};
+    Health health = {};
+    int damage = 1;
+};
+
 struct Projectile {
     Vector2 velocity = {};
     Vector2 position = {};
     float life_time = 0;
     float time_alive = 0;
+    int damage = 1;
 };
 
 struct GameState {
@@ -26,4 +34,5 @@ struct GameState {
     float time_since_last_shot = 0;
     std::vector<Input> inputs = {};
     std::vector<Projectile> projectiles = {};
+    std::vector<Enemy> enemies = {};
 };

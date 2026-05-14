@@ -11,7 +11,10 @@ const int PLAYER_STARTING_HEALTH = 10;
 const int PLAYER_SIZE = 50;
 const int PLAYER_SPEED = 200;
 
-const int PROJECTILE_RADIUS = 20;
+const int ENEMY_SPEED = 100;
+const int ENEMY_RADIUS = 20;
+
+const int PROJECTILE_RADIUS = 5;
 const int PROJECTILE_SPEED = 1000;
 
 const int FIRE_RATE = 100;
@@ -49,22 +52,55 @@ void Update(GameState& state) {
 
     state.inputs.clear();
 
-    std::vector<size_t> projectileIndexesToRemove = {};
+    std::vector<size_t> enemy_indexes_to_remove = {};
+    std::vector<size_t> projectile_indexes_to_remove = {};
     for (size_t i = 0; i < state.projectiles.size(); i++) {
         Projectile& projectile = state.projectiles[i];
 
         projectile.time_alive += delta_time;
 
         if (projectile.time_alive >= projectile.life_time) {
-            projectileIndexesToRemove.push_back(i);
+            projectile_indexes_to_remove.push_back(i);
             continue;
         }
 
+        const Vector2 old_position = projectile.position;
+
         projectile.position += projectile.velocity * delta_time;
+
+        for (size_t i = 0; i < state.enemies.size(); i++) {
+            Enemy& enemy = state.enemies[i];
+
+            // Projectile trajectory would collide with enemy.
+            // This is done with a line instead of point because a projectile could move fast enough
+            // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
+            const bool hit_enemy =
+                CheckCollisionCircleLine(enemy.position, ENEMY_RADIUS, old_position, projectile.position);
+
+            if (!hit_enemy) continue;
+
+            enemy.health.current -= projectile.damage;
+
+            if (enemy.health.current <= 0) { enemy_indexes_to_remove.push_back(i); }
+
+            projectile_indexes_to_remove.push_back(i);
+        }
     }
 
-    for (const size_t index : projectileIndexesToRemove) {
+    for (const size_t index : projectile_indexes_to_remove) {
         state.projectiles.erase(state.projectiles.begin() + index);
+    }
+
+    for (const size_t index : enemy_indexes_to_remove) {
+        state.enemies.erase(state.enemies.begin() + index);
+    }
+
+    for (size_t i = 0; i < state.enemies.size(); i++) {
+        Enemy& enemy = state.enemies[i];
+
+        enemy.velocity = Vector2Normalize(state.player_position - enemy.position) * ENEMY_SPEED;
+
+        enemy.position += enemy.velocity * delta_time;
     }
 };
 
@@ -76,6 +112,10 @@ void Draw(const GameState& state) {
 
     for (const Projectile& projectile : state.projectiles) {
         DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_RADIUS, YELLOW);
+    }
+
+    for (const Enemy& enemy : state.enemies) {
+        DrawCircle(enemy.position.x, enemy.position.y, ENEMY_RADIUS, RED);
     }
 
     EndDrawing();
@@ -101,6 +141,8 @@ int main() {
 
     GameState state = {.player_position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                        .player_health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+
+    state.enemies.push_back({.health = {.max = 3, .current = 3}});
 
     while (!WindowShouldClose()) {
         HandleInput(state);
