@@ -51,7 +51,7 @@ void Update(GameState& state) {
                 state.projectiles.push_back(
                     {.velocity = Vector2Normalize(Vector2Subtract(GetMousePosition(), state.player_position)) *
                                  PROJECTILE_SPEED,
-                     .position = state.player_position + Vector2{.x = PLAYER_SIZE / 2, .y = PLAYER_SIZE / 2},
+                     .position = state.player_position,
                      .life_time = 2.0});
                 state.time_since_last_shot = 0;
                 break;
@@ -84,6 +84,8 @@ void Update(GameState& state) {
             // Projectile trajectory would collide with enemy.
             // This is done with a line instead of point because a projectile could move fast enough
             // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
+            // TODO: This only checks center point of projectile. Should also check radius. So cylender/rectangle for
+            // path
             const bool hit_enemy =
                 CheckCollisionCircleLine(enemy.position, ENEMY_SIZE, old_position, projectile.position);
 
@@ -134,7 +136,8 @@ void Draw(const GameState& state) {
     BeginDrawing();
     ClearBackground(WHITE);
 
-    DrawRectangle(state.player_position.x, state.player_position.y, PLAYER_SIZE, PLAYER_SIZE, GREEN);
+    DrawRectangle(state.player_position.x - PLAYER_SIZE / 2, state.player_position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
+                  PLAYER_SIZE, GREEN);
     DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 5}, state.player_health);
 
     for (const Projectile& projectile : state.projectiles) {
