@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <algorithm>
 #include <format>
 #include <iostream>
 
@@ -26,7 +27,7 @@ const int PROJECTILE_SIZE = 5;
 const float FIRE_RATE = 150;
 const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;
 
-// Dropping turrets
+const int TOWER_SIZE = 100;
 
 void DrawHealth(const Vector2& position, const Health& health) {
     const std::string health_text = std::format("{}/{}", health.current, health.max);
@@ -49,8 +50,8 @@ void Update(GameState& state) {
 
     for (const Input& input : state.inputs) {
         switch (input) {
-            case Input::FireWeapon:
-                if (state.time_since_last_shot < TIME_BETWEEN_SHOTS) continue;
+            case Input::FireWeapon: {
+                if (state.time_since_last_shot < TIME_BETWEEN_SHOTS) break;
                 std::cout << state.time_since_last_shot << std::endl;
 
                 state.projectiles.push_back(
@@ -61,6 +62,21 @@ void Update(GameState& state) {
                      .life_time = 2.0});
                 state.time_since_last_shot = 0;
                 break;
+            }
+            case Input::DropTower: {
+                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
+                if (std::ranges::any_of(state.towers.data, [destination](const Slot<Tower>& tower_ref) {
+                        return tower_ref.alive && CheckCollisionPointRec(destination, {.x = tower_ref.ref.position.x,
+                                                                                       .y = tower_ref.ref.position.y,
+                                                                                       .width = TOWER_SIZE,
+                                                                                       .height = TOWER_SIZE});
+                    })) {
+                    break;
+                }
+
+                CreateEntity(state.towers, {.position = destination});
+                break;
+            }
             default:
                 throw "Unrecognized input";
         }
@@ -68,7 +84,6 @@ void Update(GameState& state) {
 
     state.inputs.clear();
 
-    std::vector<size_t> enemy_indexes_to_remove = {};
     std::vector<size_t> spawner_indexes_to_remove = {};
     std::vector<size_t> projectile_indexes_to_remove = {};
     for (size_t projectile_index = 0; projectile_index < state.projectiles.size(); projectile_index++) {
@@ -86,23 +101,24 @@ void Update(GameState& state) {
 
         projectile.position += projectile.velocity * delta_time;
 
-        for (size_t enemy_index = 0; enemy_index < state.enemies.size(); enemy_index++) {
-            Enemy& enemy = state.enemies[enemy_index];
+        for (size_t enemy_index = 0; enemy_index < state.enemies.data.size(); enemy_index++) {
+            Slot<Enemy>& enemy = state.enemies.data[enemy_index];
+            if (!enemy.alive) continue;
 
             // Projectile trajectory would collide with enemy.
             // This is done with a line instead of point because a projectile could move fast enough
             // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
             // TODO: This only checks center point of projectile. Should also check radius. So cylender/rectangle for
             // path
-            hit = CheckCollisionCircleLine(enemy.position, ENEMY_SIZE, old_position, projectile.position);
+            hit = CheckCollisionCircleLine(enemy.ref.position, ENEMY_SIZE, old_position, projectile.position);
 
             if (!hit) continue;
 
-            enemy.health.current -= projectile.damage;
+            enemy.ref.health.current -= projectile.damage;
 
-            if (enemy.health.current <= 0) {
-                enemy_indexes_to_remove.push_back(enemy_index);
+            if (enemy.ref.health.current <= 0) {
                 state.difficulty_scale += 0.05;
+                DestroyEntity(state.enemies, {.index = enemy_index, .generation = enemy.generation});
             }
 
             projectile_indexes_to_remove.push_back(projectile_index);
@@ -136,62 +152,102 @@ void Update(GameState& state) {
         state.projectiles.erase(state.projectiles.begin() + index);
     }
 
-    for (const size_t index : enemy_indexes_to_remove) {
-        state.enemies.erase(state.enemies.begin() + index);
-    }
-
     for (const size_t index : spawner_indexes_to_remove) {
         state.spawners.erase(state.spawners.begin() + index);
     }
 
-    for (size_t i = 0; i < state.enemies.size(); i++) {
-        Enemy& enemy = state.enemies[i];
+    for (size_t i = 0; i < state.enemies.data.size(); i++) {
+        Slot<Enemy>& enemy = state.enemies.data[i];
+
+        if (!enemy.alive) continue;
+
+        enemy.ref.time_since_last_attack += delta_time;
 
         // TODO: Fix enemy converging
-        if (Vector2Distance(state.player_position, enemy.position) <=
+        if (Vector2Distance(state.player_position, enemy.ref.position) <=
             (PLAYER_SIZE / 2) + (ENEMY_SIZE / 2) + ENEMY_ATTACK_RANGE) {
             // If in range -> stand still and attack
-            enemy.velocity = {.x = 0, .y = 0};
+            enemy.ref.velocity = {.x = 0, .y = 0};
 
-            if (enemy.time_since_last_attack >= enemy.attack_cooldown) {
-                state.player_health.current -= enemy.damage;
-                enemy.time_since_last_attack = 0;
+            if (enemy.ref.time_since_last_attack >= enemy.ref.attack_cooldown) {
+                state.player_health.current -= enemy.ref.damage;
+                enemy.ref.time_since_last_attack = 0;
             }
         } else {
             // Else -> move closer
-            enemy.velocity = Vector2Normalize(state.player_position - enemy.position) * ENEMY_SPEED;
-            enemy.position += enemy.velocity * delta_time;
+            enemy.ref.velocity = Vector2Normalize(state.player_position - enemy.ref.position) * ENEMY_SPEED;
+            enemy.ref.position += enemy.ref.velocity * delta_time;
         }
-
-        enemy.time_since_last_attack += delta_time;
     }
 
     for (Spawner& spawner : state.spawners) {
         if (!spawner.initial_spawn_happened) {
             for (int i = 0; i < spawner.initial_spawn; i++) {
-                state.enemies.push_back(
-                    {.position = spawner.position + Vector2{.x = static_cast<float>(30 * i), .y = 0},
-                     .health = {.max = 3, .current = 3}});
+                CreateEntity(state.enemies,
+                             {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
+                              .health = {.max = static_cast<int>(3 * state.difficulty_scale),
+                                         .current = static_cast<int>(3 * state.difficulty_scale)},
+                              .damage = static_cast<int>(1 * state.difficulty_scale)});
             }
 
             spawner.initial_spawn_happened = true;
             continue;
         }
 
+        spawner.time_since_last_spawn += delta_time;
         if (spawner.time_since_last_spawn >= (spawner.spawn_cooldown / state.difficulty_scale)) {
             const int spawn_count = static_cast<int>((float)spawner.spawn_amount * state.difficulty_scale);
             for (int i = 0; i < spawn_count; i++) {
-                state.enemies.push_back(
-                    {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
-                     .health = {.max = static_cast<int>(3 * state.difficulty_scale),
-                                .current = static_cast<int>(3 * state.difficulty_scale)},
-                     .damage = static_cast<int>(1 * state.difficulty_scale)});
+                CreateEntity(state.enemies,
+                             {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
+                              .health = {.max = static_cast<int>(3 * state.difficulty_scale),
+                                         .current = static_cast<int>(3 * state.difficulty_scale)},
+                              .damage = static_cast<int>(1 * state.difficulty_scale)});
             }
 
             spawner.time_since_last_spawn = 0;
         }
+    }
 
-        spawner.time_since_last_spawn += delta_time;
+    for (Slot<Tower>& tower : state.towers.data) {
+        tower.ref.time_since_last_attack += delta_time;
+
+        Enemy* target = GetEntity(state.enemies, tower.ref.target);
+
+        // Check if target left range
+        if (target != nullptr) {
+            const float distance = Vector2Distance(tower.ref.position, target->position);
+
+            if (distance > tower.ref.range) target = nullptr;
+        }
+
+        // Acquire target
+        if (target == nullptr) {
+            for (uint32_t i = 0; i < state.enemies.data.size(); i++) {
+                Slot<Enemy>& enemy = state.enemies.data[i];
+                if (!enemy.alive) continue;
+
+                const float distance = Vector2Distance(tower.ref.position, enemy.ref.position);
+                if (distance <= tower.ref.range) {
+                    tower.ref.target = EntityHandle{.index = i, .generation = enemy.generation};
+                    target = &enemy.ref;
+                    break;
+                }
+            }
+        }
+
+        // Target acquiring failed
+        if (target == nullptr) continue;
+
+        // Attacking time
+        if (tower.ref.time_since_last_attack >= 60.0 / tower.ref.fire_rate) {
+            const Vector2 tower_center = tower.ref.position + Vector2{.x = TOWER_SIZE / 2, .y = TOWER_SIZE / 2};
+            state.projectiles.push_back(
+                {.velocity = Vector2Normalize(target->position - tower_center) * PROJECTILE_SPEED,
+                 .position = tower_center,
+                 .life_time = 2.0});
+            tower.ref.time_since_last_attack = 0;
+        }
     }
 
     // TODO: Should show a death state / restart the game
@@ -206,16 +262,22 @@ void Draw(const GameState& state) {
 
     DrawRectangle(state.player_position.x - PLAYER_SIZE / 2, state.player_position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                   PLAYER_SIZE, GREEN);
-    DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 10}, state.player_health);
+    if (state.player_health.current < state.player_health.max) {
+        DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 10}, state.player_health);
+    }
 
     // TODO: Cull stuff outside of the screen
     for (const Projectile& projectile : state.projectiles) {
         DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_SIZE, ORANGE);
     }
 
-    for (const Enemy& enemy : state.enemies) {
-        DrawCircle(enemy.position.x, enemy.position.y, ENEMY_SIZE, RED);
-        DrawHealth(enemy.position - Vector2{.x = 0, .y = ENEMY_SIZE / 2 + 10}, enemy.health);
+    for (const Slot<Enemy>& enemy : state.enemies.data) {
+        if (!enemy.alive) continue;
+
+        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, ENEMY_SIZE, RED);
+        if (enemy.ref.health.current < enemy.ref.health.max) {
+            DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = ENEMY_SIZE / 2 + 10}, enemy.ref.health);
+        }
     }
 
     for (const Spawner& spawner : state.spawners) {
@@ -224,7 +286,22 @@ void Draw(const GameState& state) {
         DrawText("Spawner", spawner.position.x - text_width / 2 + SPAWNER_SIZE / 2,
                  spawner.position.y + SPAWNER_SIZE / 2, 12, BLACK);
 
-        DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, spawner.health);
+        if (spawner.health.current < spawner.health.max) {
+            DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, spawner.health);
+        }
+    }
+
+    for (const Slot<Tower>& tower : state.towers.data) {
+        DrawRectangleLines(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE, TOWER_SIZE, BLACK);
+        DrawCircle(tower.ref.position.x + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2, TOWER_SIZE * 0.3,
+                   BLUE);
+        const int text_width = MeasureText("Tower", 12);
+        DrawText("Tower", tower.ref.position.x - text_width / 2 + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2,
+                 12, BLACK);
+
+        if (tower.ref.health.current < tower.ref.health.max) {
+            DrawHealth(tower.ref.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, tower.ref.health);
+        }
     }
 
     EndMode2D();
@@ -245,6 +322,7 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_S)) { player_direction.y += 1; }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::FireWeapon); }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::DropTower); }
 
     state.player_direction = player_direction;
 }
