@@ -50,4 +50,5 @@ struct GameState {
     std::vector<Spawner> spawners = {};
 
     float difficulty_scale = 1;
+    Camera2D camera = {};
 };

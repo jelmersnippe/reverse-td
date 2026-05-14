@@ -26,9 +26,7 @@ const int PROJECTILE_SIZE = 5;
 const float FIRE_RATE = 150;
 const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;
 
-// Following camera (?)
 // Dropping turrets
-// Increasing difficulty
 
 void DrawHealth(const Vector2& position, const Health& health) {
     const std::string health_text = std::format("{}/{}", health.current, health.max);
@@ -47,6 +45,8 @@ void Update(GameState& state) {
     const Vector2 normalized_direction = Vector2Normalize(state.player_direction);
     state.player_position += normalized_direction * PLAYER_SPEED * delta_time;
 
+    state.camera.target = {state.player_position};
+
     for (const Input& input : state.inputs) {
         switch (input) {
             case Input::FireWeapon:
@@ -54,7 +54,8 @@ void Update(GameState& state) {
                 std::cout << state.time_since_last_shot << std::endl;
 
                 state.projectiles.push_back(
-                    {.velocity = Vector2Normalize(Vector2Subtract(GetMousePosition(), state.player_position)) *
+                    {.velocity = Vector2Normalize(Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera),
+                                                                  state.player_position)) *
                                  PROJECTILE_SPEED,
                      .position = state.player_position,
                      .life_time = 2.0});
@@ -201,6 +202,8 @@ void Draw(const GameState& state) {
     BeginDrawing();
     ClearBackground(WHITE);
 
+    BeginMode2D(state.camera);
+
     DrawRectangle(state.player_position.x - PLAYER_SIZE / 2, state.player_position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                   PLAYER_SIZE, GREEN);
     DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE / 2 + 10}, state.player_health);
@@ -223,6 +226,8 @@ void Draw(const GameState& state) {
 
         DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, spawner.health);
     }
+
+    EndMode2D();
 
     const std::string difficulty_text = std::format("Difficulty scale: {}", state.difficulty_scale);
     const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
@@ -247,10 +252,16 @@ void HandleInput(GameState& state) {
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
     InitAudioDevice();
-    SetTargetFPS(TARGET_FPS);
 
     GameState state = {.player_position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                        .player_health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+
+    state.camera.target = {state.player_position};
+    state.camera.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
+    state.camera.rotation = 0.0f;
+    state.camera.zoom = 1.0f;
+
+    SetTargetFPS(TARGET_FPS);
 
     state.spawners.push_back({.position = {.x = -200, .y = 200},
                               .health = {.max = 20, .current = 20},
