@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
+cmake_minimum_required(VERSION 3.12) # FetchContent is available in 3.11+, CONFIGURE_DEPENDS needs 3.12
 project(reverse-td)
 
 # Generate compile_commands.json
@@ -24,15 +24,8 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 # Our Project
-add_executable(${PROJECT_NAME})
-target_sources(${PROJECT_NAME} PRIVATE
-    src/main.cpp
-    src/systems/targeting
-    src/systems/projectile_system
-    src/systems/spawner_system
-    src/systems/tower_system
-    src/systems/enemy_system
-)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/res
