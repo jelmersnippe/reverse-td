@@ -44,16 +44,29 @@ void UpdateInputs(GameState& state) {
             case Input::DropTower: {
                 if (state.currency < TOWER_COST) break;
 
-                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera) -
-                                            Vector2{.x = TOWER_SIZE / 2, .y = TOWER_SIZE / 2};
+                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
                 if (std::ranges::any_of(state.towers.data, [destination](const Slot<Tower>& tower_ref) {
-                        return tower_ref.alive &&
-                               CheckCollisionRecs(
-                                   {.x = destination.x, .y = destination.y, .width = TOWER_SIZE, .height = TOWER_SIZE},
-                                   {.x = tower_ref.ref.position.x,
-                                    .y = tower_ref.ref.position.y,
-                                    .width = TOWER_SIZE,
-                                    .height = TOWER_SIZE});
+                        return tower_ref.alive && CheckCollisionRecs({.x = destination.x - TOWER_SIZE / 2,
+                                                                      .y = destination.y - TOWER_SIZE / 2,
+                                                                      .width = TOWER_SIZE,
+                                                                      .height = TOWER_SIZE},
+                                                                     {.x = tower_ref.ref.position.x - TOWER_SIZE / 2,
+                                                                      .y = tower_ref.ref.position.y - TOWER_SIZE / 2,
+                                                                      .width = TOWER_SIZE,
+                                                                      .height = TOWER_SIZE});
+                    })) {
+                    break;
+                }
+                if (std::ranges::any_of(state.spawners.data, [destination](const Slot<Spawner>& spawner_ref) {
+                        return spawner_ref.alive &&
+                               CheckCollisionRecs({.x = destination.x - TOWER_SIZE / 2,
+                                                   .y = destination.y - TOWER_SIZE / 2,
+                                                   .width = TOWER_SIZE,
+                                                   .height = TOWER_SIZE},
+                                                  {.x = spawner_ref.ref.position.x - SPAWNER_SIZE / 2,
+                                                   .y = spawner_ref.ref.position.y - SPAWNER_SIZE / 2,
+                                                   .width = SPAWNER_SIZE,
+                                                   .height = SPAWNER_SIZE});
                     })) {
                     break;
                 }
@@ -76,8 +89,19 @@ void Update(GameState& state) {
 
     state.player.time_since_last_shot += delta_time;
 
-    const Vector2 normalized_direction = Vector2Normalize(state.player.direction);
-    state.player.position += normalized_direction * PLAYER_SPEED * delta_time;
+    Vector2 velocity = Vector2Normalize(state.player.direction) * PLAYER_SPEED * delta_time;
+
+    Vector2 new_position = state.player.position;
+
+    new_position.x += velocity.x;
+    const CollisionResult collision_x = check_player_collision(state, new_position);
+
+    new_position = state.player.position;
+    new_position.y += velocity.y;
+    const CollisionResult collision_y = check_player_collision(state, new_position);
+
+    if (!collision_x.collided) state.player.position.x += velocity.x;
+    if (!collision_y.collided) state.player.position.y += velocity.y;
 
     state.camera.target = {state.player.position};
 

@@ -34,3 +34,9 @@ struct GameState {
 };
 
 void apply_damage(GameState& state, Targetable& target, int amount);
+
+struct CollisionResult {
+    bool collided = false;
+    Vector2 location = {};
+};
+CollisionResult check_player_collision(GameState& state, Vector2 position);

@@ -1,5 +1,7 @@
 #include "game_state.hpp"
 #include "core/entity_pool.hpp"
+#include "globals.hpp"
+#include "raylib.h"
 #include "systems/targeting.hpp"
 
 void kill_entity(GameState& state, Targetable& target) {
@@ -62,4 +64,34 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
     if (health->current > 0) return;
 
     kill_entity(state, target);
+}
+
+// Checks against all towers and spawners
+CollisionResult check_player_collision(GameState& state, Vector2 position) {
+    const Rectangle player_rect = {.x = position.x - PLAYER_SIZE / 2,
+                                   .y = position.y - PLAYER_SIZE / 2,
+                                   .width = PLAYER_SIZE,
+                                   .height = PLAYER_SIZE};
+
+    for (const Slot<Tower>& tower : state.towers.data) {
+        const Rectangle tower_rect = {.x = tower.ref.position.x - TOWER_SIZE / 2,
+                                      .y = tower.ref.position.y - TOWER_SIZE / 2,
+                                      .width = TOWER_SIZE,
+                                      .height = TOWER_SIZE};
+
+        if (CheckCollisionRecs(tower_rect, player_rect))
+            return CollisionResult{.collided = true, .location = tower.ref.position};
+    }
+
+    for (const Slot<Spawner>& spawner : state.spawners.data) {
+        const Rectangle spawner_rect = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
+                                        .y = spawner.ref.position.y - SPAWNER_SIZE / 2,
+                                        .width = SPAWNER_SIZE,
+                                        .height = SPAWNER_SIZE};
+
+        if (CheckCollisionRecs(spawner_rect, player_rect))
+            return CollisionResult{.collided = true, .location = spawner.ref.position};
+    }
+
+    return CollisionResult{};
 }
