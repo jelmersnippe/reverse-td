@@ -10,6 +10,8 @@
 #include "entities/tower.hpp"
 #include <vector>
 
+struct Targetable;
+
 enum class Input {
     FireWeapon,
     DropTower,
@@ -30,3 +32,5 @@ struct GameState {
 
     int currency = 1000;
 };
+
+void apply_damage(GameState& state, Targetable& target, int amount);

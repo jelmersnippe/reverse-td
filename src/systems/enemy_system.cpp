@@ -12,8 +12,7 @@ void Update(Enemy& enemy, GameState& state) {
     enemy.time_since_last_attack += delta_time;
     const float radius = ENEMY_SIZE * ((float)enemy.health.max / (float)BASE_ENEMY_HEALTH);
 
-    const Targetable target =
-        find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+    Targetable target = find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
 
     Vector2 target_position = enemy.position;
 
@@ -36,11 +35,10 @@ void Update(Enemy& enemy, GameState& state) {
         // If in range -> stand still and attack
         enemy.velocity = {.x = 0, .y = 0};
 
-        // TODO: Reimplement
-        // if (enemy.time_since_last_attack >= enemy.attack_cooldown) {
-        //     state.player.health.current -= enemy.damage;
-        //     enemy.time_since_last_attack = 0;
-        // }
+        if (enemy.time_since_last_attack >= enemy.attack_cooldown) {
+            apply_damage(state, target, enemy.damage);
+            enemy.time_since_last_attack = 0;
+        }
     } else {
         // Else -> move closer
         enemy.velocity = Vector2Normalize(target_position - enemy.position) * ENEMY_SPEED;

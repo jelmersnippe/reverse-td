@@ -58,7 +58,7 @@ void UpdateInputs(GameState& state) {
                     break;
                 }
 
-                CreateEntity(state.towers, {.position = destination});
+                CreateEntity(state.towers, {.position = destination, .health = {.max = 5, .current = 5}});
                 state.currency -= TOWER_COST;
                 break;
             }
@@ -108,7 +108,6 @@ void Draw(const GameState& state) {
         DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, ORANGE);
     }
 
-    std::cout << "Drawing enemy count: " << state.enemies.data.size() << std::endl;
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
@@ -126,7 +125,7 @@ void Draw(const GameState& state) {
         const int text_width = MeasureText("Spawner", 12);
         DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
 
-        DrawHealth(spawner.ref.position + Vector2{.x = SPAWNER_SIZE / 2.0, .y = 10}, spawner.ref.health);
+        DrawHealth(spawner.ref.position - Vector2{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
     }
 
     for (const Slot<Tower>& tower : state.towers.data) {
@@ -139,7 +138,7 @@ void Draw(const GameState& state) {
         const int text_width = MeasureText("Tower", 12);
         DrawText("Tower", tower.ref.position.x - text_width / 2, tower.ref.position.y, 12, BLACK);
 
-        DrawHealth(tower.ref.position + Vector2{.x = TOWER_SIZE / 2, .y = 10}, tower.ref.health);
+        DrawHealth(tower.ref.position - Vector2{.x = 0, .y = TOWER_SIZE / 2 + 10}, tower.ref.health);
     }
 
     EndMode2D();

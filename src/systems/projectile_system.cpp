@@ -3,9 +3,10 @@
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raymath.h"
+#include "systems/targeting.hpp"
 
 // Returns a bool for if it should be destroyed
-bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawner>& spawners) {
+bool Update(Projectile& projectile, GameState& state) {
     const float delta_time = GetFrameTime();
 
     bool hit = false;
@@ -18,8 +19,8 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
 
     projectile.position += projectile.velocity * delta_time;
 
-    for (size_t enemy_index = 0; enemy_index < enemies.data.size(); enemy_index++) {
-        Slot<Enemy>& enemy = enemies.data[enemy_index];
+    for (size_t enemy_index = 0; enemy_index < state.enemies.data.size(); enemy_index++) {
+        Slot<Enemy>& enemy = state.enemies.data[enemy_index];
         if (!enemy.alive) continue;
 
         // Projectile trajectory would collide with enemy.
@@ -32,21 +33,15 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
 
         if (!hit) continue;
 
-        enemy.ref.health.current -= projectile.damage;
-
-        if (enemy.ref.health.current <= 0) {
-            DestroyEntity(enemies, {.index = enemy_index, .generation = enemy.generation});
-
-            // TODO: Move elsewhere
-            // state.difficulty_scale += 0.02;
-            // state.currency += 1;
-        }
+        Targetable target = {
+            .flags = TARGET_ENEMY, .handle = {.index = enemy_index, .generation = enemy.generation}, .position = {}};
+        apply_damage(state, target, projectile.damage);
 
         return true;
     }
 
-    for (size_t spawner_index = 0; spawner_index < spawners.data.size(); spawner_index++) {
-        Slot<Spawner>& spawner = spawners.data[spawner_index];
+    for (size_t spawner_index = 0; spawner_index < state.spawners.data.size(); spawner_index++) {
+        Slot<Spawner>& spawner = state.spawners.data[spawner_index];
 
         const Vector2 spawner_top_left =
             Vector2{.x = spawner.ref.position.x - SPAWNER_SIZE / 2, .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
@@ -56,15 +51,10 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
 
         if (!hit) continue;
 
-        spawner.ref.health.current -= projectile.damage;
-
-        if (spawner.ref.health.current <= 0) {
-            DestroyEntity(spawners, {.index = spawner_index, .generation = spawner.generation});
-
-            // TODO: Move elsewhere
-            // state.difficulty_scale += 0.1;
-            // state.currency += 5;
-        }
+        Targetable target = {.flags = TARGET_SPAWNER,
+                             .handle = {.index = spawner_index, .generation = spawner.generation},
+                             .position = {}};
+        apply_damage(state, target, projectile.damage);
 
         return true;
     }
@@ -78,7 +68,7 @@ void UpdateProjectiles(GameState& state) {
 
         if (!projectile.alive) continue;
 
-        bool should_destroy = Update(projectile.ref, state.enemies, state.spawners);
+        bool should_destroy = Update(projectile.ref, state);
 
         if (should_destroy) {
             DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});

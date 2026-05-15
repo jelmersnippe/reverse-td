@@ -30,7 +30,7 @@ void Update(Tower& tower, GameState& state) {
             break;
     }
 
-    if (target.position == tower.position) return;
+    if (target.position == tower.position || Vector2Distance(tower.position, target_position) > tower.range) return;
 
     // Attacking time
     if (tower.time_since_last_attack >= 60.0 / tower.fire_rate) {
