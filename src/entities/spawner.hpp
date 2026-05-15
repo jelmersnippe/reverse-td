@@ -1,10 +1,8 @@
 #pragma once
 
-#include "core/gen_index.hpp"
-#include "entities/enemy.hpp"
 #include "raylib.h"
 
-#include "entities/health.hpp"
+#include "core/health.hpp"
 
 struct Spawner {
     Vector2 position = {};
@@ -15,5 +13,3 @@ struct Spawner {
     float time_since_last_spawn = 0;
     bool initial_spawn_happened = false;
 };
-
-void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty_scale);

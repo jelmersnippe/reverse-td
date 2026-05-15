@@ -1,10 +1,9 @@
 #pragma once
 
-#include "core/gen_index.hpp"
-#include "entities/enemy.hpp"
-#include "entities/projectile.hpp"
-#include "health.hpp"
+#include "core/targeting.hpp"
 #include "raylib.h"
+
+#include "core/health.hpp"
 
 struct Tower {
     Vector2 position = {};
@@ -13,7 +12,5 @@ struct Tower {
     int fire_rate = 200;
     float time_since_last_attack = 0;
     int range = 200;
-    EntityHandle target = {};
+    Targetable target = {};
 };
-
-void Update(Tower& tower, EntityPool<Enemy>& enemies, EntityPool<Projectile>& projectiles);

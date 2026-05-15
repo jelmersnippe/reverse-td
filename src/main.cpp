@@ -1,6 +1,7 @@
 #include "core/gen_index.hpp"
-#include "entities/enemy.hpp"
-#include "entities/spawner.hpp"
+#include "core/health.hpp"
+#include "core/targeting.hpp"
+#include "game_state.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -8,8 +9,11 @@
 #include <format>
 #include <iostream>
 
-#include "game_state.hpp"
 #include "globals.hpp"
+#include "systems/enemy_system.hpp"
+#include "systems/projectile_system.hpp"
+#include "systems/spawner_system.hpp"
+#include "systems/tower_system.hpp"
 
 void DrawHealth(const Vector2& position, const Health& health) {
     if (health.current >= health.max) return;
@@ -66,49 +70,9 @@ void UpdateInputs(GameState& state) {
     state.inputs.clear();
 }
 
-void UpdateProjectiles(GameState& state) {
-    for (size_t projectile_index = 0; projectile_index < state.projectiles.data.size(); projectile_index++) {
-        Slot<Projectile>& projectile = state.projectiles.data[projectile_index];
-
-        if (!projectile.alive) continue;
-
-        bool should_destroy = Update(projectile.ref, state.enemies, state.spawners);
-
-        if (should_destroy) {
-            DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});
-        }
-    }
-}
-
-void UpdateEnemies(GameState& state) {
-    std::cout << "Updating enemy count: " << state.enemies.data.size() << std::endl;
-
-    for (Slot<Enemy>& enemy : state.enemies.data) {
-        if (!enemy.alive) continue;
-
-        Update(enemy.ref, state.player);
-    }
-}
-
-void UpdateSpawners(GameState& state) {
-    std::cout << "Updating spawner count: " << state.spawners.data.size() << std::endl;
-    for (Slot<Spawner>& spawner : state.spawners.data) {
-        if (!spawner.alive) continue;
-
-        Update(spawner.ref, state.enemies, state.difficulty_scale);
-    }
-}
-
-void UpdateTowers(GameState& state) {
-    for (Slot<Tower>& tower : state.towers.data) {
-        if (!tower.alive) continue;
-
-        Update(tower.ref, state.enemies, state.projectiles);
-    }
-}
-
 void Update(GameState& state) {
     const float delta_time = GetFrameTime();
+    const std::vector<Targetable> targetables = build_targetables(state);
 
     state.player.time_since_last_shot += delta_time;
 

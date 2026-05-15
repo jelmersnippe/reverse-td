@@ -27,11 +27,11 @@ endif()
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE
     src/main.cpp
-    src/entities/enemy
-    src/entities/projectile
-    src/entities/spawner
-    src/entities/tower
-    src/entities/player
+    src/core/targeting
+    src/systems/projectile_system
+    src/systems/spawner_system
+    src/systems/tower_system
+    src/systems/enemy_system
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src

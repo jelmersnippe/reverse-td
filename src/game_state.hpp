@@ -1,12 +1,13 @@
 #pragma once
 
+#include "raylib.h"
+
 #include "core/gen_index.hpp"
 #include "entities/enemy.hpp"
 #include "entities/player.hpp"
 #include "entities/projectile.hpp"
 #include "entities/spawner.hpp"
 #include "entities/tower.hpp"
-#include "raylib.h"
 #include <vector>
 
 enum class Input {

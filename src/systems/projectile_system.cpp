@@ -1,13 +1,7 @@
-#include "raylib.h"
-#include "raymath.h"
-#include <cstddef>
-
-#include "core/gen_index.hpp"
-#include "entities/enemy.hpp"
-#include "entities/spawner.hpp"
+#include "projectile_system.hpp"
+#include "game_state.hpp"
 #include "globals.hpp"
-
-#include "projectile.hpp"
+#include "raymath.h"
 
 // Returns a bool for if it should be destroyed
 bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawner>& spawners) {
@@ -62,7 +56,7 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
         spawner.ref.health.current -= projectile.damage;
 
         if (spawner.ref.health.current <= 0) {
-            DestroyEntity(enemies, {.index = spawner_index, .generation = spawner.generation});
+            DestroyEntity(spawners, {.index = spawner_index, .generation = spawner.generation});
 
             // TODO: Move elsewhere
             // state.difficulty_scale += 0.1;
@@ -73,4 +67,18 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
     }
 
     return false;
+}
+
+void UpdateProjectiles(GameState& state) {
+    for (size_t projectile_index = 0; projectile_index < state.projectiles.data.size(); projectile_index++) {
+        Slot<Projectile>& projectile = state.projectiles.data[projectile_index];
+
+        if (!projectile.alive) continue;
+
+        bool should_destroy = Update(projectile.ref, state.enemies, state.spawners);
+
+        if (should_destroy) {
+            DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});
+        }
+    }
 }

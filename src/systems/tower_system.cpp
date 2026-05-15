@@ -1,18 +1,16 @@
-#include "raylib.h"
+#include "tower_system.hpp"
+#include "core/targeting.hpp"
+#include "game_state.hpp"
+#include "globals.hpp"
 #include "raymath.h"
 
-#include <vector>
-
-#include "core/gen_index.hpp"
-#include "globals.hpp"
-#include "tower.hpp"
-
-void Update(Tower& tower, EntityPool<Enemy>& enemies, EntityPool<Projectile>& projectiles) {
+void Update(Tower& tower, GameState& state) {
     const float delta_time = GetFrameTime();
 
     tower.time_since_last_attack += delta_time;
 
-    Enemy* target = GetEntity(enemies, tower.target);
+    // TODO: Change this so it can also shoot at TARGET_SPAWNER
+    Enemy* target = GetEntity(state.enemies, tower.target.handle);
 
     // Check if target left range
     if (target != nullptr) {
@@ -23,17 +21,9 @@ void Update(Tower& tower, EntityPool<Enemy>& enemies, EntityPool<Projectile>& pr
 
     // Acquire target
     if (target == nullptr) {
-        for (uint32_t i = 0; i < enemies.data.size(); i++) {
-            Slot<Enemy>& enemy = enemies.data[i];
-            if (!enemy.alive) continue;
-
-            const float distance = Vector2Distance(tower.position, enemy.ref.position);
-            if (distance <= tower.range) {
-                tower.target = EntityHandle{.index = i, .generation = enemy.generation};
-                target = &enemy.ref;
-                break;
-            }
-        }
+        Targetable targetable = find_closest_target(tower.position, build_targetables(state), TARGET_ENEMY);
+        tower.target = targetable;
+        target = GetEntity(state.enemies, targetable.handle);
     }
 
     // Target acquiring failed
@@ -44,8 +34,16 @@ void Update(Tower& tower, EntityPool<Enemy>& enemies, EntityPool<Projectile>& pr
         const Vector2 tower_center = tower.position + Vector2{.x = TOWER_SIZE / 2, .y = TOWER_SIZE / 2};
         const Vector2 direction = target->position - tower_center;
         CreateEntity(
-            projectiles,
+            state.projectiles,
             {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED, .position = tower_center, .life_time = 2.0});
         tower.time_since_last_attack = 0;
+    }
+}
+
+void UpdateTowers(GameState& state) {
+    for (Slot<Tower>& tower : state.towers.data) {
+        if (!tower.alive) continue;
+
+        Update(tower.ref, state);
     }
 }

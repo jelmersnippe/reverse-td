@@ -1,9 +1,9 @@
 #pragma once
 
+#include "core/targeting.hpp"
 #include "raylib.h"
 
-#include "entities/health.hpp"
-#include "entities/player.hpp"
+#include "core/health.hpp"
 
 struct Enemy {
     Vector2 velocity = {};
@@ -12,6 +12,5 @@ struct Enemy {
     int damage = 1;
     float attack_cooldown = 2;
     float time_since_last_attack = 0;
+    Targetable target = {};
 };
-
-void Update(Enemy& enemy, Player& player);

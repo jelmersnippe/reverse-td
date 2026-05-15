@@ -2,7 +2,7 @@
 
 #include "raylib.h"
 
-#include "entities/health.hpp"
+#include "core/health.hpp"
 
 struct Player {
     Vector2 position;

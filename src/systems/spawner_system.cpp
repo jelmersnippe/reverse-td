@@ -1,10 +1,6 @@
-#include "entities/enemy.hpp"
-#include "raylib.h"
-#include "raymath.h"
-
-#include "core/gen_index.hpp"
+#include "game_state.hpp"
 #include "globals.hpp"
-#include "spawner.hpp"
+#include "raymath.h"
 
 void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty_scale) {
     const float delta_time = GetFrameTime();
@@ -34,4 +30,12 @@ void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty
     }
 
     spawner.time_since_last_spawn = 0;
+}
+
+void UpdateSpawners(GameState& state) {
+    for (Slot<Spawner>& spawner : state.spawners.data) {
+        if (!spawner.alive) continue;
+
+        Update(spawner.ref, state.enemies, state.difficulty_scale);
+    }
 }
