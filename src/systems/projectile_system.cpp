@@ -48,9 +48,11 @@ bool Update(Projectile& projectile, EntityPool<Enemy>& enemies, EntityPool<Spawn
     for (size_t spawner_index = 0; spawner_index < spawners.data.size(); spawner_index++) {
         Slot<Spawner>& spawner = spawners.data[spawner_index];
 
+        const Vector2 spawner_top_left =
+            Vector2{.x = spawner.ref.position.x - SPAWNER_SIZE / 2, .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
         hit = CheckCollisionPointRec(
             projectile.position,
-            {.x = spawner.ref.position.x, .y = spawner.ref.position.y, .width = SPAWNER_SIZE, .height = SPAWNER_SIZE});
+            {.x = spawner_top_left.x, .y = spawner_top_left.y, .width = SPAWNER_SIZE, .height = SPAWNER_SIZE});
 
         if (!hit) continue;
 

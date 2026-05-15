@@ -10,7 +10,7 @@ void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty
 
     if (!spawner.initial_spawn_happened) {
         for (int i = 0; i < spawner.initial_spawn; i++) {
-            CreateEntity(enemies, {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
+            CreateEntity(enemies, {.position = spawner.position + Vector2{.x = static_cast<float>(20 * i), .y = 0},
                                    .health = {.max = static_cast<int>(BASE_ENEMY_HEALTH * difficulty_scale),
                                               .current = static_cast<int>(BASE_ENEMY_HEALTH * difficulty_scale)},
                                    .damage = static_cast<int>(1 * difficulty_scale)});
@@ -25,7 +25,7 @@ void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty
 
     const int spawn_count = static_cast<int>((float)spawner.spawn_amount * difficulty_scale);
     for (int i = 0; i < spawn_count; i++) {
-        CreateEntity(enemies, {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
+        CreateEntity(enemies, {.position = spawner.position + Vector2{.x = static_cast<float>(20 * i), .y = 0},
                                .health = {.max = static_cast<int>(BASE_ENEMY_HEALTH * difficulty_scale),
                                           .current = static_cast<int>(BASE_ENEMY_HEALTH * difficulty_scale)},
                                .damage = static_cast<int>(1 * difficulty_scale)});

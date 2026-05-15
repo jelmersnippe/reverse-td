@@ -28,5 +28,5 @@ struct GameState {
     float difficulty_scale = 1;
     Camera2D camera = {};
 
-    int currency = 0;
+    int currency = 1000;
 };

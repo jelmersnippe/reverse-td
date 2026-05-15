@@ -1,7 +1,6 @@
 #pragma once
 
 #include "raylib.h"
-#include "systems/targeting.hpp"
 
 #include "core/health.hpp"
 
@@ -12,5 +11,4 @@ struct Enemy {
     int damage = 1;
     float attack_cooldown = 2;
     float time_since_last_attack = 0;
-    Targetable target = {};
 };

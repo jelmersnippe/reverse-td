@@ -120,10 +120,11 @@ void Draw(const GameState& state) {
     for (const Slot<Spawner>& spawner : state.spawners.data) {
         if (!spawner.alive) continue;
 
-        DrawRectangleLines(spawner.ref.position.x, spawner.ref.position.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
+        const Vector2 spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
+                                          .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
+        DrawRectangleLines(spawner_top_left.x, spawner_top_left.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
         const int text_width = MeasureText("Spawner", 12);
-        DrawText("Spawner", spawner.ref.position.x - text_width / 2 + SPAWNER_SIZE / 2,
-                 spawner.ref.position.y + SPAWNER_SIZE / 2, 12, BLACK);
+        DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
 
         DrawHealth(spawner.ref.position + Vector2{.x = SPAWNER_SIZE / 2.0, .y = 10}, spawner.ref.health);
     }
@@ -131,14 +132,14 @@ void Draw(const GameState& state) {
     for (const Slot<Tower>& tower : state.towers.data) {
         if (!tower.alive) continue;
 
-        DrawRectangleLines(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE, TOWER_SIZE, BLACK);
-        DrawCircle(tower.ref.position.x + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2, TOWER_SIZE * 0.3,
-                   BLUE);
+        const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
+                                        .y = tower.ref.position.y - TOWER_SIZE / 2};
+        DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE, TOWER_SIZE, BLACK);
+        DrawCircle(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE * 0.3, BLUE);
         const int text_width = MeasureText("Tower", 12);
-        DrawText("Tower", tower.ref.position.x - text_width / 2 + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2,
-                 12, BLACK);
+        DrawText("Tower", tower.ref.position.x - text_width / 2, tower.ref.position.y, 12, BLACK);
 
-        DrawHealth(tower.ref.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, tower.ref.health);
+        DrawHealth(tower.ref.position + Vector2{.x = TOWER_SIZE / 2, .y = 10}, tower.ref.health);
     }
 
     EndMode2D();

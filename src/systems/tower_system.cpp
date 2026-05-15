@@ -10,33 +10,34 @@ void Update(Tower& tower, GameState& state) {
 
     tower.time_since_last_attack += delta_time;
 
-    // TODO: Change this so it can also shoot at TARGET_SPAWNER
-    Enemy* target = GetEntity(state.enemies, tower.target.handle);
+    // TODO: Store in Tower and only update every x frames / when out of range
+    const Targetable target =
+        find_closest_target(tower.position, build_targetables(state), TARGET_ENEMY | TARGET_SPAWNER);
 
-    // Check if target left range
-    if (target != nullptr) {
-        const float distance = Vector2Distance(tower.position, target->position);
-
-        if (distance > tower.range) target = nullptr;
+    Vector2 target_position = tower.position;
+    switch (target.flags) {
+        case TARGET_ENEMY: {
+            Enemy* enemy = GetEntity(state.enemies, target.handle);
+            if (enemy != nullptr) target_position = enemy->position;
+            break;
+        }
+        case TARGET_SPAWNER: {
+            Spawner* spawner = GetEntity(state.spawners, target.handle);
+            if (spawner != nullptr) target_position = spawner->position;
+            break;
+        }
+        default:
+            break;
     }
 
-    // Acquire target
-    if (target == nullptr) {
-        Targetable targetable = find_closest_target(tower.position, build_targetables(state), TARGET_ENEMY);
-        tower.target = targetable;
-        target = GetEntity(state.enemies, targetable.handle);
-    }
-
-    // Target acquiring failed
-    if (target == nullptr) return;
+    if (target.position == tower.position) return;
 
     // Attacking time
     if (tower.time_since_last_attack >= 60.0 / tower.fire_rate) {
-        const Vector2 tower_center = tower.position + Vector2{.x = TOWER_SIZE / 2, .y = TOWER_SIZE / 2};
-        const Vector2 direction = target->position - tower_center;
+        const Vector2 direction = target_position - tower.position;
         CreateEntity(
             state.projectiles,
-            {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED, .position = tower_center, .life_time = 2.0});
+            {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED, .position = tower.position, .life_time = 2.0});
         tower.time_since_last_attack = 0;
     }
 }
