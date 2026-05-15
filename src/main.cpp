@@ -1,3 +1,6 @@
+#include "core/gen_index.hpp"
+#include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -6,32 +9,11 @@
 #include <iostream>
 
 #include "game_state.hpp"
-
-const int SCREEN_WIDTH = 1200;
-const int SCREEN_HEIGHT = 800;
-const int TARGET_FPS = 60;
-
-const int PLAYER_STARTING_HEALTH = 10;
-const int PLAYER_SPEED = 200;
-const int PLAYER_SIZE = 50;
-
-const int BASE_ENEMY_HEALTH = 3;
-const int ENEMY_SPEED = 100;
-const int ENEMY_SIZE = 20;
-const int ENEMY_ATTACK_RANGE = 5;
-
-const int SPAWNER_SIZE = 100;
-
-const int PROJECTILE_SPEED = 1000;
-const int PROJECTILE_SIZE = 5;
-
-const float FIRE_RATE = 150;
-const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;
-
-const int TOWER_SIZE = 100;
-const int TOWER_COST = 10;
+#include "globals.hpp"
 
 void DrawHealth(const Vector2& position, const Health& health) {
+    if (health.current >= health.max) return;
+
     const std::string health_text = std::format("{}/{}", health.current, health.max);
     const int text_width = MeasureText(health_text.c_str(), 12);
 
@@ -44,16 +26,15 @@ void UpdateInputs(GameState& state) {
     for (const Input& input : state.inputs) {
         switch (input) {
             case Input::FireWeapon: {
-                if (state.time_since_last_shot < TIME_BETWEEN_SHOTS) break;
-                std::cout << state.time_since_last_shot << std::endl;
+                if (state.player.time_since_last_shot < TIME_BETWEEN_SHOTS) break;
+                std::cout << state.player.time_since_last_shot << std::endl;
 
-                state.projectiles.push_back(
-                    {.velocity = Vector2Normalize(Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera),
-                                                                  state.player_position)) *
-                                 PROJECTILE_SPEED,
-                     .position = state.player_position,
-                     .life_time = 2.0});
-                state.time_since_last_shot = 0;
+                const Vector2 direction =
+                    Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), state.player.position);
+                CreateEntity(state.projectiles, {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
+                                                 .position = state.player.position,
+                                                 .life_time = 2.0});
+                state.player.time_since_last_shot = 0;
                 break;
             }
             case Input::DropTower: {
@@ -86,197 +67,55 @@ void UpdateInputs(GameState& state) {
 }
 
 void UpdateProjectiles(GameState& state) {
-    const float delta_time = GetFrameTime();
+    for (size_t projectile_index = 0; projectile_index < state.projectiles.data.size(); projectile_index++) {
+        Slot<Projectile>& projectile = state.projectiles.data[projectile_index];
 
-    std::vector<size_t> spawner_indexes_to_remove = {};
-    std::vector<size_t> projectile_indexes_to_remove = {};
-    for (size_t projectile_index = 0; projectile_index < state.projectiles.size(); projectile_index++) {
-        bool hit = false;
-        Projectile& projectile = state.projectiles[projectile_index];
+        if (!projectile.alive) continue;
 
-        projectile.time_alive += delta_time;
+        bool should_destroy = Update(projectile.ref, state.enemies, state.spawners);
 
-        if (projectile.time_alive >= projectile.life_time) {
-            projectile_indexes_to_remove.push_back(projectile_index);
-            continue;
+        if (should_destroy) {
+            DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});
         }
-
-        const Vector2 old_position = projectile.position;
-
-        projectile.position += projectile.velocity * delta_time;
-
-        for (size_t enemy_index = 0; enemy_index < state.enemies.data.size(); enemy_index++) {
-            Slot<Enemy>& enemy = state.enemies.data[enemy_index];
-            if (!enemy.alive) continue;
-
-            // Projectile trajectory would collide with enemy.
-            // This is done with a line instead of point because a projectile could move fast enough
-            // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
-            // TODO: This only checks center point of projectile. Should also check radius. So cylender/rectangle for
-            // path
-            const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
-            hit = CheckCollisionCircleLine(enemy.ref.position, radius, old_position, projectile.position);
-
-            if (!hit) continue;
-
-            enemy.ref.health.current -= projectile.damage;
-
-            if (enemy.ref.health.current <= 0) {
-                DestroyEntity(state.enemies, {.index = enemy_index, .generation = enemy.generation});
-                state.difficulty_scale += 0.02;
-                state.currency += 1;
-            }
-
-            projectile_indexes_to_remove.push_back(projectile_index);
-            break;
-        }
-
-        if (hit) continue;
-
-        for (size_t spawner_index = 0; spawner_index < state.spawners.size(); spawner_index++) {
-            Spawner& spawner = state.spawners[spawner_index];
-
-            hit = CheckCollisionPointRec(
-                projectile.position,
-                {.x = spawner.position.x, .y = spawner.position.y, .width = SPAWNER_SIZE, .height = SPAWNER_SIZE});
-
-            if (!hit) continue;
-
-            spawner.health.current -= projectile.damage;
-
-            if (spawner.health.current <= 0) {
-                spawner_indexes_to_remove.push_back(spawner_index);
-                state.difficulty_scale += 0.1;
-                state.currency += 5;
-            }
-
-            projectile_indexes_to_remove.push_back(projectile_index);
-            break;
-        }
-    }
-
-    for (const size_t index : projectile_indexes_to_remove) {
-        state.projectiles.erase(state.projectiles.begin() + index);
-    }
-
-    for (const size_t index : spawner_indexes_to_remove) {
-        state.spawners.erase(state.spawners.begin() + index);
     }
 }
 
 void UpdateEnemies(GameState& state) {
-    const float delta_time = GetFrameTime();
-    for (size_t i = 0; i < state.enemies.data.size(); i++) {
-        Slot<Enemy>& enemy = state.enemies.data[i];
+    std::cout << "Updating enemy count: " << state.enemies.data.size() << std::endl;
 
+    for (Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        enemy.ref.time_since_last_attack += delta_time;
-        const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
-
-        // TODO: Fix enemy converging
-        if (Vector2Distance(state.player_position, enemy.ref.position) <=
-            (PLAYER_SIZE / 2) + (radius / 2) + ENEMY_ATTACK_RANGE) {
-            // If in range -> stand still and attack
-            enemy.ref.velocity = {.x = 0, .y = 0};
-
-            if (enemy.ref.time_since_last_attack >= enemy.ref.attack_cooldown) {
-                state.player_health.current -= enemy.ref.damage;
-                enemy.ref.time_since_last_attack = 0;
-            }
-        } else {
-            // Else -> move closer
-            enemy.ref.velocity = Vector2Normalize(state.player_position - enemy.ref.position) * ENEMY_SPEED;
-            enemy.ref.position += enemy.ref.velocity * delta_time;
-        }
+        Update(enemy.ref, state.player);
     }
 }
 
 void UpdateSpawners(GameState& state) {
-    const float delta_time = GetFrameTime();
-    for (Spawner& spawner : state.spawners) {
-        if (!spawner.initial_spawn_happened) {
-            for (int i = 0; i < spawner.initial_spawn; i++) {
-                CreateEntity(state.enemies,
-                             {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
-                              .health = {.max = static_cast<int>(BASE_ENEMY_HEALTH * state.difficulty_scale),
-                                         .current = static_cast<int>(BASE_ENEMY_HEALTH * state.difficulty_scale)},
-                              .damage = static_cast<int>(1 * state.difficulty_scale)});
-            }
+    std::cout << "Updating spawner count: " << state.spawners.data.size() << std::endl;
+    for (Slot<Spawner>& spawner : state.spawners.data) {
+        if (!spawner.alive) continue;
 
-            spawner.initial_spawn_happened = true;
-            continue;
-        }
-
-        spawner.time_since_last_spawn += delta_time;
-        if (spawner.time_since_last_spawn >= (spawner.spawn_cooldown / state.difficulty_scale)) {
-            const int spawn_count = static_cast<int>((float)spawner.spawn_amount * state.difficulty_scale);
-            for (int i = 0; i < spawn_count; i++) {
-                CreateEntity(state.enemies,
-                             {.position = spawner.position + Vector2{.x = static_cast<float>(0.5 * i), .y = 0},
-                              .health = {.max = static_cast<int>(BASE_ENEMY_HEALTH * state.difficulty_scale),
-                                         .current = static_cast<int>(BASE_ENEMY_HEALTH * state.difficulty_scale)},
-                              .damage = static_cast<int>(1 * state.difficulty_scale)});
-            }
-
-            spawner.time_since_last_spawn = 0;
-        }
+        Update(spawner.ref, state.enemies, state.difficulty_scale);
     }
 }
 
 void UpdateTowers(GameState& state) {
-    const float delta_time = GetFrameTime();
     for (Slot<Tower>& tower : state.towers.data) {
-        tower.ref.time_since_last_attack += delta_time;
+        if (!tower.alive) continue;
 
-        Enemy* target = GetEntity(state.enemies, tower.ref.target);
-
-        // Check if target left range
-        if (target != nullptr) {
-            const float distance = Vector2Distance(tower.ref.position, target->position);
-
-            if (distance > tower.ref.range) target = nullptr;
-        }
-
-        // Acquire target
-        if (target == nullptr) {
-            for (uint32_t i = 0; i < state.enemies.data.size(); i++) {
-                Slot<Enemy>& enemy = state.enemies.data[i];
-                if (!enemy.alive) continue;
-
-                const float distance = Vector2Distance(tower.ref.position, enemy.ref.position);
-                if (distance <= tower.ref.range) {
-                    tower.ref.target = EntityHandle{.index = i, .generation = enemy.generation};
-                    target = &enemy.ref;
-                    break;
-                }
-            }
-        }
-
-        // Target acquiring failed
-        if (target == nullptr) continue;
-
-        // Attacking time
-        if (tower.ref.time_since_last_attack >= 60.0 / tower.ref.fire_rate) {
-            const Vector2 tower_center = tower.ref.position + Vector2{.x = TOWER_SIZE / 2, .y = TOWER_SIZE / 2};
-            state.projectiles.push_back(
-                {.velocity = Vector2Normalize(target->position - tower_center) * PROJECTILE_SPEED,
-                 .position = tower_center,
-                 .life_time = 2.0});
-            tower.ref.time_since_last_attack = 0;
-        }
+        Update(tower.ref, state.enemies, state.projectiles);
     }
 }
 
 void Update(GameState& state) {
     const float delta_time = GetFrameTime();
 
-    state.time_since_last_shot += delta_time;
+    state.player.time_since_last_shot += delta_time;
 
-    const Vector2 normalized_direction = Vector2Normalize(state.player_direction);
-    state.player_position += normalized_direction * PLAYER_SPEED * delta_time;
+    const Vector2 normalized_direction = Vector2Normalize(state.player.direction);
+    state.player.position += normalized_direction * PLAYER_SPEED * delta_time;
 
-    state.camera.target = {state.player_position};
+    state.camera.target = {state.player.position};
 
     UpdateInputs(state);
     UpdateProjectiles(state);
@@ -285,7 +124,7 @@ void Update(GameState& state) {
     UpdateTowers(state);
 
     // TODO: Should show a death state / restart the game
-    if (state.player_health.current <= 0) { state.should_exit = true; }
+    if (state.player.health.current <= 0) { state.should_exit = true; }
 };
 
 void Draw(const GameState& state) {
@@ -294,39 +133,40 @@ void Draw(const GameState& state) {
 
     BeginMode2D(state.camera);
 
-    DrawRectangle(state.player_position.x - PLAYER_SIZE / 2, state.player_position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
+    DrawRectangle(state.player.position.x - PLAYER_SIZE / 2, state.player.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                   PLAYER_SIZE, GREEN);
-    if (state.player_health.current < state.player_health.max) {
-        DrawHealth(state.player_position - Vector2{.x = 0, .y = PLAYER_SIZE}, state.player_health);
-    }
+    DrawHealth(state.player.position - Vector2{.x = 0, .y = PLAYER_SIZE}, state.player.health);
 
     // TODO: Cull stuff outside of the screen
-    for (const Projectile& projectile : state.projectiles) {
-        DrawCircle(projectile.position.x, projectile.position.y, PROJECTILE_SIZE, ORANGE);
+    for (const Slot<Projectile>& projectile : state.projectiles.data) {
+        if (!projectile.alive) continue;
+
+        DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, ORANGE);
     }
 
+    std::cout << "Drawing enemy count: " << state.enemies.data.size() << std::endl;
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
         const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
         DrawCircle(enemy.ref.position.x, enemy.ref.position.y, radius, RED);
-        if (enemy.ref.health.current < enemy.ref.health.max) {
-            DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = radius + 20}, enemy.ref.health);
-        }
+        DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = radius + 20}, enemy.ref.health);
     }
 
-    for (const Spawner& spawner : state.spawners) {
-        DrawRectangleLines(spawner.position.x, spawner.position.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
-        const int text_width = MeasureText("Spawner", 12);
-        DrawText("Spawner", spawner.position.x - text_width / 2 + SPAWNER_SIZE / 2,
-                 spawner.position.y + SPAWNER_SIZE / 2, 12, BLACK);
+    for (const Slot<Spawner>& spawner : state.spawners.data) {
+        if (!spawner.alive) continue;
 
-        if (spawner.health.current < spawner.health.max) {
-            DrawHealth(spawner.position + Vector2{.x = SPAWNER_SIZE / 2.0, .y = 10}, spawner.health);
-        }
+        DrawRectangleLines(spawner.ref.position.x, spawner.ref.position.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
+        const int text_width = MeasureText("Spawner", 12);
+        DrawText("Spawner", spawner.ref.position.x - text_width / 2 + SPAWNER_SIZE / 2,
+                 spawner.ref.position.y + SPAWNER_SIZE / 2, 12, BLACK);
+
+        DrawHealth(spawner.ref.position + Vector2{.x = SPAWNER_SIZE / 2.0, .y = 10}, spawner.ref.health);
     }
 
     for (const Slot<Tower>& tower : state.towers.data) {
+        if (!tower.alive) continue;
+
         DrawRectangleLines(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE, TOWER_SIZE, BLACK);
         DrawCircle(tower.ref.position.x + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2, TOWER_SIZE * 0.3,
                    BLUE);
@@ -334,9 +174,7 @@ void Draw(const GameState& state) {
         DrawText("Tower", tower.ref.position.x - text_width / 2 + TOWER_SIZE / 2, tower.ref.position.y + TOWER_SIZE / 2,
                  12, BLACK);
 
-        if (tower.ref.health.current < tower.ref.health.max) {
-            DrawHealth(tower.ref.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, tower.ref.health);
-        }
+        DrawHealth(tower.ref.position + Vector2{.x = SPAWNER_SIZE / 2, .y = 10}, tower.ref.health);
     }
 
     EndMode2D();
@@ -363,32 +201,33 @@ void HandleInput(GameState& state) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::FireWeapon); }
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::DropTower); }
 
-    state.player_direction = player_direction;
+    state.player.direction = player_direction;
 }
 
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
     InitAudioDevice();
 
-    GameState state = {.player_position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
-                       .player_health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
+                     .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+    GameState state = {.player = player};
 
-    state.camera.target = {state.player_position};
+    state.camera.target = {player.position};
     state.camera.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
     state.camera.rotation = 0.0f;
     state.camera.zoom = 1.0f;
 
     SetTargetFPS(TARGET_FPS);
 
-    state.spawners.push_back({.position = {.x = -200, .y = 200},
-                              .health = {.max = 20, .current = 20},
-                              .spawn_amount = 2,
-                              .initial_spawn = 2});
-    state.spawners.push_back({.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
-    state.spawners.push_back(
-        {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
-    state.spawners.push_back(
-        {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
+    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200},
+                                  .health = {.max = 20, .current = 20},
+                                  .spawn_amount = 2,
+                                  .initial_spawn = 2});
+    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
+    CreateEntity(state.spawners,
+                 {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
+    CreateEntity(state.spawners,
+                 {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
 
     while (!state.should_exit && !WindowShouldClose()) {
         HandleInput(state);
@@ -397,6 +236,7 @@ int main() {
 
         Draw(state);
     }
+
     CloseAudioDevice();
 
     CloseWindow();
