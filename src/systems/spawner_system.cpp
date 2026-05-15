@@ -1,3 +1,5 @@
+#include "spawner_system.hpp"
+
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raymath.h"

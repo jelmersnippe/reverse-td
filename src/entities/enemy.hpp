@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/targeting.hpp"
 #include "raylib.h"
+#include "systems/targeting.hpp"
 
 #include "core/health.hpp"
 

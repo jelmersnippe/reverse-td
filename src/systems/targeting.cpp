@@ -1,5 +1,5 @@
 #include "targeting.hpp"
-#include "core/gen_index.hpp"
+#include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "raymath.h"
 

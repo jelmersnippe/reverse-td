@@ -27,7 +27,7 @@ endif()
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE
     src/main.cpp
-    src/core/targeting
+    src/systems/targeting
     src/systems/projectile_system
     src/systems/spawner_system
     src/systems/tower_system

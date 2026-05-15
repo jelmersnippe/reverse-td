@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include <vector>
 
-#include "core/gen_index.hpp"
+#include "core/entity_pool.hpp"
 
 struct GameState;
 

@@ -2,7 +2,7 @@
 
 #include "raylib.h"
 
-#include "core/gen_index.hpp"
+#include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
 #include "entities/player.hpp"
 #include "entities/projectile.hpp"

@@ -1,9 +1,9 @@
-#include "core/gen_index.hpp"
+#include "core/entity_pool.hpp"
 #include "core/health.hpp"
-#include "core/targeting.hpp"
 #include "game_state.hpp"
 #include "raylib.h"
 #include "raymath.h"
+#include "systems/targeting.hpp"
 
 #include <algorithm>
 #include <format>

@@ -1,8 +1,9 @@
 #include "tower_system.hpp"
-#include "core/targeting.hpp"
+
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raymath.h"
+#include "systems/targeting.hpp"
 
 void Update(Tower& tower, GameState& state) {
     const float delta_time = GetFrameTime();
