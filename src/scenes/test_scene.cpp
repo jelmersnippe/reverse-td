@@ -12,11 +12,9 @@
 #include "raymath.h"
 #include "systems/tower_system.hpp"
 #include <format>
-#include <numeric>
 
 namespace {
 static float PERSONAL_SPACE = 50;
-static float SEPARATION_STRENGTH = 75;
 
 void Init(GameState& state) {
     Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
@@ -29,7 +27,6 @@ void Draw(const GameState& state) {
     ClearBackground(WHITE);
 
     DrawText(std::format("Personal space: {}", PERSONAL_SPACE).c_str(), 20, 50, 12, BLACK);
-    DrawText(std::format("Separation strength: {}", SEPARATION_STRENGTH).c_str(), 20, 80, 12, BLACK);
 
     BeginMode2D(state.camera);
 
@@ -49,8 +46,6 @@ void Draw(const GameState& state) {
 void Update(GameState& state) {
     if (IsKeyDown(KEY_F5) && PERSONAL_SPACE > 0) PERSONAL_SPACE -= 1;
     if (IsKeyDown(KEY_F6)) PERSONAL_SPACE += 1;
-    if (IsKeyDown(KEY_F7) && SEPARATION_STRENGTH > 0) SEPARATION_STRENGTH -= 1;
-    if (IsKeyDown(KEY_F8)) SEPARATION_STRENGTH += 1;
 
     const float delta_time = GetFrameTime();
     Vector2 velocity = Vector2Normalize(state.player.direction) * PLAYER_SPEED * delta_time;
@@ -74,41 +69,29 @@ void Update(GameState& state) {
 
     state.inputs.clear();
 
-    for (size_t i = 0; i < state.enemies.data.size(); i++) {
-        Slot<Enemy>& slot = state.enemies.data[i];
+    for (Slot<Enemy>& slot : state.enemies.data) {
         if (!slot.alive) continue;
 
         Enemy& enemy = slot.ref;
 
-        Vector2 seek = Vector2Normalize(state.player.position - enemy.position) * enemy.speed;
+        Vector2 seek = Vector2Normalize(state.player.position - enemy.position);
 
-        std::vector<Vector2> positions_to_avoid = {};
-        for (size_t j = 0; j < state.enemies.data.size(); j++) {
-            Slot<Enemy>& other_slot = state.enemies.data[j];
-
-            if (!other_slot.alive || i == j) continue;
+        Vector2 separation{};
+        for (Slot<Enemy>& other_slot : state.enemies.data) {
+            if (!other_slot.alive) continue;
             const Enemy& other_enemy = other_slot.ref;
 
-            const float distance_to_other = Vector2Distance(enemy.position, other_enemy.position);
+            const Vector2 direction_from_other = enemy.position - other_enemy.position;
+            float distance = Vector2Length(direction_from_other);
 
-            if (distance_to_other > PERSONAL_SPACE) continue;
+            if (distance < 0.001f || distance > PERSONAL_SPACE) continue;
 
-            positions_to_avoid.push_back(other_enemy.position);
+            float strength = 1.0f - (distance / PERSONAL_SPACE);
+
+            separation += Vector2Normalize(direction_from_other) * strength;
         }
 
-        const Vector2 average_neighbor_position =
-            std::accumulate(positions_to_avoid.begin(), positions_to_avoid.end(), Vector2{.x = 0, .y = 0},
-                            [](Vector2 sum, const Vector2& position) {
-                                sum.x += position.x;
-                                sum.y += position.y;
-                                return sum;
-                            }) /
-            (float)positions_to_avoid.size();
-
-        Vector2 separation_velocity =
-            Vector2Normalize(enemy.position - average_neighbor_position) * SEPARATION_STRENGTH;
-
-        Vector2 velocity = seek + separation_velocity;
+        Vector2 velocity = Vector2Normalize(seek + separation) * enemy.speed;
         enemy.position += velocity * delta_time;
     }
 }
