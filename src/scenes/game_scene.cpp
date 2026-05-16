@@ -45,7 +45,7 @@ void Draw(const GameState& state) {
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
+        const float radius = enemy.ref.size * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
         DrawCircle(enemy.ref.position.x, enemy.ref.position.y, radius, RED);
         DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = radius + 20}, enemy.ref.health);
     }
@@ -89,7 +89,7 @@ void Draw(const GameState& state) {
 void UpdateInputs(GameState& state) {
     for (const Input& input : state.inputs) {
         switch (input) {
-            case Input::FireWeapon: {
+            case Input::LeftMouse: {
                 if (state.player.time_since_last_shot < TIME_BETWEEN_SHOTS) break;
                 std::cout << state.player.time_since_last_shot << std::endl;
 
@@ -101,7 +101,7 @@ void UpdateInputs(GameState& state) {
                 state.player.time_since_last_shot = 0;
                 break;
             }
-            case Input::DropTower: {
+            case Input::RightMouse: {
                 if (state.currency < TOWER_COST) break;
 
                 const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);

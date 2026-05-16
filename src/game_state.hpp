@@ -14,8 +14,8 @@
 struct Targetable;
 
 enum class Input {
-    FireWeapon,
-    DropTower,
+    LeftMouse,
+    RightMouse,
 };
 
 const int STARTING_CURRENCY = 1000;

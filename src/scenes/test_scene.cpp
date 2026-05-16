@@ -1,4 +1,5 @@
 #include "scenes/test_scene.hpp"
+#include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -10,8 +11,13 @@
 
 #include "raymath.h"
 #include "systems/tower_system.hpp"
+#include <format>
+#include <numeric>
 
 namespace {
+static float PERSONAL_SPACE = 50;
+static float SEPARATION_STRENGTH = 75;
+
 void Init(GameState& state) {
     Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                      .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
@@ -22,6 +28,9 @@ void Init(GameState& state) {
 void Draw(const GameState& state) {
     ClearBackground(WHITE);
 
+    DrawText(std::format("Personal space: {}", PERSONAL_SPACE).c_str(), 20, 50, 12, BLACK);
+    DrawText(std::format("Separation strength: {}", SEPARATION_STRENGTH).c_str(), 20, 80, 12, BLACK);
+
     BeginMode2D(state.camera);
 
     DrawRectangle(state.player.position.x - PLAYER_SIZE / 2, state.player.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
@@ -30,7 +39,7 @@ void Draw(const GameState& state) {
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
+        const float radius = enemy.ref.size * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
         DrawCircle(enemy.ref.position.x, enemy.ref.position.y, radius, RED);
     }
 
@@ -38,11 +47,70 @@ void Draw(const GameState& state) {
 }
 
 void Update(GameState& state) {
+    if (IsKeyDown(KEY_F5) && PERSONAL_SPACE > 0) PERSONAL_SPACE -= 1;
+    if (IsKeyDown(KEY_F6)) PERSONAL_SPACE += 1;
+    if (IsKeyDown(KEY_F7) && SEPARATION_STRENGTH > 0) SEPARATION_STRENGTH -= 1;
+    if (IsKeyDown(KEY_F8)) SEPARATION_STRENGTH += 1;
+
     const float delta_time = GetFrameTime();
     Vector2 velocity = Vector2Normalize(state.player.direction) * PLAYER_SPEED * delta_time;
     state.player.position += velocity;
 
     state.camera.target = {state.player.position};
+
+    for (Input input : state.inputs) {
+        switch (input) {
+            case Input::LeftMouse: {
+                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
+                Enemy new_enemy{};
+                new_enemy.position = destination;
+                CreateEntity(state.enemies, new_enemy);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    state.inputs.clear();
+
+    for (size_t i = 0; i < state.enemies.data.size(); i++) {
+        Slot<Enemy>& slot = state.enemies.data[i];
+        if (!slot.alive) continue;
+
+        Enemy& enemy = slot.ref;
+
+        Vector2 seek = Vector2Normalize(state.player.position - enemy.position) * enemy.speed;
+
+        std::vector<Vector2> positions_to_avoid = {};
+        for (size_t j = 0; j < state.enemies.data.size(); j++) {
+            Slot<Enemy>& other_slot = state.enemies.data[j];
+
+            if (!other_slot.alive || i == j) continue;
+            const Enemy& other_enemy = other_slot.ref;
+
+            const float distance_to_other = Vector2Distance(enemy.position, other_enemy.position);
+
+            if (distance_to_other > PERSONAL_SPACE) continue;
+
+            positions_to_avoid.push_back(other_enemy.position);
+        }
+
+        const Vector2 average_neighbor_position =
+            std::accumulate(positions_to_avoid.begin(), positions_to_avoid.end(), Vector2{.x = 0, .y = 0},
+                            [](Vector2 sum, const Vector2& position) {
+                                sum.x += position.x;
+                                sum.y += position.y;
+                                return sum;
+                            }) /
+            (float)positions_to_avoid.size();
+
+        Vector2 separation_velocity =
+            Vector2Normalize(enemy.position - average_neighbor_position) * SEPARATION_STRENGTH;
+
+        Vector2 velocity = seek + separation_velocity;
+        enemy.position += velocity * delta_time;
+    }
 }
 
 void Destroy(GameState& state) {

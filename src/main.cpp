@@ -21,8 +21,8 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_W)) { player_direction.y -= 1; }
     if (IsKeyDown(KEY_S)) { player_direction.y += 1; }
 
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::FireWeapon); }
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::DropTower); }
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::LeftMouse); }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::RightMouse); }
 
     state.player.direction = player_direction;
 }

@@ -10,7 +10,7 @@ void Update(Enemy& enemy, GameState& state) {
     const float delta_time = GetFrameTime();
 
     enemy.time_since_last_attack += delta_time;
-    const float radius = ENEMY_SIZE * ((float)enemy.health.max / (float)BASE_ENEMY_HEALTH);
+    const float radius = enemy.range * ((float)enemy.health.max / (float)BASE_ENEMY_HEALTH);
 
     Targetable target = find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
 
@@ -31,7 +31,7 @@ void Update(Enemy& enemy, GameState& state) {
     }
 
     // TODO: Fix enemy converging
-    if (Vector2Distance(target_position, enemy.position) <= radius * 2 + ENEMY_ATTACK_RANGE) {
+    if (Vector2Distance(target_position, enemy.position) <= radius * 2 + enemy.range) {
         // If in range -> stand still and attack
         enemy.velocity = {.x = 0, .y = 0};
 
@@ -41,7 +41,7 @@ void Update(Enemy& enemy, GameState& state) {
         }
     } else {
         // Else -> move closer
-        enemy.velocity = Vector2Normalize(target_position - enemy.position) * ENEMY_SPEED;
+        enemy.velocity = Vector2Normalize(target_position - enemy.position) * enemy.speed;
         enemy.position += enemy.velocity * delta_time;
     }
 }

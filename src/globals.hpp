@@ -9,9 +9,6 @@ const int PLAYER_SPEED = 200;
 const int PLAYER_SIZE = 50;
 
 const int BASE_ENEMY_HEALTH = 3;
-const int ENEMY_SPEED = 100;
-const int ENEMY_SIZE = 20;
-const int ENEMY_ATTACK_RANGE = 5;
 
 const int SPAWNER_SIZE = 100;
 

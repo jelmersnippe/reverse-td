@@ -28,7 +28,7 @@ bool Update(Projectile& projectile, GameState& state) {
         // to fully pass through an enemy in a frame, thus the point would not be in the circle ever
         // TODO: This only checks center point of projectile. Should also check radius. So cylender/rectangle for
         // path
-        const float radius = ENEMY_SIZE * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
+        const float radius = enemy.ref.size * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
         hit = CheckCollisionCircleLine(enemy.ref.position, radius, old_position, projectile.position);
 
         if (!hit) continue;
