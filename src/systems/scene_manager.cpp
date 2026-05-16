@@ -2,6 +2,11 @@
 #include "raylib.h"
 #include <cassert>
 
+void SceneManager::SwapScene(GameState& state, const Scene& scene) {
+    PopScene(state);
+    PushScene(state, scene);
+}
+
 void SceneManager::PushScene(GameState& state, const Scene& scene) {
     scenes.push(scene);
 
@@ -26,6 +31,8 @@ void SceneManager::Update(GameState& state) {
 
     BeginDrawing();
 
+    DrawText(current_scene.name.c_str(), 5, 5, 12, BLACK);
+
     if (current_scene.draw != nullptr) current_scene.draw(state);
 
     EndDrawing();
@@ -37,6 +44,4 @@ void SceneManager::Dispose(GameState& state) {
     }
 }
 
-SceneManager SCENE_MANAGER = {
-
-};
+SceneManager SCENE_MANAGER = {};

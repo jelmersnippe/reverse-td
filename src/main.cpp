@@ -2,6 +2,7 @@
 #include "game_state.hpp"
 #include "raylib.h"
 #include "scenes/game_scene.hpp"
+#include "scenes/test_scene.hpp"
 #include "systems/scene_manager.hpp"
 #include "systems/targeting.hpp"
 
@@ -13,6 +14,7 @@
 
 void HandleInput(GameState& state) {
     Vector2 player_direction = {.x = 0, .y = 0};
+    if (IsKeyDown(KEY_F1)) { SCENE_MANAGER.SwapScene(state, TEST_SCENE); }
 
     if (IsKeyDown(KEY_A)) { player_direction.x -= 1; }
     if (IsKeyDown(KEY_D)) { player_direction.x += 1; }
@@ -27,28 +29,10 @@ void HandleInput(GameState& state) {
 
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
+    SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
 
-    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
-                     .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
-    GameState state = {.player = player};
-
-    state.camera.target = {player.position};
-    state.camera.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
-    state.camera.rotation = 0.0f;
-    state.camera.zoom = 1.0f;
-
-    SetTargetFPS(TARGET_FPS);
-
-    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200},
-                                  .health = {.max = 20, .current = 20},
-                                  .spawn_amount = 2,
-                                  .initial_spawn = 2});
-    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
-    CreateEntity(state.spawners,
-                 {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
-    CreateEntity(state.spawners,
-                 {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
+    GameState state = {};
 
     SCENE_MANAGER.PushScene(state, GAME_SCENE);
 

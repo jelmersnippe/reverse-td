@@ -21,6 +21,11 @@ template <typename T> struct Slot {
 template <typename T> struct EntityPool {
     std::vector<Slot<T>> data;
     std::vector<uint32_t> free_indices;
+
+    void clear() {
+        data.clear();
+        free_indices.clear();
+    }
 };
 
 template <typename T> EntityHandle CreateEntity(EntityPool<T>& pool, T entity) {

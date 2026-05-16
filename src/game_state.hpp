@@ -1,5 +1,6 @@
 #pragma once
 
+#include "globals.hpp"
 #include "raylib.h"
 
 #include "core/entity_pool.hpp"
@@ -17,6 +18,9 @@ enum class Input {
     DropTower,
 };
 
+const int STARTING_CURRENCY = 1000;
+const float STARTING_DIFFICULTY = 1;
+
 struct GameState {
     bool should_exit = false;
 
@@ -27,10 +31,26 @@ struct GameState {
     EntityPool<Enemy> enemies = {};
     EntityPool<Tower> towers = {};
 
-    float difficulty_scale = 1;
-    Camera2D camera = {};
+    float difficulty_scale = STARTING_DIFFICULTY;
+    Camera2D camera = {.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
+                       .target = {.x = 0, .y = 0},
+                       .rotation = 0.0f,
+                       .zoom = 1.0f};
 
-    int currency = 1000;
+    int currency = STARTING_CURRENCY;
+
+    void Reset() {
+        player = {};
+        inputs.clear();
+        spawners.clear();
+        enemies.clear();
+        towers.clear();
+        projectiles.clear();
+        difficulty_scale = STARTING_DIFFICULTY;
+        currency = STARTING_CURRENCY;
+
+        camera.target = {.x = 0, .y = 0};
+    }
 };
 
 void apply_damage(GameState& state, Targetable& target, int amount);

@@ -15,6 +15,8 @@ struct Scene {
 struct SceneManager {
     std::stack<Scene> scenes;
 
+    void SwapScene(GameState& state, const Scene& scene);
+
     void PushScene(GameState& state, const Scene& scene);
 
     void PopScene(GameState& state);

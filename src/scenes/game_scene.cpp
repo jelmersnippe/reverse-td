@@ -1,4 +1,5 @@
 #include "scenes/game_scene.hpp"
+#include "game_state.hpp"
 #include "globals.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/projectile_system.hpp"
@@ -11,6 +12,8 @@
 #include <algorithm>
 #include <format>
 #include <iostream>
+
+namespace {
 
 void DrawHealth(const Vector2& position, const Health& health) {
     if (health.current >= health.max) return;
@@ -171,4 +174,27 @@ void Update(GameState& state) {
     if (state.player.health.current <= 0) { state.should_exit = true; }
 }
 
-const Scene GAME_SCENE = {.name = "Game", .init = nullptr, .update = Update, .draw = Draw, .destroy = nullptr};
+void Destroy(GameState& state) {
+    state.Reset();
+}
+
+void Init(GameState& state) {
+    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
+                     .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+    state.player = player;
+    state.camera.target = {player.position};
+
+    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200},
+                                  .health = {.max = 20, .current = 20},
+                                  .spawn_amount = 2,
+                                  .initial_spawn = 2});
+    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
+    CreateEntity(state.spawners,
+                 {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
+    CreateEntity(state.spawners,
+                 {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
+}
+
+} // namespace
+
+const Scene GAME_SCENE = {.name = "Game", .init = Init, .update = Update, .draw = Draw, .destroy = Destroy};
