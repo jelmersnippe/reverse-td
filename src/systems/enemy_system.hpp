@@ -2,6 +2,6 @@
 
 struct GameState;
 
-static float PERSONAL_SPACE = 50;
+inline float PERSONAL_SPACE = 50;
 
 void UpdateEnemies(GameState& state);
