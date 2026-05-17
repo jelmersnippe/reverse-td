@@ -1,5 +1,6 @@
 #include "scenes/test_scene.hpp"
 #include "core/entity_pool.hpp"
+#include "entities/enemy.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -14,8 +15,6 @@
 #include <format>
 
 namespace {
-static float PERSONAL_SPACE = 50;
-
 void Init(GameState& state) {
     Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                      .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
@@ -59,6 +58,8 @@ void Update(GameState& state) {
                 const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
                 Enemy new_enemy{};
                 new_enemy.position = destination;
+                new_enemy.seek_behavior = SeekBehavior::Separation;
+                new_enemy.attack_behavior = AttackBehavior::None;
                 CreateEntity(state.enemies, new_enemy);
                 break;
             }
@@ -69,31 +70,7 @@ void Update(GameState& state) {
 
     state.inputs.clear();
 
-    for (Slot<Enemy>& slot : state.enemies.data) {
-        if (!slot.alive) continue;
-
-        Enemy& enemy = slot.ref;
-
-        Vector2 seek = Vector2Normalize(state.player.position - enemy.position);
-
-        Vector2 separation{};
-        for (Slot<Enemy>& other_slot : state.enemies.data) {
-            if (!other_slot.alive) continue;
-            const Enemy& other_enemy = other_slot.ref;
-
-            const Vector2 direction_from_other = enemy.position - other_enemy.position;
-            float distance = Vector2Length(direction_from_other);
-
-            if (distance < 0.001f || distance > PERSONAL_SPACE) continue;
-
-            float strength = 1.0f - (distance / PERSONAL_SPACE);
-
-            separation += Vector2Normalize(direction_from_other) * strength;
-        }
-
-        Vector2 velocity = Vector2Normalize(seek + separation) * enemy.speed;
-        enemy.position += velocity * delta_time;
-    }
+    UpdateEnemies(state);
 }
 
 void Destroy(GameState& state) {

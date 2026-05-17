@@ -4,9 +4,23 @@
 #include "raylib.h"
 
 #include "core/health.hpp"
+#include <cstdint>
+
+enum class SeekBehavior : uint32_t {
+    SimpleFollow,
+    Separation,
+    Count
+};
+
+enum class AttackBehavior : uint32_t {
+    None,
+    Melee,
+    Count
+};
 
 struct Enemy {
-    Vector2 velocity = {};
+    SeekBehavior seek_behavior = SeekBehavior::SimpleFollow;
+    AttackBehavior attack_behavior = AttackBehavior::Melee;
     Vector2 position = {};
     Health health = Health{.max = BASE_ENEMY_HEALTH, .current = BASE_ENEMY_HEALTH};
 
