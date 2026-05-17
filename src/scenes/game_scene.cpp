@@ -1,6 +1,7 @@
 #include "scenes/game_scene.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "raylib.h"
 #include "systems/enemy_system.hpp"
 #include "systems/projectile_system.hpp"
 #include "systems/scene_manager.hpp"
@@ -127,6 +128,15 @@ void UpdateInputs(GameState& state) {
                                                    .y = spawner_ref.ref.position.y - SPAWNER_SIZE / 2,
                                                    .width = SPAWNER_SIZE,
                                                    .height = SPAWNER_SIZE});
+                    })) {
+                    break;
+                }
+                if (std::ranges::any_of(state.enemies.data, [destination](const Slot<Enemy>& enemy_ref) {
+                        return enemy_ref.alive &&
+                               CheckCollisionPointRec(enemy_ref.ref.position, {.x = destination.x - TOWER_SIZE / 2,
+                                                                               .y = destination.y - TOWER_SIZE / 2,
+                                                                               .width = TOWER_SIZE,
+                                                                               .height = TOWER_SIZE});
                     })) {
                     break;
                 }
