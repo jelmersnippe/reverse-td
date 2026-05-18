@@ -41,9 +41,10 @@ Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& sta
         const Vector2 direction_from_other = enemy.position - other_enemy.position;
         float distance = Vector2Length(direction_from_other);
 
-        if (distance < 0.001f || distance > (enemy.size + PERSONAL_SPACE)) continue;
+        const float personal_space_center_to_center = enemy.size + other_enemy.size + PERSONAL_SPACE;
+        if (distance < 0.001f || distance > personal_space_center_to_center) continue;
 
-        float strength = 1.0f - (distance / (enemy.size + PERSONAL_SPACE));
+        float strength = 1.0f - (distance / personal_space_center_to_center);
 
         separation += Vector2Normalize(direction_from_other) * strength;
     }
