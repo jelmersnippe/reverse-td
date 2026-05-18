@@ -4,6 +4,7 @@
 #include "globals.hpp"
 #include "raymath.h"
 #include "systems/targeting.hpp"
+#include <iostream>
 
 void Update(Tower& tower, GameState& state) {
     const float delta_time = GetFrameTime();
@@ -48,4 +49,10 @@ void UpdateTowers(GameState& state) {
 
         Update(tower.ref, state);
     }
+}
+
+int GetScrapValue(const Tower& tower) {
+    const float default_scrap_value = (TOWER_COST * 0.9);
+    const float modifier = (float)tower.health.current / (float)tower.health.max;
+    return default_scrap_value * modifier;
 }

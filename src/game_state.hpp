@@ -16,6 +16,7 @@ struct Targetable;
 enum class Input {
     LeftMouse,
     RightMouse,
+    X,
 };
 
 const int STARTING_CURRENCY = 1000;

@@ -1,4 +1,5 @@
 #include "scenes/game_scene.hpp"
+#include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -29,6 +30,8 @@ void DrawHealth(const Vector2& position, const Health& health) {
 
 void Draw(const GameState& state) {
     ClearBackground(WHITE);
+
+    const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), state.camera);
 
     BeginMode2D(state.camera);
 
@@ -73,6 +76,15 @@ void Draw(const GameState& state) {
         const int text_width = MeasureText("Tower", 12);
         DrawText("Tower", tower.ref.position.x - text_width / 2, tower.ref.position.y, 12, BLACK);
 
+        const bool is_hovered = CheckCollisionPointRec(
+            mouse_position, {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
+        if (is_hovered && Vector2Distance(state.player.position, tower.ref.position) < PLAYER_RANGE) {
+            std::string scrap_text = std::format("[x] Scrap for: {}", GetScrapValue(tower.ref));
+            int scrap_text_width = MeasureText(scrap_text.c_str(), 12);
+            DrawText(scrap_text.c_str(), tower.ref.position.x - scrap_text_width / 2, tower.ref.position.y + 10, 12,
+                     BLACK);
+        }
+
         DrawHealth(tower.ref.position - Vector2{.x = 0, .y = TOWER_SIZE / 2 + 10}, tower.ref.health);
     }
 
@@ -88,6 +100,7 @@ void Draw(const GameState& state) {
 }
 
 void UpdateInputs(GameState& state) {
+    const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), state.camera);
     for (const Input& input : state.inputs) {
         switch (input) {
             case Input::LeftMouse: {
@@ -102,13 +115,31 @@ void UpdateInputs(GameState& state) {
                 state.player.time_since_last_shot = 0;
                 break;
             }
+            case Input::X: {
+                for (size_t i = 0; i < state.towers.data.size(); i++) {
+                    Slot<Tower>& slot = state.towers.data[i];
+                    if (!slot.alive) continue;
+
+                    const bool is_hovered =
+                        CheckCollisionPointRec(mouse_position, {.x = slot.ref.position.x - TOWER_SIZE / 2,
+                                                                .y = slot.ref.position.y - TOWER_SIZE / 2,
+                                                                .width = TOWER_SIZE,
+                                                                .height = TOWER_SIZE});
+
+                    if (!is_hovered || Vector2Distance(state.player.position, slot.ref.position) > PLAYER_RANGE)
+                        continue;
+
+                    DestroyEntity(state.towers, EntityHandle{.index = i, .generation = slot.generation});
+                    state.currency += GetScrapValue(slot.ref);
+                }
+                break;
+            }
             case Input::RightMouse: {
                 if (state.currency < TOWER_COST) break;
 
-                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
-                if (std::ranges::any_of(state.towers.data, [destination](const Slot<Tower>& tower_ref) {
-                        return tower_ref.alive && CheckCollisionRecs({.x = destination.x - TOWER_SIZE / 2,
-                                                                      .y = destination.y - TOWER_SIZE / 2,
+                if (std::ranges::any_of(state.towers.data, [mouse_position](const Slot<Tower>& tower_ref) {
+                        return tower_ref.alive && CheckCollisionRecs({.x = mouse_position.x - TOWER_SIZE / 2,
+                                                                      .y = mouse_position.y - TOWER_SIZE / 2,
                                                                       .width = TOWER_SIZE,
                                                                       .height = TOWER_SIZE},
                                                                      {.x = tower_ref.ref.position.x - TOWER_SIZE / 2,
@@ -118,10 +149,10 @@ void UpdateInputs(GameState& state) {
                     })) {
                     break;
                 }
-                if (std::ranges::any_of(state.spawners.data, [destination](const Slot<Spawner>& spawner_ref) {
+                if (std::ranges::any_of(state.spawners.data, [mouse_position](const Slot<Spawner>& spawner_ref) {
                         return spawner_ref.alive &&
-                               CheckCollisionRecs({.x = destination.x - TOWER_SIZE / 2,
-                                                   .y = destination.y - TOWER_SIZE / 2,
+                               CheckCollisionRecs({.x = mouse_position.x - TOWER_SIZE / 2,
+                                                   .y = mouse_position.y - TOWER_SIZE / 2,
                                                    .width = TOWER_SIZE,
                                                    .height = TOWER_SIZE},
                                                   {.x = spawner_ref.ref.position.x - SPAWNER_SIZE / 2,
@@ -131,17 +162,18 @@ void UpdateInputs(GameState& state) {
                     })) {
                     break;
                 }
-                if (std::ranges::any_of(state.enemies.data, [destination](const Slot<Enemy>& enemy_ref) {
+                if (std::ranges::any_of(state.enemies.data, [mouse_position](const Slot<Enemy>& enemy_ref) {
                         return enemy_ref.alive &&
-                               CheckCollisionPointRec(enemy_ref.ref.position, {.x = destination.x - TOWER_SIZE / 2,
-                                                                               .y = destination.y - TOWER_SIZE / 2,
+                               CheckCollisionPointRec(enemy_ref.ref.position, {.x = mouse_position.x - TOWER_SIZE / 2,
+                                                                               .y = mouse_position.y - TOWER_SIZE / 2,
                                                                                .width = TOWER_SIZE,
                                                                                .height = TOWER_SIZE});
                     })) {
                     break;
                 }
 
-                CreateEntity(state.towers, {.position = destination, .health = {.max = 5, .current = 5}});
+                CreateEntity(state.towers,
+                             {.position = mouse_position, .health = {.max = TOWER_HEALTH, .current = TOWER_HEALTH}});
                 state.currency -= TOWER_COST;
                 break;
             }

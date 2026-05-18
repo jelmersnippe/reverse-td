@@ -20,3 +20,6 @@ const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;
 
 const int TOWER_SIZE = 100;
 const int TOWER_COST = 10;
+const int TOWER_HEALTH = 10;
+
+const int PLAYER_RANGE = 300;
