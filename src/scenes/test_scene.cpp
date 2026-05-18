@@ -16,8 +16,7 @@
 
 namespace {
 void Init(GameState& state) {
-    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
-                     .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
     state.player = player;
     state.camera.target = {player.position};
 }

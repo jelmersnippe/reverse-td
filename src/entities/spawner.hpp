@@ -6,7 +6,7 @@
 
 struct Spawner {
     Vector2 position = {};
-    Health health = {};
+    Health health = Health(500);
     float spawn_cooldown = 10;
     int spawn_amount = 1;
     int initial_spawn = 3;

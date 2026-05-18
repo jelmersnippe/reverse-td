@@ -74,13 +74,30 @@ bool attack_melee(Enemy& enemy, Target& target, GameState& state) {
     return true;
 }
 
+bool attack_ranged(Enemy& enemy, Target& target, GameState& state) {
+    // Out of range -> keep moving
+    if (Vector2Distance(target.position, enemy.position) > enemy.size * 2 + enemy.range) return false;
+
+    // Cooldown -> Don't move but also don't attack
+    if (enemy.time_since_last_attack < enemy.attack_cooldown) return true;
+
+    CreateEntity(state.projectiles, Projectile{.velocity = Vector2Normalize(target.position - enemy.position) * 600,
+                                               .position = enemy.position,
+                                               .life_time = 2.0,
+                                               .damage = enemy.damage,
+                                               .flags = TARGET_PLAYER | TARGET_TOWER});
+    enemy.time_since_last_attack = 0;
+
+    return true;
+}
+
 using SeekBehaviorFn = Vector2 (*)(Enemy&, Target&, GameState&);
 constexpr std::array<SeekBehaviorFn, static_cast<size_t>(SeekBehavior::Count)> seek_behavior_table = {
     get_simple_follow_velocity, get_separation_velocity};
 
 using AttackBehaviorFn = bool (*)(Enemy&, Target&, GameState& state);
 constexpr std::array<AttackBehaviorFn, static_cast<size_t>(AttackBehavior::Count)> attack_behavior_table = {
-    nullptr, attack_melee};
+    nullptr, attack_melee, attack_ranged};
 
 void UpdateEnemies(GameState& state) {
     for (Slot<Enemy>& slot : state.enemies.data) {

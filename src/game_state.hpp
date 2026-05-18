@@ -17,6 +17,10 @@ enum class Input {
     LeftMouse,
     RightMouse,
     X,
+    One,
+    Two,
+    Three,
+    Four
 };
 
 const int STARTING_CURRENCY = 1000;
@@ -41,7 +45,6 @@ struct GameState {
     int currency = STARTING_CURRENCY;
 
     void Reset() {
-        player = {};
         inputs.clear();
         spawners.clear();
         enemies.clear();

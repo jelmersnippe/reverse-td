@@ -1,4 +1,3 @@
-#include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "raylib.h"
 #include "scenes/game_scene.hpp"
@@ -21,6 +20,11 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_W)) { player_direction.y -= 1; }
     if (IsKeyDown(KEY_S)) { player_direction.y += 1; }
     if (IsKeyDown(KEY_X)) { state.inputs.push_back(Input::X); }
+
+    if (IsKeyDown(KEY_ONE)) { state.inputs.push_back(Input::One); }
+    if (IsKeyDown(KEY_TWO)) { state.inputs.push_back(Input::Two); }
+    if (IsKeyDown(KEY_THREE)) { state.inputs.push_back(Input::Three); }
+    if (IsKeyDown(KEY_FOUR)) { state.inputs.push_back(Input::Four); }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::LeftMouse); }
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::RightMouse); }

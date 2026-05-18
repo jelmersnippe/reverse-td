@@ -4,7 +4,7 @@ const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
 const int TARGET_FPS = 60;
 
-const int PLAYER_STARTING_HEALTH = 10;
+const int PLAYER_STARTING_HEALTH = 100;
 const int PLAYER_SPEED = 200;
 const int PLAYER_SIZE = 50;
 

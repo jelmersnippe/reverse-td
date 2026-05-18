@@ -49,9 +49,8 @@ void Draw(const GameState& state) {
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        const float radius = enemy.ref.size * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
-        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, radius, RED);
-        DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = radius + 20}, enemy.ref.health);
+        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, RED);
+        DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
     }
 
     for (const Slot<Spawner>& spawner : state.spawners.data) {
@@ -109,9 +108,11 @@ void UpdateInputs(GameState& state) {
 
                 const Vector2 direction =
                     Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), state.player.position);
-                CreateEntity(state.projectiles, {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
-                                                 .position = state.player.position,
-                                                 .life_time = 2.0});
+                CreateEntity(state.projectiles, Projectile{.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
+                                                           .position = state.player.position,
+                                                           .life_time = 2.0,
+                                                           .damage = state.player.damage,
+                                                           .flags = TARGET_SPAWNER | TARGET_ENEMY});
                 state.player.time_since_last_shot = 0;
                 break;
             }
@@ -172,8 +173,7 @@ void UpdateInputs(GameState& state) {
                     break;
                 }
 
-                CreateEntity(state.towers,
-                             {.position = mouse_position, .health = {.max = TOWER_HEALTH, .current = TOWER_HEALTH}});
+                CreateEntity(state.towers, {.position = mouse_position});
                 state.currency -= TOWER_COST;
                 break;
             }
@@ -221,20 +221,14 @@ void Destroy(GameState& state) {
 }
 
 void Init(GameState& state) {
-    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
-                     .health = {.max = PLAYER_STARTING_HEALTH, .current = PLAYER_STARTING_HEALTH}};
+    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
     state.player = player;
     state.camera.target = {player.position};
 
-    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200},
-                                  .health = {.max = 20, .current = 20},
-                                  .spawn_amount = 2,
-                                  .initial_spawn = 2});
-    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}, .health = {.max = 20, .current = 20}});
-    CreateEntity(state.spawners,
-                 {.position = {.x = 600, .y = 800}, .health = {.max = 20, .current = 20}, .initial_spawn = 2});
-    CreateEntity(state.spawners,
-                 {.position = {.x = 0, .y = 1200}, .health = {.max = 20, .current = 20}, .initial_spawn = 1});
+    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200}, .spawn_amount = 2, .initial_spawn = 2});
+    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}});
+    CreateEntity(state.spawners, {.position = {.x = 600, .y = 800}, .initial_spawn = 2});
+    CreateEntity(state.spawners, {.position = {.x = 0, .y = 1200}, .initial_spawn = 1});
 }
 
 } // namespace
