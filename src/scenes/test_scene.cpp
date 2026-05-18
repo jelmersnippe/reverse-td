@@ -34,8 +34,13 @@ void Draw(const GameState& state) {
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        const float radius = enemy.ref.size * ((float)enemy.ref.health.max / (float)BASE_ENEMY_HEALTH);
-        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, radius, RED);
+        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
+    }
+
+    for (const Slot<Projectile>& projectile : state.projectiles.data) {
+        if (!projectile.alive) continue;
+
+        DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, RED);
     }
 
     EndMode2D();
@@ -51,14 +56,35 @@ void Update(GameState& state) {
 
     state.camera.target = {state.player.position};
 
+    const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
+
     for (Input input : state.inputs) {
         switch (input) {
-            case Input::LeftMouse: {
-                const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
-                Enemy new_enemy{};
+            case Input::One: {
+                Enemy new_enemy = melee_enemy;
                 new_enemy.position = destination;
-                new_enemy.seek_behavior = SeekBehavior::Separation;
-                new_enemy.attack_behavior = AttackBehavior::None;
+                new_enemy.damage = 0;
+                CreateEntity(state.enemies, new_enemy);
+                break;
+            }
+            case Input::Two: {
+                Enemy new_enemy = fast_enemy;
+                new_enemy.position = destination;
+                new_enemy.damage = 0;
+                CreateEntity(state.enemies, new_enemy);
+                break;
+            }
+            case Input::Three: {
+                Enemy new_enemy = ranged_enemy;
+                new_enemy.position = destination;
+                new_enemy.damage = 0;
+                CreateEntity(state.enemies, new_enemy);
+                break;
+            }
+            case Input::Four: {
+                Enemy new_enemy = tank_enemy;
+                new_enemy.position = destination;
+                new_enemy.damage = 0;
                 CreateEntity(state.enemies, new_enemy);
                 break;
             }
@@ -70,6 +96,7 @@ void Update(GameState& state) {
     state.inputs.clear();
 
     UpdateEnemies(state);
+    UpdateProjectiles(state);
 }
 
 void Destroy(GameState& state) {

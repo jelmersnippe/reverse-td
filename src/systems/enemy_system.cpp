@@ -8,12 +8,7 @@
 #include "raymath.h"
 #include "systems/targeting.hpp"
 
-struct Target {
-    Vector2 position;
-    Targetable target;
-};
-
-Target get_target(Enemy& enemy, GameState& state) {
+Targetable get_target(Enemy& enemy, GameState& state) {
     Targetable target = find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
 
     Vector2 target_position = enemy.position;
@@ -32,10 +27,10 @@ Target get_target(Enemy& enemy, GameState& state) {
             break;
     }
 
-    return {.position = target_position, .target = target};
+    return target;
 }
 
-Vector2 get_separation_velocity(Enemy& enemy, Target& target, GameState& state) {
+Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& state) {
     Vector2 seek = Vector2Normalize(target.position - enemy.position);
 
     Vector2 separation{};
@@ -46,9 +41,9 @@ Vector2 get_separation_velocity(Enemy& enemy, Target& target, GameState& state) 
         const Vector2 direction_from_other = enemy.position - other_enemy.position;
         float distance = Vector2Length(direction_from_other);
 
-        if (distance < 0.001f || distance > PERSONAL_SPACE) continue;
+        if (distance < 0.001f || distance > (enemy.size + PERSONAL_SPACE)) continue;
 
-        float strength = 1.0f - (distance / PERSONAL_SPACE);
+        float strength = 1.0f - (distance / (enemy.size + PERSONAL_SPACE));
 
         separation += Vector2Normalize(direction_from_other) * strength;
     }
@@ -56,25 +51,25 @@ Vector2 get_separation_velocity(Enemy& enemy, Target& target, GameState& state) 
     return Vector2Normalize(seek + separation) * enemy.speed;
 }
 
-Vector2 get_simple_follow_velocity(Enemy& enemy, Target& target, GameState& state) {
+Vector2 get_simple_follow_velocity(Enemy& enemy, Targetable& target, GameState& state) {
     return Vector2Normalize(target.position - enemy.position) * enemy.speed;
 }
 
 // TODO: Switch this to state machine. Bool now says if has attacked = don't move
-bool attack_melee(Enemy& enemy, Target& target, GameState& state) {
+bool attack_melee(Enemy& enemy, Targetable& target, GameState& state) {
     // Out of range -> keep moving
     if (Vector2Distance(target.position, enemy.position) > enemy.size * 2 + enemy.range) return false;
 
     // Cooldown -> Don't move but also don't attack
     if (enemy.time_since_last_attack < enemy.attack_cooldown) return true;
 
-    apply_damage(state, target.target, enemy.damage);
+    apply_damage(state, target, enemy.damage);
     enemy.time_since_last_attack = 0;
 
     return true;
 }
 
-bool attack_ranged(Enemy& enemy, Target& target, GameState& state) {
+bool attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
     // Out of range -> keep moving
     if (Vector2Distance(target.position, enemy.position) > enemy.size * 2 + enemy.range) return false;
 
@@ -91,11 +86,11 @@ bool attack_ranged(Enemy& enemy, Target& target, GameState& state) {
     return true;
 }
 
-using SeekBehaviorFn = Vector2 (*)(Enemy&, Target&, GameState&);
+using SeekBehaviorFn = Vector2 (*)(Enemy&, Targetable&, GameState&);
 constexpr std::array<SeekBehaviorFn, static_cast<size_t>(SeekBehavior::Count)> seek_behavior_table = {
     get_simple_follow_velocity, get_separation_velocity};
 
-using AttackBehaviorFn = bool (*)(Enemy&, Target&, GameState& state);
+using AttackBehaviorFn = bool (*)(Enemy&, Targetable&, GameState& state);
 constexpr std::array<AttackBehaviorFn, static_cast<size_t>(AttackBehavior::Count)> attack_behavior_table = {
     nullptr, attack_melee, attack_ranged};
 
@@ -109,7 +104,7 @@ void UpdateEnemies(GameState& state) {
 
         enemy.time_since_last_attack += delta_time;
 
-        Target target = get_target(enemy, state);
+        Targetable target = get_target(enemy, state);
 
         auto attack_behavior = attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
 

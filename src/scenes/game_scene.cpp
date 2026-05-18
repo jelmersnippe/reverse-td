@@ -49,7 +49,7 @@ void Draw(const GameState& state) {
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
 
-        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, RED);
+        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
         DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
     }
 
