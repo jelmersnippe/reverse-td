@@ -5,7 +5,9 @@
 #include "game_state.hpp"
 #include "raymath.h"
 
-void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty_scale) {
+void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const float difficulty_scale) {
+    Spawner& spawner = spawner_slot.ref;
+
     const float delta_time = GetFrameTime();
     spawner.time_since_last_spawn += delta_time;
 
@@ -13,6 +15,8 @@ void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty
         for (int i = 0; i < spawner.initial_spawn; i++) {
             Enemy new_enemy = melee_enemy;
             new_enemy.position = spawner.position;
+            new_enemy.home = spawner_slot.handle;
+            new_enemy.target_position = spawner.position;
             CreateEntity(enemies, new_enemy);
         }
 
@@ -27,6 +31,8 @@ void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty
     for (int i = 0; i < spawn_count; i++) {
         Enemy new_enemy = melee_enemy;
         new_enemy.position = spawner.position;
+        new_enemy.home = spawner_slot.handle;
+        new_enemy.target_position = spawner.position;
         CreateEntity(enemies, new_enemy);
     }
 
@@ -37,7 +43,7 @@ void UpdateSpawners(GameState& state) {
     for (Slot<Spawner>& spawner : state.spawners.data) {
         if (!spawner.alive) continue;
 
-        Update(spawner.ref, state.enemies, state.difficulty_scale);
+        Update(spawner, state.enemies, state.difficulty_scale);
     }
 }
 

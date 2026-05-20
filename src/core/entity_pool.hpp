@@ -1,21 +1,22 @@
 #pragma once
 
 #include <cstdint>
-#include <limits>
 #include <vector>
 
-const uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
+const uint32_t INVALID_INDEX = SIZE_MAX;
+const uint32_t INVALID_GENERATION = UINT32_MAX;
 struct EntityHandle {
     size_t index = INVALID_INDEX;
-    uint32_t generation = INVALID_INDEX;
+    uint32_t generation = INVALID_GENERATION;
 
-    bool IsValid() const { return index != INVALID_INDEX && generation != INVALID_INDEX; }
+    bool IsValid() const { return index != INVALID_INDEX && generation != INVALID_GENERATION; }
 };
 
 template <typename T> struct Slot {
     T ref;
     uint32_t generation;
     bool alive;
+    EntityHandle handle = {};
 };
 
 template <typename T> struct EntityPool {
@@ -29,23 +30,24 @@ template <typename T> struct EntityPool {
 };
 
 template <typename T> EntityHandle CreateEntity(EntityPool<T>& pool, T entity) {
-    uint32_t index = INVALID_INDEX;
-    uint32_t generation = INVALID_INDEX;
+    EntityHandle handle = {};
     if (!pool.free_indices.empty()) {
-        index = pool.free_indices.back();
+        handle.index = pool.free_indices.back();
         pool.free_indices.pop_back();
 
-        Slot<T>& slot = pool.data[index];
-        slot.ref = entity;
+        Slot<T>& slot = pool.data[handle.index];
+        slot.ref = std::move(entity);
         slot.alive = true;
-        generation = slot.generation;
+        handle.generation = slot.generation;
+        slot.handle = handle;
     } else {
-        index = pool.data.size();
-        generation = 0;
-        pool.data.push_back(Slot<T>{.ref = entity, .generation = 0, .alive = true});
+        handle.index = pool.data.size();
+        handle.generation = 0;
+        pool.data.push_back(
+            {.ref = std::move(entity), .generation = handle.generation, .alive = true, .handle = handle});
     }
 
-    return {.index = index, .generation = generation};
+    return handle;
 }
 
 template <typename T> void DestroyEntity(EntityPool<T>& pool, EntityHandle handle) {

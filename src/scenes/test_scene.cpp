@@ -70,6 +70,7 @@ void UpdateInputs(GameState& state) {
             case Input::One: {
                 Enemy new_enemy = melee_enemy;
                 new_enemy.position = destination;
+                new_enemy.target_position = destination;
                 new_enemy.damage = 0;
                 CreateEntity(state.enemies, new_enemy);
                 break;
@@ -77,6 +78,7 @@ void UpdateInputs(GameState& state) {
             case Input::Two: {
                 Enemy new_enemy = fast_enemy;
                 new_enemy.position = destination;
+                new_enemy.target_position = destination;
                 new_enemy.damage = 0;
                 CreateEntity(state.enemies, new_enemy);
                 break;
@@ -84,6 +86,7 @@ void UpdateInputs(GameState& state) {
             case Input::Three: {
                 Enemy new_enemy = ranged_enemy;
                 new_enemy.position = destination;
+                new_enemy.target_position = destination;
                 new_enemy.damage = 0;
                 CreateEntity(state.enemies, new_enemy);
                 break;
@@ -91,6 +94,7 @@ void UpdateInputs(GameState& state) {
             case Input::Four: {
                 Enemy new_enemy = tank_enemy;
                 new_enemy.position = destination;
+                new_enemy.target_position = destination;
                 new_enemy.damage = 0;
                 CreateEntity(state.enemies, new_enemy);
                 break;

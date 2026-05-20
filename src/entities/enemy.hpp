@@ -1,13 +1,17 @@
 #pragma once
 
+#include "core/entity_pool.hpp"
 #include "globals.hpp"
 #include "raylib.h"
 
 #include "core/health.hpp"
+#include "systems/targeting.hpp"
 #include <cstdint>
+#include <optional>
 
 enum class EnemyState : uint32_t {
     Wander,
+    Rally,
     Seek,
     Attack
 };
@@ -28,10 +32,17 @@ enum class AttackBehavior : uint32_t {
 struct Enemy {
     Color color = RED;
     EnemyState state = EnemyState::Wander;
+    EntityHandle home = {};
     SeekBehavior seek_behavior = SeekBehavior::SimpleFollow;
     AttackBehavior attack_behavior = AttackBehavior::Melee;
     Vector2 position = {};
+    // Used for wander+rally
+    Vector2 target_position = {};
+    // Used for seek + attack
+    std::optional<Targetable> target = std::nullopt;
     Health health = Health(BASE_ENEMY_HEALTH);
+
+    float remaining_idle_time = 0;
 
     float speed = 100;
     float range = 5;

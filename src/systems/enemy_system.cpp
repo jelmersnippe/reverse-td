@@ -9,7 +9,7 @@
 #include "systems/targeting.hpp"
 #include <optional>
 
-Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& state) {
+Vector2 get_separation_direction(Enemy& enemy, Targetable& target, GameState& state) {
     Vector2 seek = Vector2Normalize(target.position - enemy.position);
 
     Vector2 separation{};
@@ -28,33 +28,23 @@ Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& sta
         separation += Vector2Normalize(direction_from_other) * strength;
     }
 
-    return Vector2Normalize(seek + separation) * enemy.speed;
+    return Vector2Normalize(seek + separation);
 }
 
-Vector2 get_simple_follow_velocity(Enemy& enemy, Targetable& target, GameState& state) {
-    return Vector2Normalize(target.position - enemy.position) * enemy.speed;
+Vector2 get_simple_follow_direction(Enemy& enemy, Targetable& target, GameState& state) {
+    return Vector2Normalize(target.position - enemy.position);
 }
 
-// TODO: Switch this to state machine. Bool now says if has attacked = don't move
-bool attack_melee(Enemy& enemy, Targetable& target, GameState& state) {
+void attack_melee(Enemy& enemy, Targetable& target, GameState& state) {
     // Out of range -> keep moving
-    if (Vector2Distance(target.position, enemy.position) > enemy.size * 2 + enemy.range) return false;
-
-    // Cooldown -> Don't move but also don't attack
-    if (enemy.time_since_last_attack < enemy.attack_cooldown) return true;
+    if (enemy.time_since_last_attack < enemy.attack_cooldown) return;
 
     apply_damage(state, target, enemy.damage);
     enemy.time_since_last_attack = 0;
-
-    return true;
 }
 
-bool attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
-    // Out of range -> keep moving
-    if (Vector2Distance(target.position, enemy.position) > enemy.size * 2 + enemy.range) return false;
-
-    // Cooldown -> Don't move but also don't attack
-    if (enemy.time_since_last_attack < enemy.attack_cooldown) return true;
+void attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
+    if (enemy.time_since_last_attack < enemy.attack_cooldown) return;
 
     CreateEntity(state.projectiles, Projectile{.velocity = Vector2Normalize(target.position - enemy.position) * 600,
                                                .position = enemy.position,
@@ -62,15 +52,13 @@ bool attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
                                                .damage = enemy.damage,
                                                .flags = TARGET_PLAYER | TARGET_TOWER});
     enemy.time_since_last_attack = 0;
-
-    return true;
 }
 
 using SeekBehaviorFn = Vector2 (*)(Enemy&, Targetable&, GameState&);
 constexpr std::array<SeekBehaviorFn, static_cast<size_t>(SeekBehavior::Count)> seek_behavior_table = {
-    get_simple_follow_velocity, get_separation_velocity};
+    get_simple_follow_direction, get_separation_direction};
 
-using AttackBehaviorFn = bool (*)(Enemy&, Targetable&, GameState& state);
+using AttackBehaviorFn = void (*)(Enemy&, Targetable&, GameState& state);
 constexpr std::array<AttackBehaviorFn, static_cast<size_t>(AttackBehavior::Count)> attack_behavior_table = {
     nullptr, attack_melee, attack_ranged};
 
@@ -83,20 +71,74 @@ void UpdateEnemies(GameState& state) {
         const float delta_time = GetFrameTime();
 
         enemy.time_since_last_attack += delta_time;
+        Vector2 velocity = {};
 
-        // TODO: Store and only update on target loss/every x seconds
-        std::optional<Targetable> target =
-            find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+        switch (enemy.state) {
+            case EnemyState::Rally: {
+                throw "Not implemented";
+                break;
+            }
+            case EnemyState::Wander: {
+                if (Vector2Distance(enemy.position, enemy.target_position) < 1.0) {
+                    if (enemy.remaining_idle_time > 0) {
+                        enemy.remaining_idle_time -= delta_time;
+                        break;
+                    };
 
-        // TODO: Set to wander behavior
-        if (!target.has_value()) continue;
+                    const float random_x =
+                        (float)GetRandomValue(0, 100) * (WANDER_RANGE / 100.0) - (WANDER_RANGE / 2.0);
+                    const float random_y =
+                        (float)GetRandomValue(0, 100) * (WANDER_RANGE / 100.0) - (WANDER_RANGE / 2.0);
+                    const Vector2 wander_offset = Vector2{.x = random_x, .y = random_y};
 
-        auto attack_behavior = attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
+                    Spawner* home = GetEntity(state.spawners, enemy.home);
+                    if (home == nullptr) {
+                        // We could make the enemy turn into seek/go into a frenzy because it's home was destroyed
+                        // If there is no targets (like in a test scene) this will perma flip state though
+                        // enemy.state = EnemyState::Seek;
+                        // break;
+                        enemy.target_position += wander_offset;
+                    } else {
+                        enemy.target_position = home->position + wander_offset;
+                    }
 
-        if (attack_behavior != nullptr && attack_behavior(enemy, target.value(), state)) continue;
+                    enemy.remaining_idle_time = (float)GetRandomValue(0, 100) * (MAX_IDLE_TIME / 100.0) + MIN_IDLE_TIME;
+                }
 
-        const Vector2 velocity =
-            seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state);
+                velocity =
+                    Vector2Normalize(enemy.target_position - enemy.position) * (enemy.speed * WANDER_SPEED_MODIFIER);
+                break;
+            }
+            case EnemyState::Seek: {
+                std::optional<Targetable> target =
+                    find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+
+                if (!target.has_value()) {
+                    // If the enemy has no home and can't find a target it will perma flip between states
+                    enemy.state = EnemyState::Wander;
+                    break;
+                }
+
+                enemy.target = target.value();
+
+                velocity = seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state) *
+                           enemy.speed;
+                break;
+            }
+            case EnemyState::Attack: {
+                if (!enemy.target.has_value() ||
+                    Vector2Distance(enemy.target->position, enemy.position) > enemy.size * 2 + enemy.range) {
+                    enemy.state = EnemyState::Seek;
+                    break;
+                }
+
+                AttackBehaviorFn attack_behavior = attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
+                if (attack_behavior != nullptr) attack_behavior(enemy, enemy.target.value(), state);
+                break;
+            }
+            default:
+                break;
+        }
 
         enemy.position += velocity * delta_time;
     }
