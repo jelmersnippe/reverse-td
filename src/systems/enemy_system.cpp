@@ -7,10 +7,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "systems/targeting.hpp"
-
-Targetable get_target(Enemy& enemy, GameState& state) {
-    return find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
-}
+#include <optional>
 
 Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& state) {
     Vector2 seek = Vector2Normalize(target.position - enemy.position);
@@ -87,14 +84,29 @@ void UpdateEnemies(GameState& state) {
 
         enemy.time_since_last_attack += delta_time;
 
-        Targetable target = get_target(enemy, state);
+        // TODO: Store and only update on target loss/every x seconds
+        std::optional<Targetable> target =
+            find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+
+        // TODO: Set to wander behavior
+        if (!target.has_value()) continue;
 
         auto attack_behavior = attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
 
-        if (attack_behavior != nullptr && attack_behavior(enemy, target, state)) continue;
+        if (attack_behavior != nullptr && attack_behavior(enemy, target.value(), state)) continue;
 
-        const Vector2 velocity = seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target, state);
+        const Vector2 velocity =
+            seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state);
 
         enemy.position += velocity * delta_time;
+    }
+}
+
+void DrawEnemies(const EntityPool<Enemy>& enemies) {
+    for (const Slot<Enemy>& enemy : enemies.data) {
+        if (!enemy.alive) continue;
+
+        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
+        DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
     }
 }

@@ -36,3 +36,13 @@ void UpdatePlayers(GameState& state) {
         Update(player.ref, state);
     }
 }
+
+void DrawPlayers(const EntityPool<Player>& players) {
+    for (const Slot<Player>& player : players.data) {
+        if (!player.alive) continue;
+
+        DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
+                      PLAYER_SIZE, GREEN);
+        DrawHealth(player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE}, player.ref.health);
+    }
+}

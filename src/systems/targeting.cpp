@@ -2,6 +2,7 @@
 #include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "raymath.h"
+#include <optional>
 
 std::vector<Targetable> build_targetables(const GameState& state) {
     std::vector<Targetable> targetables = {};
@@ -45,11 +46,11 @@ std::vector<Targetable> build_targetables(const GameState& state) {
     return targetables;
 }
 
-Targetable find_closest_target(const Vector2& position, const std::vector<Targetable>& targetables,
-                               const uint32_t target_flags) {
+std::optional<Targetable> find_closest_target(const Vector2& position, const std::vector<Targetable>& targetables,
+                                              const uint32_t target_flags) {
     float closest_distance = std::numeric_limits<float>::max();
 
-    Targetable current_target_handle = {};
+    std::optional<Targetable> current_target_handle = std::nullopt;
 
     for (const Targetable& targetable : targetables) {
         if (!(targetable.flags & target_flags)) continue;

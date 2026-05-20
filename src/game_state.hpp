@@ -24,7 +24,9 @@ enum class Input {
     One,
     Two,
     Three,
-    Four
+    Four,
+    MouseScrollUp,
+    MouseScrollDown,
 };
 
 const int STARTING_CURRENCY = 1000;
@@ -42,19 +44,22 @@ struct GameState {
     EntityPool<Tower> towers = {};
 
     float difficulty_scale = STARTING_DIFFICULTY;
+    int currency = STARTING_CURRENCY;
+
     Camera2D camera = {.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
                        .target = {.x = 0, .y = 0},
                        .rotation = 0.0f,
                        .zoom = 1.0f};
 
-    int currency = STARTING_CURRENCY;
-
     void Reset() {
+        active_player = {};
         inputs.clear();
+        players.clear();
+        projectiles.clear();
         spawners.clear();
         enemies.clear();
         towers.clear();
-        projectiles.clear();
+
         difficulty_scale = STARTING_DIFFICULTY;
         currency = STARTING_CURRENCY;
 

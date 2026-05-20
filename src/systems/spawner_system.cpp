@@ -1,7 +1,9 @@
 #include "spawner_system.hpp"
 
+#include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
 #include "game_state.hpp"
+#include "raymath.h"
 
 void Update(Spawner& spawner, EntityPool<Enemy>& enemies, const float difficulty_scale) {
     const float delta_time = GetFrameTime();
@@ -36,5 +38,19 @@ void UpdateSpawners(GameState& state) {
         if (!spawner.alive) continue;
 
         Update(spawner.ref, state.enemies, state.difficulty_scale);
+    }
+}
+
+void DrawSpawners(const EntityPool<Spawner>& spawners) {
+    for (const Slot<Spawner>& spawner : spawners.data) {
+        if (!spawner.alive) continue;
+
+        const Vector2 spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
+                                          .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
+        DrawRectangleLines(spawner_top_left.x, spawner_top_left.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
+        const int text_width = MeasureText("Spawner", 12);
+        DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
+
+        DrawHealth(spawner.ref.position - Vector2{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
     }
 }

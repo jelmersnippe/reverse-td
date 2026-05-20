@@ -1,5 +1,6 @@
 #include "projectile_system.hpp"
 
+#include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -113,5 +114,14 @@ void UpdateProjectiles(GameState& state) {
         if (should_destroy) {
             DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});
         }
+    }
+}
+
+void DrawProjectiles(const EntityPool<Projectile>& projectiles) {
+    // TODO: Cull stuff outside of the screen
+    for (const Slot<Projectile>& projectile : projectiles.data) {
+        if (!projectile.alive) continue;
+
+        DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, ORANGE);
     }
 }

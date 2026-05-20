@@ -18,6 +18,7 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_D)) { state.inputs.push_back(Input::D); }
     if (IsKeyDown(KEY_W)) { state.inputs.push_back(Input::W); }
     if (IsKeyDown(KEY_S)) { state.inputs.push_back(Input::S); }
+
     if (IsKeyDown(KEY_X)) { state.inputs.push_back(Input::X); }
 
     if (IsKeyDown(KEY_ONE)) { state.inputs.push_back(Input::One); }

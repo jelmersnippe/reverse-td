@@ -18,79 +18,16 @@
 
 namespace {
 
-void DrawHealth(const Vector2& position, const Health& health) {
-    if (health.current >= health.max) return;
-
-    const std::string health_text = std::format("{}/{}", health.current, health.max);
-    const int text_width = MeasureText(health_text.c_str(), 12);
-
-    DrawRectangle(position.x - 10, position.y, 20, 5, RED);
-    DrawRectangle(position.x - 10, position.y, 20 * ((float)health.current / (float)health.max), 5, GREEN);
-    DrawText(health_text.c_str(), position.x - text_width / 2, position.y, 12, BLACK);
-}
-
 void Draw(const GameState& state) {
     ClearBackground(WHITE);
 
-    const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), state.camera);
-
     BeginMode2D(state.camera);
 
-    for (const Slot<Player>& player : state.players.data) {
-        if (!player.alive) continue;
-
-        DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
-                      PLAYER_SIZE, GREEN);
-        DrawHealth(player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE}, player.ref.health);
-    }
-
-    // TODO: Cull stuff outside of the screen
-    for (const Slot<Projectile>& projectile : state.projectiles.data) {
-        if (!projectile.alive) continue;
-
-        DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, ORANGE);
-    }
-
-    for (const Slot<Enemy>& enemy : state.enemies.data) {
-        if (!enemy.alive) continue;
-
-        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
-        DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
-    }
-
-    for (const Slot<Spawner>& spawner : state.spawners.data) {
-        if (!spawner.alive) continue;
-
-        const Vector2 spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
-                                          .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
-        DrawRectangleLines(spawner_top_left.x, spawner_top_left.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
-        const int text_width = MeasureText("Spawner", 12);
-        DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
-
-        DrawHealth(spawner.ref.position - Vector2{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
-    }
-
-    for (const Slot<Tower>& tower : state.towers.data) {
-        if (!tower.alive) continue;
-
-        const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
-                                        .y = tower.ref.position.y - TOWER_SIZE / 2};
-        DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE, TOWER_SIZE, BLACK);
-        DrawCircle(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE * 0.3, BLUE);
-        const int text_width = MeasureText("Tower", 12);
-        DrawText("Tower", tower.ref.position.x - text_width / 2, tower.ref.position.y, 12, BLACK);
-
-        const bool is_hovered = CheckCollisionPointRec(
-            mouse_position, {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
-        if (is_hovered && Vector2Distance(state.camera.target, tower.ref.position) < PLAYER_RANGE) {
-            std::string scrap_text = std::format("[x] Scrap for: {}", GetScrapValue(tower.ref));
-            int scrap_text_width = MeasureText(scrap_text.c_str(), 12);
-            DrawText(scrap_text.c_str(), tower.ref.position.x - scrap_text_width / 2, tower.ref.position.y + 10, 12,
-                     BLACK);
-        }
-
-        DrawHealth(tower.ref.position - Vector2{.x = 0, .y = TOWER_SIZE / 2 + 10}, tower.ref.health);
-    }
+    DrawEnemies(state.enemies);
+    DrawPlayers(state.players);
+    DrawProjectiles(state.projectiles);
+    DrawSpawners(state.spawners);
+    DrawTowers(state.towers, state.camera);
 
     EndMode2D();
 

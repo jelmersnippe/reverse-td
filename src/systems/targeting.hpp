@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include <optional>
 #include <vector>
 
 #include "core/entity_pool.hpp"
@@ -23,5 +24,5 @@ struct Targetable {
 
 std::vector<Targetable> build_targetables(const GameState& state);
 
-Targetable find_closest_target(const Vector2& position, const std::vector<Targetable>& targetables,
-                               const uint32_t target_flags);
+std::optional<Targetable> find_closest_target(const Vector2& position, const std::vector<Targetable>& targetables,
+                                              const uint32_t target_flags);
