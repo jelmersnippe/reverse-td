@@ -175,6 +175,18 @@ void UpdateInputs(GameState& state) {
                     })) {
                     break;
                 }
+                if (std::ranges::any_of(state.players.data, [mouse_position](const Slot<Player>& player_ref) {
+                        return player_ref.alive && CheckCollisionRecs({.x = mouse_position.x - TOWER_SIZE / 2,
+                                                                       .y = mouse_position.y - TOWER_SIZE / 2,
+                                                                       .width = TOWER_SIZE,
+                                                                       .height = TOWER_SIZE},
+                                                                      {.x = player_ref.ref.position.x - PLAYER_SIZE / 2,
+                                                                       .y = player_ref.ref.position.y - PLAYER_SIZE / 2,
+                                                                       .width = PLAYER_SIZE,
+                                                                       .height = PLAYER_SIZE});
+                    })) {
+                    break;
+                }
                 if (std::ranges::any_of(state.enemies.data, [mouse_position](const Slot<Enemy>& enemy_ref) {
                         return enemy_ref.alive &&
                                CheckCollisionPointRec(enemy_ref.ref.position, {.x = mouse_position.x - TOWER_SIZE / 2,
@@ -185,7 +197,7 @@ void UpdateInputs(GameState& state) {
                     break;
                 }
 
-                CreateEntity(state.towers, {.position = mouse_position});
+                CreateEntity(state.towers, Tower{.position = mouse_position});
                 state.currency -= TOWER_COST;
                 break;
             }
