@@ -4,7 +4,6 @@
 #include "globals.hpp"
 #include "raymath.h"
 #include "systems/targeting.hpp"
-#include <iostream>
 
 void Update(Tower& tower, GameState& state) {
     const float delta_time = GetFrameTime();

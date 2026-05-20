@@ -12,13 +12,12 @@
 #include "systems/tower_system.hpp"
 
 void HandleInput(GameState& state) {
-    Vector2 player_direction = {.x = 0, .y = 0};
     if (IsKeyDown(KEY_F1)) { SCENE_MANAGER.SwapScene(state, TEST_SCENE); }
 
-    if (IsKeyDown(KEY_A)) { player_direction.x -= 1; }
-    if (IsKeyDown(KEY_D)) { player_direction.x += 1; }
-    if (IsKeyDown(KEY_W)) { player_direction.y -= 1; }
-    if (IsKeyDown(KEY_S)) { player_direction.y += 1; }
+    if (IsKeyDown(KEY_A)) { state.inputs.push_back(Input::A); }
+    if (IsKeyDown(KEY_D)) { state.inputs.push_back(Input::D); }
+    if (IsKeyDown(KEY_W)) { state.inputs.push_back(Input::W); }
+    if (IsKeyDown(KEY_S)) { state.inputs.push_back(Input::S); }
     if (IsKeyDown(KEY_X)) { state.inputs.push_back(Input::X); }
 
     if (IsKeyDown(KEY_ONE)) { state.inputs.push_back(Input::One); }
@@ -28,8 +27,6 @@ void HandleInput(GameState& state) {
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::LeftMouse); }
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::RightMouse); }
-
-    state.player.direction = player_direction;
 }
 
 int main() {

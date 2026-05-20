@@ -4,6 +4,7 @@
 #include "globals.hpp"
 #include "raylib.h"
 #include "systems/enemy_system.hpp"
+#include "systems/player_system.hpp"
 #include "systems/projectile_system.hpp"
 #include "systems/scene_manager.hpp"
 #include "systems/spawner_system.hpp"
@@ -35,9 +36,13 @@ void Draw(const GameState& state) {
 
     BeginMode2D(state.camera);
 
-    DrawRectangle(state.player.position.x - PLAYER_SIZE / 2, state.player.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
-                  PLAYER_SIZE, GREEN);
-    DrawHealth(state.player.position - Vector2{.x = 0, .y = PLAYER_SIZE}, state.player.health);
+    for (const Slot<Player>& player : state.players.data) {
+        if (!player.alive) continue;
+
+        DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
+                      PLAYER_SIZE, GREEN);
+        DrawHealth(player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE}, player.ref.health);
+    }
 
     // TODO: Cull stuff outside of the screen
     for (const Slot<Projectile>& projectile : state.projectiles.data) {
@@ -77,7 +82,7 @@ void Draw(const GameState& state) {
 
         const bool is_hovered = CheckCollisionPointRec(
             mouse_position, {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
-        if (is_hovered && Vector2Distance(state.player.position, tower.ref.position) < PLAYER_RANGE) {
+        if (is_hovered && Vector2Distance(state.camera.target, tower.ref.position) < PLAYER_RANGE) {
             std::string scrap_text = std::format("[x] Scrap for: {}", GetScrapValue(tower.ref));
             int scrap_text_width = MeasureText(scrap_text.c_str(), 12);
             DrawText(scrap_text.c_str(), tower.ref.position.x - scrap_text_width / 2, tower.ref.position.y + 10, 12,
@@ -100,20 +105,27 @@ void Draw(const GameState& state) {
 
 void UpdateInputs(GameState& state) {
     const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), state.camera);
+    Player* active_player = GetEntity(state.players, state.active_player);
+
+    if (active_player == nullptr) {
+        state.inputs.clear();
+        return;
+    };
+
     for (const Input& input : state.inputs) {
         switch (input) {
             case Input::LeftMouse: {
-                if (state.player.time_since_last_shot < TIME_BETWEEN_SHOTS) break;
-                std::cout << state.player.time_since_last_shot << std::endl;
+                if (active_player->time_since_last_shot < TIME_BETWEEN_SHOTS) break;
+                std::cout << active_player->time_since_last_shot << std::endl;
 
                 const Vector2 direction =
-                    Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), state.player.position);
+                    Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position);
                 CreateEntity(state.projectiles, Projectile{.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
-                                                           .position = state.player.position,
+                                                           .position = active_player->position,
                                                            .life_time = 2.0,
-                                                           .damage = state.player.damage,
+                                                           .damage = active_player->damage,
                                                            .flags = TARGET_SPAWNER | TARGET_ENEMY});
-                state.player.time_since_last_shot = 0;
+                active_player->time_since_last_shot = 0;
                 break;
             }
             case Input::X: {
@@ -127,7 +139,7 @@ void UpdateInputs(GameState& state) {
                                                                 .width = TOWER_SIZE,
                                                                 .height = TOWER_SIZE});
 
-                    if (!is_hovered || Vector2Distance(state.player.position, slot.ref.position) > PLAYER_RANGE)
+                    if (!is_hovered || Vector2Distance(active_player->position, slot.ref.position) > PLAYER_RANGE)
                         continue;
 
                     DestroyEntity(state.towers, EntityHandle{.index = i, .generation = slot.generation});
@@ -177,6 +189,18 @@ void UpdateInputs(GameState& state) {
                 state.currency -= TOWER_COST;
                 break;
             }
+            case Input::W:
+                active_player->direction += {.x = 0, .y = -1};
+                break;
+            case Input::S:
+                active_player->direction += {.x = 0, .y = 1};
+                break;
+            case Input::A:
+                active_player->direction += {.x = -1, .y = 0};
+                break;
+            case Input::D:
+                active_player->direction += {.x = 1, .y = 0};
+                break;
             default:
                 throw "Unrecognized input";
         }
@@ -185,35 +209,15 @@ void UpdateInputs(GameState& state) {
     state.inputs.clear();
 }
 void Update(GameState& state) {
-    const float delta_time = GetFrameTime();
-    const std::vector<Targetable> targetables = build_targetables(state);
-
-    state.player.time_since_last_shot += delta_time;
-
-    Vector2 velocity = Vector2Normalize(state.player.direction) * PLAYER_SPEED * delta_time;
-
-    Vector2 new_position = state.player.position;
-
-    new_position.x += velocity.x;
-    const CollisionResult collision_x = check_player_collision(state, new_position);
-
-    new_position = state.player.position;
-    new_position.y += velocity.y;
-    const CollisionResult collision_y = check_player_collision(state, new_position);
-
-    if (!collision_x.collided) state.player.position.x += velocity.x;
-    if (!collision_y.collided) state.player.position.y += velocity.y;
-
-    state.camera.target = {state.player.position};
+    Player* active_player = GetEntity(state.players, state.active_player);
+    if (active_player != nullptr) state.camera.target = {active_player->position};
 
     UpdateInputs(state);
+    UpdatePlayers(state);
     UpdateProjectiles(state);
     UpdateEnemies(state);
     UpdateSpawners(state);
     UpdateTowers(state);
-
-    // TODO: Should show a death state / restart the game
-    if (state.player.health.current <= 0) { state.should_exit = true; }
 }
 
 void Destroy(GameState& state) {
@@ -222,7 +226,7 @@ void Destroy(GameState& state) {
 
 void Init(GameState& state) {
     Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
-    state.player = player;
+    state.active_player = CreateEntity(state.players, player);
     state.camera.target = {player.position};
 
     CreateEntity(state.spawners, {.position = {.x = -200, .y = 200}, .spawn_amount = 2, .initial_spawn = 2});

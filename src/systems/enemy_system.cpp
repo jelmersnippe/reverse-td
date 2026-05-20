@@ -9,25 +9,7 @@
 #include "systems/targeting.hpp"
 
 Targetable get_target(Enemy& enemy, GameState& state) {
-    Targetable target = find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
-
-    Vector2 target_position = enemy.position;
-
-    switch (target.flags) {
-        case TARGET_PLAYER: {
-            target_position = state.player.position;
-            break;
-        }
-        case TARGET_TOWER: {
-            Tower* tower = GetEntity(state.towers, target.handle);
-            if (tower != nullptr) target_position = tower->position;
-            break;
-        }
-        default:
-            break;
-    }
-
-    return target;
+    return find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
 }
 
 Vector2 get_separation_velocity(Enemy& enemy, Targetable& target, GameState& state) {

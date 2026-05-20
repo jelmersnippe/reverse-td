@@ -14,6 +14,10 @@
 struct Targetable;
 
 enum class Input {
+    W,
+    A,
+    S,
+    D,
     LeftMouse,
     RightMouse,
     X,
@@ -29,8 +33,9 @@ const float STARTING_DIFFICULTY = 1;
 struct GameState {
     bool should_exit = false;
 
+    EntityHandle active_player = {};
     std::vector<Input> inputs = {};
-    Player player;
+    EntityPool<Player> players;
     EntityPool<Projectile> projectiles = {};
     EntityPool<Spawner> spawners = {};
     EntityPool<Enemy> enemies = {};

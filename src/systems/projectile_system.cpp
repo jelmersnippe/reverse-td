@@ -79,18 +79,24 @@ bool Update(Projectile& projectile, GameState& state) {
     }
 
     if ((projectile.flags & TARGET_PLAYER) == TARGET_PLAYER) {
-        const Vector2 player_top_left =
-            Vector2{.x = state.player.position.x - PLAYER_SIZE / 2, .y = state.player.position.y - PLAYER_SIZE / 2};
-        hit = CheckCollisionPointRec(
-            projectile.position,
-            {.x = player_top_left.x, .y = player_top_left.y, .width = PLAYER_SIZE, .height = PLAYER_SIZE});
+        for (size_t player_index = 0; player_index < state.players.data.size(); player_index++) {
+            Slot<Player>& player = state.players.data[player_index];
 
-        if (!hit) return false;
+            const Vector2 player_top_left =
+                Vector2{.x = player.ref.position.x - TOWER_SIZE / 2, .y = player.ref.position.y - TOWER_SIZE / 2};
+            hit = CheckCollisionPointRec(
+                projectile.position,
+                {.x = player_top_left.x, .y = player_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
 
-        Targetable target = {.flags = TARGET_PLAYER, .handle = {}, .position = {}};
-        apply_damage(state, target, projectile.damage);
+            if (!hit) continue;
 
-        return true;
+            Targetable target = {.flags = TARGET_PLAYER,
+                                 .handle = {.index = player_index, .generation = player.generation},
+                                 .position = {}};
+            apply_damage(state, target, projectile.damage);
+
+            return true;
+        }
     }
 
     return false;

@@ -19,7 +19,7 @@ void kill_entity(GameState& state, Targetable& target) {
             break;
         }
         case TARGET_PLAYER: {
-            state.should_exit = true;
+            DestroyEntity(state.players, target.handle);
             break;
         }
         case TARGET_TOWER: {
@@ -45,7 +45,8 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
             break;
         }
         case TARGET_PLAYER: {
-            health = &state.player.health;
+            Player* player = GetEntity(state.players, target.handle);
+            if (player != nullptr) health = &player->health;
             break;
         }
         case TARGET_TOWER: {

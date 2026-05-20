@@ -16,9 +16,7 @@
 
 namespace {
 void Init(GameState& state) {
-    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
-    state.player = player;
-    state.camera.target = {player.position};
+    state.camera.target = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
 }
 
 void Draw(const GameState& state) {
@@ -27,9 +25,6 @@ void Draw(const GameState& state) {
     DrawText(std::format("Personal space: {}", PERSONAL_SPACE).c_str(), 20, 50, 12, BLACK);
 
     BeginMode2D(state.camera);
-
-    DrawRectangle(state.player.position.x - PLAYER_SIZE / 2, state.player.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
-                  PLAYER_SIZE, GREEN);
 
     for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
@@ -49,12 +44,6 @@ void Draw(const GameState& state) {
 void Update(GameState& state) {
     if (IsKeyDown(KEY_F5) && PERSONAL_SPACE > 0) PERSONAL_SPACE -= 1;
     if (IsKeyDown(KEY_F6)) PERSONAL_SPACE += 1;
-
-    const float delta_time = GetFrameTime();
-    Vector2 velocity = Vector2Normalize(state.player.direction) * PLAYER_SPEED * delta_time;
-    state.player.position += velocity;
-
-    state.camera.target = {state.player.position};
 
     const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
 

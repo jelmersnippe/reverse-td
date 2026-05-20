@@ -6,7 +6,14 @@
 std::vector<Targetable> build_targetables(const GameState& state) {
     std::vector<Targetable> targetables = {};
 
-    targetables.push_back(Targetable{.flags = TARGET_PLAYER, .handle = {}, .position = state.player.position});
+    for (uint32_t i = 0; i < state.players.data.size(); i++) {
+        const Slot<Player>& player = state.players.data[i];
+        if (!player.alive) continue;
+
+        targetables.push_back(Targetable{.flags = TARGET_PLAYER,
+                                         .handle = {.index = i, .generation = player.generation},
+                                         .position = player.ref.position});
+    }
 
     for (uint32_t i = 0; i < state.enemies.data.size(); i++) {
         const Slot<Enemy>& enemy = state.enemies.data[i];
