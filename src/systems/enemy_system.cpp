@@ -62,6 +62,33 @@ using AttackBehaviorFn = void (*)(Enemy&, Targetable&, GameState& state);
 constexpr std::array<AttackBehaviorFn, static_cast<size_t>(AttackBehavior::Count)> attack_behavior_table = {
     nullptr, attack_melee, attack_ranged};
 
+Vector2 get_wander_direction(Enemy& enemy, const Vector2 center, const float range, const float min_idle,
+                             const float max_idle) {
+    // Move to target position
+    if (Vector2Distance(enemy.position, enemy.target_position) > 2.5) {
+        return Vector2Normalize(enemy.target_position - enemy.position);
+    }
+
+    const float delta_time = GetFrameTime();
+
+    // Idle untill enough time has passed
+    if (enemy.remaining_idle_time > 0) {
+        enemy.remaining_idle_time -= delta_time;
+        return {};
+    };
+
+    // Set new wander target
+    const float random_x = (float)GetRandomValue(0, 100) * (range / 100.0) - (range / 2.0);
+    const float random_y = (float)GetRandomValue(0, 100) * (range / 100.0) - (range / 2.0);
+    const Vector2 wander_offset = Vector2{.x = random_x, .y = random_y};
+
+    enemy.target_position = center + wander_offset;
+    enemy.remaining_idle_time = (float)GetRandomValue(0, 100) * (max_idle / 100.0) + min_idle;
+
+    return Vector2Normalize(enemy.target_position - enemy.position);
+}
+
+const float WANDER_AROUND_RALLY = 100.0;
 void UpdateEnemies(GameState& state) {
     for (Slot<Enemy>& slot : state.enemies.data) {
         if (!slot.alive) continue;
@@ -75,38 +102,32 @@ void UpdateEnemies(GameState& state) {
 
         switch (enemy.state) {
             case EnemyState::Rally: {
-                throw "Not implemented";
+                Spawner* home = GetEntity(state.spawners, enemy.home);
+                if (home == nullptr) {
+                    enemy.state = EnemyState::Seek;
+                    break;
+                }
+
+                if (Vector2Distance(enemy.target_position, home->rally_position) > WANDER_AROUND_RALLY) {
+                    enemy.target_position = home->rally_position;
+                    // Enforce immediate wander when they arrive
+                    enemy.remaining_idle_time = 0;
+                }
+
+                velocity = get_wander_direction(enemy, home->rally_position, WANDER_AROUND_RALLY - 5,
+                                                MIN_RALLY_IDLE_TIME, MAX_RALLY_IDLE_TIME);
+
+                velocity *= enemy.speed;
                 break;
             }
             case EnemyState::Wander: {
-                if (Vector2Distance(enemy.position, enemy.target_position) < 1.0) {
-                    if (enemy.remaining_idle_time > 0) {
-                        enemy.remaining_idle_time -= delta_time;
-                        break;
-                    };
+                Spawner* home = GetEntity(state.spawners, enemy.home);
+                Vector2 wander_center = enemy.position;
+                if (home != nullptr) wander_center = home->position;
 
-                    const float random_x =
-                        (float)GetRandomValue(0, 100) * (WANDER_RANGE / 100.0) - (WANDER_RANGE / 2.0);
-                    const float random_y =
-                        (float)GetRandomValue(0, 100) * (WANDER_RANGE / 100.0) - (WANDER_RANGE / 2.0);
-                    const Vector2 wander_offset = Vector2{.x = random_x, .y = random_y};
+                velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
+                           (enemy.speed * WANDER_SPEED_MODIFIER);
 
-                    Spawner* home = GetEntity(state.spawners, enemy.home);
-                    if (home == nullptr) {
-                        // We could make the enemy turn into seek/go into a frenzy because it's home was destroyed
-                        // If there is no targets (like in a test scene) this will perma flip state though
-                        // enemy.state = EnemyState::Seek;
-                        // break;
-                        enemy.target_position += wander_offset;
-                    } else {
-                        enemy.target_position = home->position + wander_offset;
-                    }
-
-                    enemy.remaining_idle_time = (float)GetRandomValue(0, 100) * (MAX_IDLE_TIME / 100.0) + MIN_IDLE_TIME;
-                }
-
-                velocity =
-                    Vector2Normalize(enemy.target_position - enemy.position) * (enemy.speed * WANDER_SPEED_MODIFIER);
                 break;
             }
             case EnemyState::Seek: {

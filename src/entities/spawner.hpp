@@ -12,4 +12,6 @@ struct Spawner {
     int initial_spawn = 3;
     float time_since_last_spawn = 0;
     bool initial_spawn_happened = false;
+
+    Vector2 rally_position = {};
 };

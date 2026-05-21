@@ -67,6 +67,12 @@ void UpdateInputs(GameState& state) {
 
     for (Input input : state.inputs) {
         switch (input) {
+            case Input::LeftMouse: {
+                for (Slot<Enemy>& enemy_slot : state.enemies.data) {
+                    enemy_slot.ref.state = EnemyState::Rally;
+                }
+                break;
+            }
             case Input::One: {
                 Enemy new_enemy = melee_enemy;
                 new_enemy.position = destination;

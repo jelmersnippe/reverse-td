@@ -1,5 +1,6 @@
 #include "game_state.hpp"
 #include "core/entity_pool.hpp"
+#include "entities/enemy.hpp"
 #include "globals.hpp"
 #include "raylib.h"
 #include "systems/targeting.hpp"
@@ -36,7 +37,10 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
     switch (target.flags) {
         case TARGET_ENEMY: {
             Enemy* enemy = GetEntity(state.enemies, target.handle);
-            if (enemy != nullptr) health = &enemy->health;
+            if (enemy == nullptr) break;
+
+            health = &enemy->health;
+            enemy->state = EnemyState::Seek;
             break;
         }
         case TARGET_SPAWNER: {
