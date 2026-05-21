@@ -108,14 +108,20 @@ void UpdateEnemies(GameState& state) {
                     break;
                 }
 
-                if (Vector2Distance(enemy.target_position, home->rally_position) > WANDER_AROUND_RALLY) {
-                    enemy.target_position = home->rally_position;
+                if (!enemy.rallied &&
+                    Vector2Distance(enemy.target_position, home->rally_position) < WANDER_AROUND_RALLY) {
+                    enemy.rallied = true;
+                    enemy.target_position = enemy.position;
                     // Enforce immediate wander when they arrive
                     enemy.remaining_idle_time = 0;
                 }
 
-                velocity = get_wander_direction(enemy, home->rally_position, WANDER_AROUND_RALLY - 5,
-                                                MIN_RALLY_IDLE_TIME, MAX_RALLY_IDLE_TIME);
+                if (enemy.rallied) {
+                    velocity = get_wander_direction(enemy, home->rally_position, WANDER_AROUND_RALLY,
+                                                    MIN_RALLY_IDLE_TIME, MAX_RALLY_IDLE_TIME);
+                } else {
+                    velocity = Vector2Normalize(home->rally_position - enemy.position);
+                }
 
                 velocity *= enemy.speed;
                 break;

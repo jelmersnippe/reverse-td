@@ -38,6 +38,7 @@ struct Enemy {
     Vector2 position = {};
     // Used for wander+rally
     Vector2 target_position = {};
+    bool rallied = false;
     // Used for seek + attack
     std::optional<Targetable> target = std::nullopt;
     Health health = Health(BASE_ENEMY_HEALTH);
