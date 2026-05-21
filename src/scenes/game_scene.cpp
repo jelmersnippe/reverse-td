@@ -31,7 +31,7 @@ void Draw(const GameState& state) {
 
     EndMode2D();
 
-    const std::string difficulty_text = std::format("Difficulty scale: {}", state.difficulty_scale);
+    const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
     const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
     DrawText(difficulty_text.c_str(), SCREEN_WIDTH / 2 - difficulty_text_width / 2, 30, 20, BLACK);
 

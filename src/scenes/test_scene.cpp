@@ -13,6 +13,7 @@
 
 #include "raymath.h"
 #include "rlgl.h"
+#include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
 #include <format>
 
@@ -32,6 +33,10 @@ void Draw(const GameState& state) {
     ClearBackground(WHITE);
 
     DrawText(std::format("Personal space: {}", PERSONAL_SPACE).c_str(), 20, 50, 12, BLACK);
+
+    const std::string difficulty_text = std::format("Threat: {}", state.threat_director.threat);
+    const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
+    DrawText(difficulty_text.c_str(), SCREEN_WIDTH / 2 - difficulty_text_width / 2, 30, 20, BLACK);
 
     BeginMode2D(state.camera);
     rlPushMatrix();
@@ -56,8 +61,8 @@ void Draw(const GameState& state) {
 
 void UpdateInputs(GameState& state) {
     const float delta_time = GetFrameTime();
-    if (IsKeyDown(KEY_F5) && PERSONAL_SPACE > 0) PERSONAL_SPACE -= 1;
-    if (IsKeyDown(KEY_F6)) PERSONAL_SPACE += 1;
+    if (IsKeyDown(KEY_F5) && state.threat_director.threat > 0) state.threat_director.threat -= 0.01f;
+    if (IsKeyDown(KEY_F6)) state.threat_director.threat += 0.01;
 
     state.camera.zoom = expf(logf(state.camera.zoom) + ((float)GetMouseWheelMove() * 0.1f));
 
@@ -132,6 +137,7 @@ void Update(GameState& state) {
     UpdateProjectiles(state);
     UpdateEnemies(state);
     UpdateSpawners(state);
+    UpdateThreatDirector(state);
 }
 
 void Destroy(GameState& state) {

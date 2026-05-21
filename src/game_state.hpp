@@ -9,6 +9,7 @@
 #include "entities/projectile.hpp"
 #include "entities/spawner.hpp"
 #include "entities/tower.hpp"
+#include "systems/threat_director.hpp"
 #include <vector>
 
 struct Targetable;
@@ -30,20 +31,20 @@ enum class Input {
 };
 
 const int STARTING_CURRENCY = 1000;
-const float STARTING_DIFFICULTY = 1;
 
 struct GameState {
     bool should_exit = false;
 
     EntityHandle active_player = {};
+
     std::vector<Input> inputs = {};
     EntityPool<Player> players;
     EntityPool<Projectile> projectiles = {};
     EntityPool<Spawner> spawners = {};
     EntityPool<Enemy> enemies = {};
     EntityPool<Tower> towers = {};
+    ThreatDirector threat_director = {};
 
-    float difficulty_scale = STARTING_DIFFICULTY;
     int currency = STARTING_CURRENCY;
 
     Camera2D camera = {.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
@@ -59,8 +60,8 @@ struct GameState {
         spawners.clear();
         enemies.clear();
         towers.clear();
+        threat_director = {};
 
-        difficulty_scale = STARTING_DIFFICULTY;
         currency = STARTING_CURRENCY;
 
         camera.target = {.x = 0, .y = 0};

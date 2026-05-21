@@ -10,13 +10,13 @@ void kill_entity(GameState& state, Targetable& target) {
         case TARGET_ENEMY: {
             DestroyEntity(state.enemies, target.handle);
             state.currency += 1;
-            state.difficulty_scale += 0.01;
+            state.threat_director.threat += 0.05f;
             break;
         }
         case TARGET_SPAWNER: {
             DestroyEntity(state.spawners, target.handle);
             state.currency += 5;
-            state.difficulty_scale += 0.05;
+            state.threat_director.threat += 3.0f;
             break;
         }
         case TARGET_PLAYER: {
