@@ -13,5 +13,7 @@ struct SpawnOption {
 struct ThreatDirector {
     float threat = 0;
 
+    float time_to_next_spawner_spread = 30;
+
     std::vector<SpawnOption> spawn_table = {{.enemy = melee_enemy, .weight = 1}};
 };
