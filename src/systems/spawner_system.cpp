@@ -4,6 +4,30 @@
 #include "entities/enemy.hpp"
 #include "game_state.hpp"
 #include "raymath.h"
+#include <algorithm>
+
+void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const int count) {
+    Spawner& spawner = spawner_slot.ref;
+
+    int active_count = 0;
+    for (const EntityHandle& handle : spawner.active_enemies) {
+        if (IsValidEntity(enemies, handle)) active_count++;
+    }
+
+    const int limited_count = std::min(spawner.max_spawn - active_count, count);
+
+    for (int i = 0; i < limited_count; i++) {
+        Enemy new_enemy = melee_enemy;
+        new_enemy.position = spawner.position;
+        new_enemy.home = spawner_slot.handle;
+        new_enemy.target_position = spawner.position;
+        const EntityHandle created_enemy = CreateEntity(enemies, new_enemy);
+
+        spawner.active_enemies.push_back(created_enemy);
+    }
+
+    spawner.time_since_last_spawn = 0;
+}
 
 void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const float difficulty_scale) {
     Spawner& spawner = spawner_slot.ref;
@@ -12,31 +36,15 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const float
     spawner.time_since_last_spawn += delta_time;
 
     if (!spawner.initial_spawn_happened) {
-        for (int i = 0; i < spawner.initial_spawn; i++) {
-            Enemy new_enemy = melee_enemy;
-            new_enemy.position = spawner.position;
-            new_enemy.home = spawner_slot.handle;
-            new_enemy.target_position = spawner.position;
-            CreateEntity(enemies, new_enemy);
-        }
-
+        spawn_enemies(spawner_slot, enemies, spawner.initial_spawn);
         spawner.initial_spawn_happened = true;
-        spawner.time_since_last_spawn = 0;
         return;
     }
 
     if (spawner.time_since_last_spawn < (spawner.spawn_cooldown / difficulty_scale)) return;
 
     const int spawn_count = static_cast<int>((float)spawner.spawn_amount * difficulty_scale);
-    for (int i = 0; i < spawn_count; i++) {
-        Enemy new_enemy = melee_enemy;
-        new_enemy.position = spawner.position;
-        new_enemy.home = spawner_slot.handle;
-        new_enemy.target_position = spawner.position;
-        CreateEntity(enemies, new_enemy);
-    }
-
-    spawner.time_since_last_spawn = 0;
+    spawn_enemies(spawner_slot, enemies, spawn_count);
 }
 
 void UpdateSpawners(GameState& state) {
