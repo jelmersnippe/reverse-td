@@ -101,6 +101,16 @@ void UpdateEnemies(GameState& state) {
         Vector2 velocity = {};
 
         switch (enemy.state) {
+            case EnemyState::Wander: {
+                Spawner* home = GetEntity(state.spawners, enemy.home);
+                Vector2 wander_center = enemy.position;
+                if (home != nullptr) wander_center = home->position;
+
+                velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
+                           (enemy.speed * WANDER_SPEED_MODIFIER);
+
+                break;
+            }
             case EnemyState::Rally: {
                 Spawner* home = GetEntity(state.spawners, enemy.home);
                 if (home == nullptr) {
@@ -108,8 +118,7 @@ void UpdateEnemies(GameState& state) {
                     break;
                 }
 
-                if (!enemy.rallied &&
-                    Vector2Distance(enemy.target_position, home->rally_position) < WANDER_AROUND_RALLY) {
+                if (!enemy.rallied && Vector2Distance(enemy.position, home->rally_position) < WANDER_AROUND_RALLY) {
                     enemy.rallied = true;
                     enemy.target_position = enemy.position;
                     // Enforce immediate wander when they arrive
@@ -124,16 +133,6 @@ void UpdateEnemies(GameState& state) {
                 }
 
                 velocity *= enemy.speed;
-                break;
-            }
-            case EnemyState::Wander: {
-                Spawner* home = GetEntity(state.spawners, enemy.home);
-                Vector2 wander_center = enemy.position;
-                if (home != nullptr) wander_center = home->position;
-
-                velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
-                           (enemy.speed * WANDER_SPEED_MODIFIER);
-
                 break;
             }
             case EnemyState::Seek: {

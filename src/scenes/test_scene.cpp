@@ -24,9 +24,7 @@ const float CAMERA_SPEED = 200;
 void Init(GameState& state) {
     state.camera.target = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
 
-    CreateEntity(state.spawners, Spawner{.position = {.x = 200, .y = 600}});
-    CreateEntity(state.spawners, Spawner{.position = {.x = -800, .y = 1000}});
-    CreateEntity(state.spawners, Spawner{.position = {.x = -350, .y = -425}});
+    CreateEntity(state.spawners, Spawner{.position = {.x = 200, .y = 200}, .max_spawn = 2});
 }
 
 void Draw(const GameState& state) {
