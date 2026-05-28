@@ -101,6 +101,7 @@ CollisionResult check_player_collision(GameState& state, Vector2 position) {
                                    .height = PLAYER_SIZE};
 
     for (const Slot<Tower>& tower : state.towers.data) {
+        if (!tower.alive) continue;
         const Rectangle tower_rect = {.x = tower.ref.position.x - TOWER_SIZE / 2,
                                       .y = tower.ref.position.y - TOWER_SIZE / 2,
                                       .width = TOWER_SIZE,
@@ -111,6 +112,7 @@ CollisionResult check_player_collision(GameState& state, Vector2 position) {
     }
 
     for (const Slot<Spawner>& spawner : state.spawners.data) {
+        if (!spawner.alive) continue;
         const Rectangle spawner_rect = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
                                         .y = spawner.ref.position.y - SPAWNER_SIZE / 2,
                                         .width = SPAWNER_SIZE,
