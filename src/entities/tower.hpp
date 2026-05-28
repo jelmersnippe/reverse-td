@@ -10,5 +10,5 @@ struct Tower {
     int damage = 20;
     int fire_rate = 120;
     float time_since_last_attack = 0;
-    int range = 200;
+    int range = 350;
 };
