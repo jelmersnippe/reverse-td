@@ -21,17 +21,14 @@ bool Update(Projectile& projectile, GameState& state) {
     projectile.position += projectile.velocity * delta_time;
 
     if ((projectile.flags & TARGET_ENEMY) == TARGET_ENEMY) {
-        for (size_t enemy_index = 0; enemy_index < state.enemies.data.size(); enemy_index++) {
-            Slot<Enemy>& enemy = state.enemies.data[enemy_index];
+        for (Slot<Enemy>& enemy : state.enemies.data) {
             if (!enemy.alive) continue;
 
             hit = CheckCollisionPointCircle(projectile.position, enemy.ref.position, enemy.ref.size);
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_ENEMY,
-                                 .handle = {.index = enemy_index, .generation = enemy.generation},
-                                 .position = {}};
+            Targetable target = {.flags = TARGET_ENEMY, .handle = enemy.handle, .position = {}};
             apply_damage(state, target, projectile.damage);
 
             return true;
@@ -39,8 +36,8 @@ bool Update(Projectile& projectile, GameState& state) {
     }
 
     if ((projectile.flags & TARGET_SPAWNER) == TARGET_SPAWNER) {
-        for (size_t spawner_index = 0; spawner_index < state.spawners.data.size(); spawner_index++) {
-            Slot<Spawner>& spawner = state.spawners.data[spawner_index];
+        for (Slot<Spawner>& spawner : state.spawners.data) {
+            if (!spawner.alive) continue;
 
             const Vector2 spawner_top_left =
                 Vector2{.x = spawner.ref.position.x - SPAWNER_SIZE / 2, .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
@@ -50,9 +47,7 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_SPAWNER,
-                                 .handle = {.index = spawner_index, .generation = spawner.generation},
-                                 .position = {}};
+            Targetable target = {.flags = TARGET_SPAWNER, .handle = spawner.handle, .position = {}};
             apply_damage(state, target, projectile.damage);
 
             return true;
@@ -60,8 +55,8 @@ bool Update(Projectile& projectile, GameState& state) {
     }
 
     if ((projectile.flags & TARGET_TOWER) == TARGET_TOWER) {
-        for (size_t tower_index = 0; tower_index < state.towers.data.size(); tower_index++) {
-            Slot<Tower>& tower = state.towers.data[tower_index];
+        for (Slot<Tower>& tower : state.towers.data) {
+            if (!tower.alive) continue;
 
             const Vector2 tower_top_left =
                 Vector2{.x = tower.ref.position.x - TOWER_SIZE / 2, .y = tower.ref.position.y - TOWER_SIZE / 2};
@@ -71,9 +66,7 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_TOWER,
-                                 .handle = {.index = tower_index, .generation = tower.generation},
-                                 .position = {}};
+            Targetable target = {.flags = TARGET_TOWER, .handle = tower.handle, .position = {}};
             apply_damage(state, target, projectile.damage);
 
             return true;
@@ -81,8 +74,8 @@ bool Update(Projectile& projectile, GameState& state) {
     }
 
     if ((projectile.flags & TARGET_PLAYER) == TARGET_PLAYER) {
-        for (size_t player_index = 0; player_index < state.players.data.size(); player_index++) {
-            Slot<Player>& player = state.players.data[player_index];
+        for (Slot<Player>& player : state.players.data) {
+            if (!player.alive) continue;
 
             const Vector2 player_top_left =
                 Vector2{.x = player.ref.position.x - TOWER_SIZE / 2, .y = player.ref.position.y - TOWER_SIZE / 2};
@@ -92,9 +85,7 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_PLAYER,
-                                 .handle = {.index = player_index, .generation = player.generation},
-                                 .position = {}};
+            Targetable target = {.flags = TARGET_PLAYER, .handle = player.handle, .position = {}};
             apply_damage(state, target, projectile.damage);
 
             return true;
