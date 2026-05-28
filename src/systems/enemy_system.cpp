@@ -150,11 +150,25 @@ void UpdateEnemies(GameState& state) {
 
                 velocity = seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state) *
                            enemy.speed;
+
+                // -5 so the enemy does not immediately flip back to seek next frame
+                if (Vector2Distance(enemy.target->position, enemy.position) < enemy.size * 2 + enemy.range - 5) {
+                    enemy.state = EnemyState::Attack;
+                }
                 break;
             }
             case EnemyState::Attack: {
-                if (!enemy.target.has_value() ||
-                    Vector2Distance(enemy.target->position, enemy.position) > enemy.size * 2 + enemy.range) {
+                std::optional<Targetable> target =
+                    find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+
+                if (!target.has_value()) {
+                    enemy.state = EnemyState::Wander;
+                    break;
+                }
+
+                enemy.target = target.value();
+
+                if (Vector2Distance(enemy.target->position, enemy.position) > enemy.size * 2 + enemy.range) {
                     enemy.state = EnemyState::Seek;
                     break;
                 }
@@ -177,7 +191,6 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
 
         DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
         DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
-
 
         std::string state_text;
         switch (enemy.ref.state) {
