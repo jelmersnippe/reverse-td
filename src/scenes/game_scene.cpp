@@ -4,6 +4,7 @@
 #include "globals.hpp"
 #include "raylib.h"
 #include "systems/enemy_system.hpp"
+#include "systems/pickup_system.hpp"
 #include "systems/player_system.hpp"
 #include "systems/projectile_system.hpp"
 #include "systems/scene_manager.hpp"
@@ -15,7 +16,6 @@
 #include "systems/tower_system.hpp"
 #include <algorithm>
 #include <format>
-#include <iostream>
 
 namespace {
 
@@ -29,6 +29,7 @@ void Draw(const GameState& state) {
     DrawProjectiles(state.projectiles);
     DrawSpawners(state.spawners);
     DrawTowers(state.towers, state.camera);
+    DrawPickups(state.pickups);
 
     EndMode2D();
 
@@ -168,6 +169,7 @@ void Update(GameState& state) {
     UpdateSpawners(state);
     UpdateTowers(state);
     UpdateThreatDirector(state);
+    UpdatePickups(state);
 }
 
 void Destroy(GameState& state) {

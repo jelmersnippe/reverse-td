@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entities/pickup.hpp"
 #include "globals.hpp"
 #include "raylib.h"
 
@@ -43,6 +44,7 @@ struct GameState {
     EntityPool<Spawner> spawners = {};
     EntityPool<Enemy> enemies = {};
     EntityPool<Tower> towers = {};
+    EntityPool<Pickup> pickups = {};
     ThreatDirector threat_director = {};
 
     int currency = STARTING_CURRENCY;

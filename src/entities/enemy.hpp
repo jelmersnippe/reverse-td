@@ -52,6 +52,8 @@ struct Enemy {
     int damage = 1;
     float attack_cooldown = 2;
     float time_since_last_attack = 0;
+
+    int value = 1;
 };
 
 inline const Enemy melee_enemy = {.color = ORANGE,

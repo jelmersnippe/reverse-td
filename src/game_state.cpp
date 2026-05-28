@@ -8,14 +8,29 @@
 void kill_entity(GameState& state, Targetable& target) {
     switch (target.flags) {
         case TARGET_ENEMY: {
+            Enemy* killed_enemy = GetEntity(state.enemies, target.handle);
+
+            if (killed_enemy == nullptr) break;
+
+            const int value = killed_enemy->value;
+            const Vector2 position = killed_enemy->position;
+
             DestroyEntity(state.enemies, target.handle);
-            state.currency += 1;
             state.threat_director.threat += 0.05f;
+
+            CreateEntity(state.pickups, Pickup{.position = position, .value = value});
             break;
         }
         case TARGET_SPAWNER: {
+            Spawner* killed_spawner = GetEntity(state.spawners, target.handle);
+
+            if (killed_spawner == nullptr) break;
+
+            const int value = 5;
+            const Vector2 position = killed_spawner->position;
+
             DestroyEntity(state.spawners, target.handle);
-            state.currency += 5;
+            CreateEntity(state.pickups, Pickup{.position = position, .value = value});
             state.threat_director.threat += 3.0f;
             break;
         }

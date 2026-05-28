@@ -1,6 +1,7 @@
 #include "projectile_system.hpp"
 
 #include "core/entity_pool.hpp"
+#include "entities/projectile.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -104,16 +105,12 @@ bool Update(Projectile& projectile, GameState& state) {
 }
 
 void UpdateProjectiles(GameState& state) {
-    for (size_t projectile_index = 0; projectile_index < state.projectiles.data.size(); projectile_index++) {
-        Slot<Projectile>& projectile = state.projectiles.data[projectile_index];
-
+    for (Slot<Projectile>& projectile : state.projectiles.data) {
         if (!projectile.alive) continue;
 
         bool should_destroy = Update(projectile.ref, state);
 
-        if (should_destroy) {
-            DestroyEntity(state.projectiles, {.index = projectile_index, .generation = projectile.generation});
-        }
+        if (should_destroy) { DestroyEntity(state.projectiles, projectile.handle); }
     }
 }
 
