@@ -1,6 +1,7 @@
 #include "game_state.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "globals.hpp"
 #include "raylib.h"
 #include "systems/targeting.hpp"
@@ -61,7 +62,12 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
         }
         case TARGET_SPAWNER: {
             Spawner* spawner = GetEntity(state.spawners, target.handle);
-            if (spawner != nullptr) health = &spawner->health;
+            if (spawner == nullptr) break;
+
+            health = &spawner->health;
+
+            spawner->state = SpawnerState::UnderAttack;
+            spawner->time_since_last_damage_taken = 0;
             break;
         }
         case TARGET_PLAYER: {

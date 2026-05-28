@@ -13,6 +13,7 @@ enum class SpawnerState {
 };
 
 const int RALLY_DISTANCE = 250;
+const float RESET_TIME = 10;
 
 struct Spawner {
     Vector2 position = {};
@@ -29,4 +30,7 @@ struct Spawner {
     std::vector<EntityHandle> active_enemies = {};
 
     SpawnerState state = SpawnerState::Idle;
+
+    float time_since_last_damage_taken = 0;
+    float under_attack_spawn_modifier = 0.5;
 };

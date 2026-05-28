@@ -8,7 +8,6 @@
 #include "raymath.h"
 #include "systems/threat_director.hpp"
 #include <algorithm>
-#include <array>
 #include <cassert>
 
 Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
@@ -57,13 +56,17 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
 
     const float delta_time = GetFrameTime();
     spawner.time_since_last_spawn += delta_time;
+    spawner.time_since_last_damage_taken += delta_time;
 
     if (!spawner.initial_spawn_happened) {
         spawn_enemies(spawner_slot, enemies, spawn_table, spawner.initial_spawn);
         spawner.initial_spawn_happened = true;
     }
 
-    if (spawner.time_since_last_spawn >= spawner.spawn_cooldown) {
+    float spawn_cooldown = spawner.spawn_cooldown;
+    if (spawner.state == SpawnerState::UnderAttack) spawn_cooldown *= spawner.under_attack_spawn_modifier;
+
+    if (spawner.time_since_last_spawn >= spawn_cooldown) {
         spawn_enemies(spawner_slot, enemies, spawn_table, spawner.spawn_amount);
     }
 
@@ -95,7 +98,6 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
         for (Enemy* enemy : resolved_enemies) {
             if (max_enemies_rallied) {
                 enemy->state = EnemyState::Seek;
-                // Decouple enemy from spawner
                 enemy->home = EntityHandle{};
             } else {
                 enemy->state = EnemyState::Rally;
@@ -108,8 +110,14 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
             spawner.state = SpawnerState::Idle;
         }
     } else if (spawner.state == SpawnerState::UnderAttack) {
+        if (spawner.time_since_last_damage_taken >= RESET_TIME) {
+            spawner.state = SpawnerState::Idle;
+            return;
+        }
+
         for (Enemy* enemy : resolved_enemies) {
             enemy->state = EnemyState::Seek;
+            enemy->home = EntityHandle{};
         }
     }
 }
