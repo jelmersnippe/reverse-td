@@ -3,6 +3,7 @@
 #include "array"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "raylib.h"
 #include "raymath.h"
@@ -95,6 +96,9 @@ void UpdateEnemies(GameState& state) {
 
         Enemy& enemy = slot.ref;
 
+        std::optional<Targetable> target =
+            find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+
         const float delta_time = GetFrameTime();
 
         enemy.time_since_last_attack += delta_time;
@@ -103,6 +107,13 @@ void UpdateEnemies(GameState& state) {
         switch (enemy.state) {
             case EnemyState::Wander: {
                 Spawner* home = GetEntity(state.spawners, enemy.home);
+
+                if (Vector2Distance(enemy.position, target->position) < enemy.aggro_range) {
+                    enemy.state = EnemyState::Seek;
+                    if (home != nullptr) home->state = SpawnerState::UnderAttack;
+                    break;
+                }
+
                 Vector2 wander_center = enemy.position;
 
                 // TODO: If no home -> attempt a seek every x seconds
@@ -117,6 +128,12 @@ void UpdateEnemies(GameState& state) {
                 Spawner* home = GetEntity(state.spawners, enemy.home);
                 if (home == nullptr) {
                     enemy.state = EnemyState::Seek;
+                    break;
+                }
+
+                if (Vector2Distance(enemy.position, target->position) < enemy.aggro_range) {
+                    enemy.state = EnemyState::Seek;
+                    if (home != nullptr) home->state = SpawnerState::UnderAttack;
                     break;
                 }
 
@@ -138,9 +155,6 @@ void UpdateEnemies(GameState& state) {
                 break;
             }
             case EnemyState::Seek: {
-                std::optional<Targetable> target =
-                    find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
-
                 if (!target.has_value()) {
                     enemy.state = EnemyState::Wander;
                     break;
@@ -158,9 +172,6 @@ void UpdateEnemies(GameState& state) {
                 break;
             }
             case EnemyState::Attack: {
-                std::optional<Targetable> target =
-                    find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
-
                 if (!target.has_value()) {
                     enemy.state = EnemyState::Wander;
                     break;
