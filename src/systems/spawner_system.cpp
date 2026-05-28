@@ -2,11 +2,13 @@
 
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "raylib.h"
 #include "raymath.h"
 #include "systems/threat_director.hpp"
 #include <algorithm>
+#include <array>
 #include <cassert>
 
 Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
@@ -59,12 +61,57 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     if (!spawner.initial_spawn_happened) {
         spawn_enemies(spawner_slot, enemies, spawn_table, spawner.initial_spawn);
         spawner.initial_spawn_happened = true;
-        return;
     }
 
-    if (spawner.time_since_last_spawn < spawner.spawn_cooldown) return;
+    if (spawner.time_since_last_spawn >= spawner.spawn_cooldown) {
+        spawn_enemies(spawner_slot, enemies, spawn_table, spawner.spawn_amount);
+    }
 
-    spawn_enemies(spawner_slot, enemies, spawn_table, spawner.spawn_amount);
+    std::vector<Enemy*> resolved_enemies;
+    std::vector<size_t> active_entities_to_remove = {};
+
+    for (size_t i = 0; i < spawner.active_enemies.size(); i++) {
+        const EntityHandle handle = spawner.active_enemies[i];
+        Enemy* enemy = GetEntity(enemies, handle);
+
+        if (enemy == nullptr) {
+            active_entities_to_remove.push_back(i);
+            continue;
+        }
+
+        resolved_enemies.push_back(enemy);
+    }
+
+    for (const size_t index : active_entities_to_remove) {
+        spawner.active_enemies.erase(spawner.active_enemies.begin() + index);
+    }
+
+    if (spawner.state == SpawnerState::Rallying) {
+        // Max enemies and all rallied
+        const bool max_enemies_rallied =
+            resolved_enemies.size() == spawner.max_spawn &&
+            std::ranges::all_of(resolved_enemies, [](Enemy* enemy) { return enemy->rallied; });
+
+        for (Enemy* enemy : resolved_enemies) {
+            if (max_enemies_rallied) {
+                enemy->state = EnemyState::Seek;
+                // Decouple enemy from spawner
+                enemy->home = EntityHandle{};
+            } else {
+                enemy->state = EnemyState::Rally;
+            }
+        }
+
+        // Allow spawner to spawn enemies again
+        if (max_enemies_rallied) {
+            spawner.active_enemies.clear();
+            spawner.state = SpawnerState::Idle;
+        }
+    } else if (spawner.state == SpawnerState::UnderAttack) {
+        for (Enemy* enemy : resolved_enemies) {
+            enemy->state = EnemyState::Seek;
+        }
+    }
 }
 
 void UpdateSpawners(GameState& state) {
@@ -84,6 +131,25 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
         DrawRectangleLines(spawner_top_left.x, spawner_top_left.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
         const int text_width = MeasureText("Spawner", 12);
         DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
+
+        std::string state_text;
+        switch (spawner.ref.state) {
+            case SpawnerState::Rallying:
+                state_text = "Rallying";
+                break;
+            case SpawnerState::UnderAttack:
+                state_text = "Under Attack";
+                break;
+            default:
+                state_text = "Idle";
+                break;
+        }
+        DrawText(state_text.c_str(), spawner.ref.position.x - text_width / 2, spawner.ref.position.y + 20, 12, BLACK);
+
+        if (spawner.ref.state == SpawnerState::Rallying) {
+            DrawCircle(spawner.ref.rally_position.x, spawner.ref.rally_position.y, 5, BLACK);
+            DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
+        }
 
         DrawHealth(spawner.ref.position - Vector2{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
     }

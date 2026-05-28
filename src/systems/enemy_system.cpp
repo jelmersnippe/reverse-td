@@ -71,7 +71,7 @@ Vector2 get_wander_direction(Enemy& enemy, const Vector2 center, const float ran
 
     const float delta_time = GetFrameTime();
 
-    // Idle untill enough time has passed
+    // Idle until enough time has passed
     if (enemy.remaining_idle_time > 0) {
         enemy.remaining_idle_time -= delta_time;
         return {};
@@ -104,6 +104,8 @@ void UpdateEnemies(GameState& state) {
             case EnemyState::Wander: {
                 Spawner* home = GetEntity(state.spawners, enemy.home);
                 Vector2 wander_center = enemy.position;
+
+                // TODO: If no home -> attempt a seek every x seconds
                 if (home != nullptr) wander_center = home->position;
 
                 velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
@@ -140,7 +142,6 @@ void UpdateEnemies(GameState& state) {
                     find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
 
                 if (!target.has_value()) {
-                    // If the enemy has no home and can't find a target it will perma flip between states
                     enemy.state = EnemyState::Wander;
                     break;
                 }
@@ -176,5 +177,23 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
 
         DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
         DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
+
+
+        std::string state_text;
+        switch (enemy.ref.state) {
+            case EnemyState::Attack:
+                state_text = "Attack";
+                break;
+            case EnemyState::Rally:
+                state_text = "Rally";
+                break;
+            case EnemyState::Seek:
+                state_text = "Seek";
+                break;
+            default:
+                state_text = "Wander";
+                break;
+        }
+        DrawText(state_text.c_str(), enemy.ref.position.x, enemy.ref.position.y, 12, BLACK);
     }
 }

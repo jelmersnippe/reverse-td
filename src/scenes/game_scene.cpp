@@ -11,6 +11,7 @@
 #include "systems/targeting.hpp"
 
 #include "raymath.h"
+#include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
 #include <algorithm>
 #include <format>
@@ -53,7 +54,6 @@ void UpdateInputs(GameState& state) {
         switch (input) {
             case Input::LeftMouse: {
                 if (active_player->time_since_last_shot < TIME_BETWEEN_SHOTS) break;
-                std::cout << active_player->time_since_last_shot << std::endl;
 
                 const Vector2 direction =
                     Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position);
@@ -167,6 +167,7 @@ void Update(GameState& state) {
     UpdateEnemies(state);
     UpdateSpawners(state);
     UpdateTowers(state);
+    UpdateThreatDirector(state);
 }
 
 void Destroy(GameState& state) {

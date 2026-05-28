@@ -1,6 +1,7 @@
 #include "threat_director.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "raylib.h"
 #include "raymath.h"
@@ -20,11 +21,61 @@ Spawner* get_random_spawner(EntityPool<Spawner>& spawners) {
     }
 }
 
+void rally_spawners(GameState& state) {
+    const Player* player = GetEntity(state.players, state.active_player);
+
+    if (player == nullptr) return;
+
+    std::vector<Spawner*> closest_spawners = {};
+
+    for (Slot<Spawner>& slot : state.spawners.data) {
+        if (!slot.alive || slot.ref.state != SpawnerState::Idle) continue;
+
+        if (closest_spawners.size() < 4) {
+            closest_spawners.push_back(&slot.ref);
+            continue;
+        }
+
+        for (Spawner*& closest_spawner : closest_spawners) {
+            if (Vector2Distance(closest_spawner->position, player->position) <
+                Vector2Distance(slot.ref.position, player->position))
+                continue;
+
+            closest_spawner = &slot.ref;
+            break;
+        }
+    }
+
+    for (Spawner*& spawner : closest_spawners) {
+        const Vector2 direction = Vector2Normalize(player->position - spawner->position);
+        spawner->rally_position = spawner->position + direction * RALLY_DISTANCE;
+        spawner->state = SpawnerState::Rallying;
+    }
+}
+
+void create_spawner(EntityPool<Spawner>& spawners) {
+    const Spawner* parent_spawner = get_random_spawner(spawners);
+
+    if (parent_spawner == nullptr) return;
+
+    const float random_x = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
+    const int x_negative = GetRandomValue(0, 1);
+    const float random_y = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
+    const int y_negative = GetRandomValue(0, 1);
+
+    Vector2 offset = {.x = random_x, .y = random_y};
+    if (x_negative == 1) offset.x = -random_x;
+    if (y_negative == 1) offset.y = -random_y;
+
+    CreateEntity(spawners, Spawner{.position = parent_spawner->position + offset, .initial_spawn = 0});
+}
+
 void UpdateThreatDirector(GameState& state) {
     ThreatDirector& director = state.threat_director;
     const float delta_time = GetFrameTime();
 
     director.time_to_next_spawner_spread -= delta_time;
+    director.time_to_next_rally -= delta_time;
 
     director.threat += 0.3f * delta_time;
 
@@ -47,21 +98,13 @@ void UpdateThreatDirector(GameState& state) {
     }
 
     if (director.time_to_next_spawner_spread <= 0) {
-        Spawner* parent_spawner = get_random_spawner(state.spawners);
-
-        if (parent_spawner == nullptr) return;
-
-        const float random_x = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
-        const int x_negative = GetRandomValue(0, 1);
-        const float random_y = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
-        const int y_negative = GetRandomValue(0, 1);
-
-        Vector2 offset = {.x = random_x, .y = random_y};
-        if (x_negative == 1) offset.x = -random_x;
-        if (y_negative == 1) offset.y = -random_y;
-
-        CreateEntity(state.spawners, Spawner{.position = parent_spawner->position + offset, .initial_spawn = 0});
+        create_spawner(state.spawners);
 
         director.time_to_next_spawner_spread = GetRandomValue(20, 40);
+    }
+
+    if (director.time_to_next_rally <= 0) {
+        rally_spawners(state);
+        director.time_to_next_rally = GetRandomValue(20, 40);
     }
 }

@@ -6,6 +6,14 @@
 #include "core/health.hpp"
 #include <vector>
 
+enum class SpawnerState {
+    Idle,
+    Rallying,
+    UnderAttack,
+};
+
+const int RALLY_DISTANCE = 250;
+
 struct Spawner {
     Vector2 position = {};
     Health health = Health(500);
@@ -19,4 +27,6 @@ struct Spawner {
     int max_spawn = 6;
 
     std::vector<EntityHandle> active_enemies = {};
+
+    SpawnerState state = SpawnerState::Idle;
 };
