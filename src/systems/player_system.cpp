@@ -1,6 +1,7 @@
 #include "player_system.hpp"
 
 #include "game_state.hpp"
+#include "globals.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -9,7 +10,10 @@ void Update(Player& player, GameState& state) {
 
     player.time_since_last_shot += delta_time;
 
-    Vector2 velocity = Vector2Normalize(player.direction) * PLAYER_SPEED * delta_time;
+    float speed = PLAYER_SPEED;
+    if (player.time_since_last_shot < TIME_BETWEEN_SHOTS) { speed *= ATTACKING_SPEED_MODIFIER; }
+
+    Vector2 velocity = Vector2Normalize(player.direction) * speed * delta_time;
 
     Vector2 new_position = player.position;
 

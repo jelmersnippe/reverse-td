@@ -74,7 +74,7 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
         const EntityHandle handle = spawner.active_enemies[i];
         Enemy* enemy = GetEntity(enemies, handle);
 
-        if (enemy == nullptr) {
+        if (enemy == nullptr || !enemy->home.IsValid()) {
             active_entities_to_remove.push_back(i);
             continue;
         }

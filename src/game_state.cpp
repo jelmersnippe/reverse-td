@@ -41,6 +41,7 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
 
             health = &enemy->health;
             enemy->state = EnemyState::Seek;
+            enemy->home = EntityHandle{};
             break;
         }
         case TARGET_SPAWNER: {
