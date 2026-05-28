@@ -60,7 +60,10 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
             state.threat_director.threat_active = true;
 
             Spawner* home = GetEntity(state.spawners, enemy->home);
-            if (home != nullptr) home->state = SpawnerState::UnderAttack;
+            if (home != nullptr) {
+                home->state = SpawnerState::UnderAttack;
+                home->time_since_last_damage_taken = 0;
+            }
 
             enemy->state = EnemyState::Seek;
             enemy->home = EntityHandle{};
