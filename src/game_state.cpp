@@ -31,7 +31,13 @@ void kill_entity(GameState& state, Targetable& target) {
             const Vector2 position = killed_spawner->position;
 
             DestroyEntity(state.spawners, target.handle);
-            CreateEntity(state.pickups, Pickup{.position = position, .value = value});
+            for (int i = 0; i < value; i++) {
+                int random_x = GetRandomValue(0, 50) - 25;
+                int random_y = GetRandomValue(0, 50) - 25;
+                CreateEntity(
+                    state.pickups,
+                    Pickup{.position = Vector2{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});
+            }
             state.threat_director.threat += 3.0f;
             break;
         }
