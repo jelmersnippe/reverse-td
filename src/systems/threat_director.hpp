@@ -11,6 +11,7 @@ struct SpawnOption {
 };
 
 struct ThreatDirector {
+    bool threat_active = false;
     float threat = 0;
 
     float time_to_next_spawner_spread = 30;

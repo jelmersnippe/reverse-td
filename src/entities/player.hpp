@@ -10,4 +10,6 @@ struct Player {
     Health health = Health(100);
     int damage = 25;
     float time_since_last_shot = 0;
+    float speed = 125;
+    float attacking_speed_modifier = 0.5;
 };

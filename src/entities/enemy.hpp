@@ -48,6 +48,7 @@ struct Enemy {
     float speed = 100;
     float range = 5;
     float size = 20;
+    float aggro_range = 200;
 
     int damage = 1;
     float attack_cooldown = 2;

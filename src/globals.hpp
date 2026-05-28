@@ -1,12 +1,10 @@
 #pragma once
 
-const int SCREEN_WIDTH = 1200;
-const int SCREEN_HEIGHT = 800;
+const int SCREEN_WIDTH = 1440;
+const int SCREEN_HEIGHT = 1200;
 const int TARGET_FPS = 60;
 
 const int PLAYER_STARTING_HEALTH = 100;
-const int PLAYER_SPEED = 200;
-const float ATTACKING_SPEED_MODIFIER = 0.5;
 const int PLAYER_SIZE = 50;
 
 const int BASE_ENEMY_HEALTH = 3;

@@ -56,6 +56,9 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
             if (enemy == nullptr) break;
 
             health = &enemy->health;
+
+            state.threat_director.threat_active = true;
+
             enemy->state = EnemyState::Seek;
             enemy->home = EntityHandle{};
             break;
@@ -65,6 +68,8 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
             if (spawner == nullptr) break;
 
             health = &spawner->health;
+
+            state.threat_director.threat_active = true;
 
             spawner->state = SpawnerState::UnderAttack;
             spawner->time_since_last_damage_taken = 0;

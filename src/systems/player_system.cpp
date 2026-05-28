@@ -10,8 +10,8 @@ void Update(Player& player, GameState& state) {
 
     player.time_since_last_shot += delta_time;
 
-    float speed = PLAYER_SPEED;
-    if (player.time_since_last_shot < TIME_BETWEEN_SHOTS) { speed *= ATTACKING_SPEED_MODIFIER; }
+    float speed = player.speed;
+    if (player.time_since_last_shot < TIME_BETWEEN_SHOTS) { speed *= player.attacking_speed_modifier; }
 
     Vector2 velocity = Vector2Normalize(player.direction) * speed * delta_time;
 

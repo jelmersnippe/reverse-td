@@ -72,12 +72,6 @@ void create_spawner(EntityPool<Spawner>& spawners) {
 
 void UpdateThreatDirector(GameState& state) {
     ThreatDirector& director = state.threat_director;
-    const float delta_time = GetFrameTime();
-
-    director.time_to_next_spawner_spread -= delta_time;
-    director.time_to_next_rally -= delta_time;
-
-    director.threat += 0.3f * delta_time;
 
     director.spawn_table.clear();
 
@@ -97,6 +91,15 @@ void UpdateThreatDirector(GameState& state) {
         director.spawn_table.push_back({.enemy = tank_enemy, .weight = 0.1});
     }
 
+    if (!director.threat_active) return;
+
+    const float delta_time = GetFrameTime();
+
+    director.time_to_next_spawner_spread -= delta_time;
+    director.time_to_next_rally -= delta_time;
+
+    director.threat += 0.03f * delta_time;
+
     if (director.time_to_next_spawner_spread <= 0) {
         create_spawner(state.spawners);
 
@@ -107,4 +110,6 @@ void UpdateThreatDirector(GameState& state) {
         rally_spawners(state);
         director.time_to_next_rally = GetRandomValue(20, 40);
     }
+
+    if (director.threat > 1) director.threat = 1;
 }
