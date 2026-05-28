@@ -31,7 +31,7 @@ enum class Input {
     MouseScrollDown,
 };
 
-const int STARTING_CURRENCY = 1000;
+const int STARTING_CURRENCY = 0;
 
 struct GameState {
     bool should_exit = false;
