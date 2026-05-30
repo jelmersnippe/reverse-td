@@ -27,7 +27,7 @@ void Init(GameState& state) {
     CreateEntity(state.spawners, Spawner{.position = {.x = 200, .y = 200}, .max_spawn = 2});
 }
 
-void Draw(const GameState& state) {
+void Draw(GameState& state) {
     ClearBackground(WHITE);
 
     DrawText(std::format("Personal space: {}", PERSONAL_SPACE).c_str(), 20, 50, 12, BLACK);

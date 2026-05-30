@@ -1,5 +1,6 @@
 #include "scenes/game_scene.hpp"
 #include "core/entity_pool.hpp"
+#include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -19,7 +20,9 @@
 
 namespace {
 
-void Draw(const GameState& state) {
+const Vector2 screen_center = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
+
+void Draw(GameState& state) {
     ClearBackground(WHITE);
 
     BeginMode2D(state.camera);
@@ -40,6 +43,28 @@ void Draw(const GameState& state) {
     const std::string currency_text = std::format("Currency: {}", state.currency);
     const int currency_text_width = MeasureText(currency_text.c_str(), 20);
     DrawText(currency_text.c_str(), SCREEN_WIDTH / 2 - currency_text_width / 2, 60, 20, BLACK);
+
+    Player* player = GetEntity(state.players, state.active_player);
+    if (player != nullptr) {
+        std::optional<Targetable> closest_spawner =
+            find_closest_target(state.camera.target, build_targetables(state), TARGET_SPAWNER);
+
+        Vector2 top_left_screen_point = GetScreenToWorld2D({.x = 0, .y = 0}, state.camera);
+        if (closest_spawner.has_value() &&
+            !CheckCollisionPointRec(closest_spawner->position, Rectangle{.x = top_left_screen_point.x,
+                                                                         .y = top_left_screen_point.y,
+                                                                         .width = SCREEN_WIDTH,
+                                                                         .height = SCREEN_HEIGHT})) {
+            Vector2 direction = Vector2Normalize(closest_spawner->position - player->position);
+            float angle = atan2f(direction.y, direction.x);
+
+            Vector2 point_a = Vector2Rotate({.x = 200, .y = 0}, angle) + screen_center;
+            Vector2 point_b = Vector2Rotate({.x = 160, .y = -10.0f}, angle) + screen_center;
+            Vector2 point_c = Vector2Rotate({.x = 160, .y = 10.0f}, angle) + screen_center;
+
+            DrawTriangle(point_a, point_b, point_c, BLACK);
+        }
+    }
 }
 
 void UpdateInputs(GameState& state) {
