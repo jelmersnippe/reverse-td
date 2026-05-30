@@ -98,7 +98,7 @@ void UpdateThreatDirector(GameState& state) {
     director.time_to_next_spawner_spread -= delta_time;
     director.time_to_next_rally -= delta_time;
 
-    director.threat += 0.03f * delta_time;
+    director.threat += 0.003f * delta_time;
 
     if (director.time_to_next_spawner_spread <= 0) {
         create_spawner(state.spawners);

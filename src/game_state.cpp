@@ -17,7 +17,7 @@ void kill_entity(GameState& state, Targetable& target) {
             const Vector2 position = killed_enemy->position;
 
             DestroyEntity(state.enemies, target.handle);
-            state.threat_director.threat += 0.05f;
+            state.threat_director.threat += 0.005f;
 
             CreateEntity(state.pickups, Pickup{.position = position, .value = value});
             break;
@@ -38,7 +38,7 @@ void kill_entity(GameState& state, Targetable& target) {
                     state.pickups,
                     Pickup{.position = Vector2{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});
             }
-            state.threat_director.threat += 3.0f;
+            state.threat_director.threat += 0.03f;
             break;
         }
         case TARGET_PLAYER: {
