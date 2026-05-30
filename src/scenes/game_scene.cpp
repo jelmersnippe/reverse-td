@@ -16,7 +16,9 @@
 #include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
 #include <algorithm>
+#include <cstdlib>
 #include <format>
+#include <iostream>
 
 namespace {
 
@@ -201,15 +203,50 @@ void Destroy(GameState& state) {
     state.Reset();
 }
 
+struct InitialSpawnerPlacement {
+    Vector2 min_distance;
+    Vector2 max_distance;
+    int count;
+    int initial_enemy_spawn_count;
+};
+
+const std::array<InitialSpawnerPlacement, 3> initial_spawner_placements = {
+    {InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
+                             .max_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
+                             .count = 3,
+                             .initial_enemy_spawn_count = 3},
+     InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
+                             .max_distance = {.x = SCREEN_WIDTH * 4, .y = SCREEN_HEIGHT * 4},
+                             .count = 5,
+                             .initial_enemy_spawn_count = 1},
+     InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 3, .y = SCREEN_HEIGHT * 3},
+                             .max_distance = {.x = SCREEN_WIDTH * 6, .y = SCREEN_HEIGHT * 6},
+                             .count = 8,
+                             .initial_enemy_spawn_count = 0}},
+};
+
 void Init(GameState& state) {
+    for (InitialSpawnerPlacement placement : initial_spawner_placements) {
+        for (int i = 0; i < placement.count; i++) {
+            bool negative_x = GetRandomValue(0, 1) == 1;
+            bool negative_y = GetRandomValue(0, 1) == 1;
+            int random_x = GetRandomValue((int)placement.min_distance.x, (int)placement.max_distance.x);
+            int random_y = GetRandomValue((int)placement.min_distance.y, (int)placement.max_distance.y);
+
+            if (negative_x) random_x = -random_x;
+            if (negative_y) random_y = -random_y;
+
+            CreateEntity(state.spawners, {.position = {.x = (float)random_x, .y = (float)random_y},
+                                          .spawn_amount = 1,
+                                          .initial_spawn = placement.initial_enemy_spawn_count});
+
+            std::cout << "Created spawner at (" << random_x << ", " << random_y << ")" << std::endl;
+        }
+    }
+
     Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
     state.active_player = CreateEntity(state.players, player);
     state.camera.target = {player.position};
-
-    CreateEntity(state.spawners, {.position = {.x = -200, .y = 200}, .spawn_amount = 2, .initial_spawn = 2});
-    CreateEntity(state.spawners, {.position = {.x = 1200, .y = -400}});
-    CreateEntity(state.spawners, {.position = {.x = 600, .y = 800}, .initial_spawn = 2});
-    CreateEntity(state.spawners, {.position = {.x = 0, .y = 1200}, .initial_spawn = 1});
 }
 
 } // namespace
