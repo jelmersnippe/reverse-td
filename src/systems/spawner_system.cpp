@@ -11,6 +11,7 @@
 #include <cassert>
 
 Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
+
     const float rng = (float)GetRandomValue(0, 100) / 100.0f;
     float weight = 0;
 
@@ -36,11 +37,22 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
         if (IsValidEntity(enemies, handle)) active_count++;
     }
 
-    const int limited_count = std::min(spawner.max_spawn - active_count, count);
+    int spawn_count = count;
+    int max_spawn = spawner.max_spawn;
+    if (spawner.state == SpawnerState::UnderAttack) {
+        spawn_count += 1;
+        max_spawn = max_spawn * 0.5;
+    }
+
+    const int limited_count = std::min(max_spawn - active_count, spawn_count);
 
     for (int i = 0; i < limited_count; i++) {
         Enemy new_enemy = get_spawn_option(spawn_table);
-        new_enemy.position = spawner.position;
+
+        const int random_x = GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
+        const int random_y = GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
+
+        new_enemy.position = spawner.position + Vector2{.x = (float)random_x, .y = (float)random_y};
         new_enemy.home = spawner_slot.handle;
         new_enemy.target_position = spawner.position;
         const EntityHandle created_enemy = CreateEntity(enemies, new_enemy);

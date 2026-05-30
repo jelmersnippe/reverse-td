@@ -5,6 +5,7 @@
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
+#include "globals.hpp"
 #include "raylib.h"
 #include "raymath.h"
 #include "systems/targeting.hpp"
@@ -22,6 +23,21 @@ Vector2 get_separation_direction(Enemy& enemy, Targetable& target, GameState& st
         float distance = Vector2Length(direction_from_other);
 
         const float personal_space_center_to_center = enemy.size + other_enemy.size + PERSONAL_SPACE;
+        if (distance < 0.001f || distance > personal_space_center_to_center) continue;
+
+        float strength = 1.0f - (distance / personal_space_center_to_center);
+
+        separation += Vector2Normalize(direction_from_other) * strength;
+    }
+
+    for (Slot<Spawner>& other_slot : state.spawners.data) {
+        if (!other_slot.alive) continue;
+        const Spawner& spawner = other_slot.ref;
+
+        const Vector2 direction_from_other = enemy.position - spawner.position;
+        float distance = Vector2Length(direction_from_other);
+
+        const float personal_space_center_to_center = enemy.size + SPAWNER_SIZE / 2 + PERSONAL_SPACE;
         if (distance < 0.001f || distance > personal_space_center_to_center) continue;
 
         float strength = 1.0f - (distance / personal_space_center_to_center);
