@@ -75,12 +75,12 @@ void UpdateThreatDirector(GameState& state) {
 
     director.spawn_table.clear();
 
-    if (director.threat < 10) {
+    if (director.threat < 0.1) {
         director.spawn_table.push_back({.enemy = melee_enemy, .weight = 1});
-    } else if (director.threat < 20) {
+    } else if (director.threat < 0.2) {
         director.spawn_table.push_back({.enemy = melee_enemy, .weight = 0.7});
         director.spawn_table.push_back({.enemy = fast_enemy, .weight = 0.3});
-    } else if (director.threat < 35) {
+    } else if (director.threat < 0.35) {
         director.spawn_table.push_back({.enemy = melee_enemy, .weight = 0.5});
         director.spawn_table.push_back({.enemy = fast_enemy, .weight = 0.3});
         director.spawn_table.push_back({.enemy = ranged_enemy, .weight = 0.2});
