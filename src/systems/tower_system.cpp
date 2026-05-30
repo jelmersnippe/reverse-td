@@ -24,7 +24,7 @@ void Update(Tower& tower, GameState& state) {
     // Attacking time
     if (tower.time_since_last_attack >= 60.0 / tower.fire_rate) {
         const Vector2 direction = target->position - tower.position;
-        CreateEntity(state.projectiles, {.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
+        CreateEntity(state.projectiles, {.direction = Vector2Normalize(direction),
                                          .position = tower.position,
                                          .life_time = 2.0,
                                          .damage = tower.damage,

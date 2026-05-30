@@ -18,7 +18,7 @@ bool Update(Projectile& projectile, GameState& state) {
 
     if (projectile.time_alive >= projectile.life_time) { return true; }
 
-    projectile.position += projectile.velocity * delta_time;
+    projectile.position += projectile.direction * projectile.speed * delta_time;
 
     if ((projectile.flags & TARGET_ENEMY) == TARGET_ENEMY) {
         for (Slot<Enemy>& enemy : state.enemies.data) {

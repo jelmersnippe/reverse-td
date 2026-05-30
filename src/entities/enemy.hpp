@@ -47,7 +47,7 @@ struct Enemy {
 
     float speed = 100;
     float range = 5;
-    float size = 20;
+    float size = 30;
     float aggro_range = 300;
 
     int damage = 1;
@@ -61,8 +61,8 @@ inline const Enemy melee_enemy = {.color = ORANGE,
                                   .seek_behavior = SeekBehavior::Separation,
                                   .attack_behavior = AttackBehavior::Melee,
                                   .health = Health(50),
-                                  .speed = 100,
-                                  .size = 20,
+                                  .speed = 175,
+                                  .size = 25,
                                   .damage = 15,
                                   .attack_cooldown = 2};
 
@@ -71,8 +71,8 @@ inline const Enemy fast_enemy = {
     .seek_behavior = SeekBehavior::Separation,
     .attack_behavior = AttackBehavior::Melee,
     .health = Health(30),
-    .speed = 150,
-    .size = 10,
+    .speed = 250,
+    .size = 20,
     .damage = 10,
     .attack_cooldown = 2,
 };
@@ -82,9 +82,9 @@ inline const Enemy ranged_enemy = {
     .seek_behavior = SeekBehavior::Separation,
     .attack_behavior = AttackBehavior::Ranged,
     .health = Health(40),
-    .speed = 75,
+    .speed = 150,
     .range = 300,
-    .size = 15,
+    .size = 20,
     .damage = 12,
     .attack_cooldown = 1,
 };
@@ -94,9 +94,9 @@ inline const Enemy tank_enemy = {
     .seek_behavior = SeekBehavior::Separation,
     .attack_behavior = AttackBehavior::Melee,
     .health = Health(250),
-    .speed = 40,
+    .speed = 100,
     .range = 15,
-    .size = 60,
+    .size = 50,
     .damage = 30,
     .attack_cooldown = 4,
 };

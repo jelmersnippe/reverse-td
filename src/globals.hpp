@@ -11,8 +11,7 @@ const int BASE_ENEMY_HEALTH = 3;
 
 const int SPAWNER_SIZE = 100;
 
-const int PROJECTILE_SPEED = 1000;
-const int PROJECTILE_SIZE = 5;
+const int PROJECTILE_SIZE = 10;
 
 const float FIRE_RATE = 150;
 const float TIME_BETWEEN_SHOTS = 60 / FIRE_RATE;

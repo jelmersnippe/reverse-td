@@ -85,7 +85,7 @@ void UpdateInputs(GameState& state) {
 
                 const Vector2 direction =
                     Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position);
-                CreateEntity(state.projectiles, Projectile{.velocity = Vector2Normalize(direction) * PROJECTILE_SPEED,
+                CreateEntity(state.projectiles, Projectile{.direction = Vector2Normalize(direction),
                                                            .position = active_player->position,
                                                            .life_time = 2.0,
                                                            .damage = active_player->damage,
