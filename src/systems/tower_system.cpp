@@ -48,7 +48,7 @@ int GetScrapValue(const Tower& tower) {
 }
 
 void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
-    const Vector2 mouse_position = GetMousePosition();
+    const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
     for (const Slot<Tower>& tower : towers.data) {
         if (!tower.alive) continue;
 
