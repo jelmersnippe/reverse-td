@@ -49,7 +49,7 @@ void Draw(GameState& state) {
     Player* player = GetEntity(state.players, state.active_player);
     if (player != nullptr) {
         std::optional<Targetable> closest_spawner =
-            find_closest_target(state.camera.target, build_targetables(state), TARGET_SPAWNER);
+            find_closest_target(state.camera.target, state.targetables, TARGET_SPAWNER);
 
         Vector2 top_left_screen_point = GetScreenToWorld2D({.x = 0, .y = 0}, state.camera);
         if (closest_spawner.has_value() &&
@@ -98,6 +98,8 @@ void UpdateInputs(GameState& state) {
                     Slot<Tower>& slot = state.towers.data[i];
                     if (!slot.alive) continue;
 
+                    if (slot.ref.scrapping) continue;
+
                     const bool is_hovered =
                         CheckCollisionPointRec(mouse_position, {.x = slot.ref.position.x - TOWER_SIZE / 2,
                                                                 .y = slot.ref.position.y - TOWER_SIZE / 2,
@@ -107,8 +109,7 @@ void UpdateInputs(GameState& state) {
                     if (!is_hovered || Vector2Distance(active_player->position, slot.ref.position) > PLAYER_RANGE)
                         continue;
 
-                    DestroyEntity(state.towers, EntityHandle{.index = i, .generation = slot.generation});
-                    state.currency += GetScrapValue(slot.ref);
+                    slot.ref.scrapping = true;
                 }
                 break;
             }
@@ -188,6 +189,8 @@ void UpdateInputs(GameState& state) {
 void Update(GameState& state) {
     Player* active_player = GetEntity(state.players, state.active_player);
     if (active_player != nullptr) state.camera.target = {active_player->position};
+
+    state.targetables = build_targetables(state);
 
     UpdateInputs(state);
     UpdatePlayers(state);

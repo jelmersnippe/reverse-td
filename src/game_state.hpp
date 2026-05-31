@@ -38,6 +38,8 @@ struct GameState {
 
     EntityHandle active_player = {};
 
+    std::vector<Targetable> targetables;
+
     std::vector<Input> inputs = {};
     EntityPool<Player> players;
     EntityPool<Projectile> projectiles = {};

@@ -10,13 +10,12 @@
 void UpdatePickups(GameState& state) {
     const float delta_time = GetFrameTime();
 
-    const auto targetables = build_targetables(state);
-
     for (Slot<Pickup>& pickup : state.pickups.data) {
         if (!pickup.alive) continue;
 
         if (!pickup.ref.target.has_value()) {
-            std::optional<Targetable> target = find_closest_target(pickup.ref.position, targetables, TARGET_PLAYER);
+            std::optional<Targetable> target =
+                find_closest_target(pickup.ref.position, state.targetables, TARGET_PLAYER);
 
             if (!target.has_value() || Vector2Distance(target->position, pickup.ref.position) > PICKUP_RANGE) continue;
 

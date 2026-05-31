@@ -11,4 +11,8 @@ struct Tower {
     int fire_rate = 120;
     float time_since_last_attack = 0;
     int range = 350;
+
+    bool scrapping = false;
+    float time_to_scrap = 3;
+    float scrap_time = 0;
 };

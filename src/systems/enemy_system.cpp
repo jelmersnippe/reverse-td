@@ -113,7 +113,7 @@ void UpdateEnemies(GameState& state) {
         Enemy& enemy = slot.ref;
 
         std::optional<Targetable> target =
-            find_closest_target(enemy.position, build_targetables(state), TARGET_TOWER | TARGET_PLAYER);
+            find_closest_target(enemy.position, state.targetables, TARGET_TOWER | TARGET_PLAYER);
 
         const float delta_time = GetFrameTime();
 
