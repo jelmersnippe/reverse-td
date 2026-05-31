@@ -67,8 +67,6 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
                                         .y = tower.ref.position.y - TOWER_SIZE / 2};
         DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE, TOWER_SIZE, BLACK);
         DrawCircle(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE * 0.3, BLUE);
-        const int text_width = MeasureText("Tower", 12);
-        DrawText("Tower", tower.ref.position.x - text_width / 2, tower.ref.position.y, 12, BLACK);
 
         if (tower.ref.scrapping) {
             DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10, 30, 5, BLACK);

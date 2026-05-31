@@ -24,20 +24,21 @@ namespace {
 
 const Vector2 screen_center = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
 
-void Draw(GameState& state) {
-    ClearBackground(WHITE);
+void DrawUi(GameState& state) {
+    // TOWER COST UI
+    const Vector2 tower_center = Vector2{.x = screen_center.x, .y = SCREEN_HEIGHT - 50};
+    const Vector2 tower_top_left = tower_center - Vector2{.x = TOWER_SIZE / 4, .y = TOWER_SIZE / 4};
+    DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE / 2, TOWER_SIZE / 2, BLACK);
+    DrawCircle(tower_center.x, tower_center.y, TOWER_SIZE * 0.15, BLUE);
 
-    BeginMode2D(state.camera);
+    const int tower_text_width = MeasureText("Tower", 12);
+    const int cost_text_width = MeasureText("10 [RMB]", 12);
+    DrawText("Tower", tower_center.x - tower_text_width / 2, tower_top_left.y - 12, 12, BLACK);
+    Color cost_color = BLACK;
+    if (state.currency < 10) cost_color = RED;
+    DrawText("10 [RMB]", screen_center.x - cost_text_width / 2, tower_top_left.y + TOWER_SIZE / 2 + 8, 12, cost_color);
 
-    DrawEnemies(state.enemies);
-    DrawPlayers(state.players);
-    DrawProjectiles(state.projectiles);
-    DrawSpawners(state.spawners);
-    DrawTowers(state.towers, state.camera);
-    DrawPickups(state.pickups);
-
-    EndMode2D();
-
+    // INFO AT TOP
     const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
     const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
     DrawText(difficulty_text.c_str(), SCREEN_WIDTH / 2 - difficulty_text_width / 2, 30, 20, BLACK);
@@ -46,6 +47,7 @@ void Draw(GameState& state) {
     const int currency_text_width = MeasureText(currency_text.c_str(), 20);
     DrawText(currency_text.c_str(), SCREEN_WIDTH / 2 - currency_text_width / 2, 60, 20, BLACK);
 
+    // POINTER TO SPAWNER
     Player* player = GetEntity(state.players, state.active_player);
     if (player != nullptr) {
         std::optional<Targetable> closest_spawner =
@@ -67,6 +69,23 @@ void Draw(GameState& state) {
             DrawTriangle(point_a, point_b, point_c, BLACK);
         }
     }
+}
+
+void Draw(GameState& state) {
+    ClearBackground(WHITE);
+
+    BeginMode2D(state.camera);
+
+    DrawEnemies(state.enemies);
+    DrawPlayers(state.players);
+    DrawProjectiles(state.projectiles);
+    DrawSpawners(state.spawners);
+    DrawTowers(state.towers, state.camera);
+    DrawPickups(state.pickups);
+
+    EndMode2D();
+
+    DrawUi(state);
 }
 
 void UpdateInputs(GameState& state) {
