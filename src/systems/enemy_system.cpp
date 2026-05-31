@@ -66,6 +66,7 @@ void attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
     CreateEntity(state.projectiles, Projectile{.direction = Vector2Normalize(target.position - enemy.position),
                                                .position = enemy.position,
                                                .life_time = 2.0,
+                                               .speed = 800,
                                                .damage = enemy.damage,
                                                .flags = TARGET_PLAYER | TARGET_TOWER});
     enemy.time_since_last_attack = 0;

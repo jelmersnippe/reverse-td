@@ -9,6 +9,28 @@ void Update(Player& player, GameState& state) {
     const float delta_time = GetFrameTime();
 
     player.time_since_last_shot += delta_time;
+    player.time_since_last_damage_taken += delta_time;
+
+    const bool can_regen = player.time_since_last_shot >= player.out_of_combat_time &&
+                           player.time_since_last_damage_taken >= player.out_of_combat_time &&
+                           player.health.current < player.health.max;
+
+    if (!can_regen) {
+        player.regenerating = false;
+    } else {
+        if (!player.regenerating) {
+            player.regenerating = true;
+            player.time_since_last_regen = 0;
+        }
+
+        player.time_since_last_regen += delta_time;
+
+        if (player.time_since_last_regen >= player.regen_time) {
+            player.health.current++;
+
+            player.time_since_last_regen -= player.regen_time;
+        }
+    }
 
     float speed = player.speed;
     if (player.time_since_last_shot < TIME_BETWEEN_SHOTS) { speed *= player.attacking_speed_modifier; }
@@ -47,6 +69,13 @@ void DrawPlayers(const EntityPool<Player>& players) {
 
         DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                       PLAYER_SIZE, GREEN);
-        DrawHealth(player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE}, player.ref.health);
+        const Vector2 health_position = player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE};
+        DrawHealth(health_position, player.ref.health);
+
+        if (player.ref.regenerating) {
+
+            const int text_width = MeasureText("Regenerating", 10);
+            DrawText("Regenerating", health_position.x - text_width / 2, health_position.y - 10, 10, BLACK);
+        }
     }
 }

@@ -89,7 +89,10 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
         }
         case TARGET_PLAYER: {
             Player* player = GetEntity(state.players, target.handle);
-            if (player != nullptr) health = &player->health;
+            if (player == nullptr) break;
+
+            health = &player->health;
+            player->time_since_last_damage_taken = 0;
             break;
         }
         case TARGET_TOWER: {
