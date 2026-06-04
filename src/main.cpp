@@ -26,12 +26,15 @@ void HandleInput(GameState& state) {
     if (IsKeyDown(KEY_THREE)) { state.inputs.push_back(Input::Three); }
     if (IsKeyDown(KEY_FOUR)) { state.inputs.push_back(Input::Four); }
 
+    if (IsKeyPressed(KEY_ESCAPE)) { state.inputs.push_back(Input::Escape); }
+
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) { state.inputs.push_back(Input::LeftMouse); }
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { state.inputs.push_back(Input::RightMouse); }
 }
 
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
+    SetExitKey(KEY_NULL);
     SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
 

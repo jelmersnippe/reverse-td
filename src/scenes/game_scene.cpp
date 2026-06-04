@@ -4,6 +4,7 @@
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
+#include "scenes/pause_scene.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/pickup_system.hpp"
 #include "systems/player_system.hpp"
@@ -99,6 +100,10 @@ void UpdateInputs(GameState& state) {
 
     for (const Input& input : state.inputs) {
         switch (input) {
+            case Input::Escape: {
+                SCENE_MANAGER.PushScene(state, PAUSE_SCENE);
+                break;
+            }
             case Input::LeftMouse: {
                 if (active_player->time_since_last_shot < TIME_BETWEEN_SHOTS) break;
 

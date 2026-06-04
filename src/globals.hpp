@@ -1,7 +1,11 @@
 #pragma once
 
+#include "raylib.h"
+
 const int SCREEN_WIDTH = 1440;
 const int SCREEN_HEIGHT = 1200;
+const Vector2 SCREEN_CENTER = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
+
 const int TARGET_FPS = 60;
 
 const int PLAYER_STARTING_HEALTH = 100;

@@ -29,6 +29,7 @@ enum class Input {
     Four,
     MouseScrollUp,
     MouseScrollDown,
+    Escape
 };
 
 const int STARTING_CURRENCY = 0;
