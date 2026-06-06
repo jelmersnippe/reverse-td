@@ -49,22 +49,51 @@ void UI::end_layout() {
 
     if (this->layouts.empty()) return;
 
-    this->layouts.top().size = {.x = this->layouts.top().size.x + size.x, .y = this->layouts.top().size.y + size.y};
+    add_size_to_layout(&this->layouts.top(), size);
 }
 
-bool UI::button(ElementId id, Vec2 size, std::string text, int font_size, Color color) {
+// TODO: Make work for other shapes
+bool get_and_update_ui_state(UI* ui, UI::ElementId id, Rectangle rect) {
+    bool result = false;
+
+    if (id == ui->active && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        if (id == ui->hot) result = true;
+
+        ui->active = NONE_ID;
+    } else if (id == ui->hot && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        ui->active = id;
+    }
+
+    // Only check for hot if nothing is active or this is the active elements
+    if ((ui->active == NONE_ID || ui->active == id) && CheckCollisionPointRec(GetMousePosition(), rect)) {
+        ui->hot = id;
+    } else if (ui->hot == id) {
+        ui->hot = NONE_ID;
+    }
+
+    return result;
+}
+
+bool UI::button(ElementId id, Vec2 size, std::string text, ButtonStyle style) {
     assert(!this->layouts.empty() && "No layout to put button in");
-
     Vec2 position = get_next_position(this);
+    bool result = get_and_update_ui_state(
+        this, id,
+        Rectangle{.x = (float)position.x, .y = (float)position.y, .width = (float)size.x, .height = (float)size.y});
 
-    DrawRectangleLines(position.x, position.y, size.x, size.y, BLACK);
-    const int text_width = MeasureText(text.c_str(), font_size);
-    DrawText(text.c_str(), position.x + size.x / 2 - text_width / 2, position.y + size.y / 2 - font_size / 2, font_size,
-             color);
+    ButtonColor color = style.color;
+    if (this->hot == id) color = style.hover_color;
+    if (this->active == id) color = style.active_color;
+
+    DrawRectangle(position.x, position.y, size.x, size.y, color.background);
+    DrawRectangleLines(position.x, position.y, size.x, size.y, color.border);
+    const int text_width = MeasureText(text.c_str(), style.font_size);
+    DrawText(text.c_str(), position.x + size.x / 2 - text_width / 2, position.y + size.y / 2 - style.font_size / 2,
+             style.font_size, color.text);
 
     add_size_to_layout(&this->layouts.top(), size);
 
-    return false;
+    return result;
 }
 
 void UI::text(ElementId id, std::string text, int font_size, Color color) {
