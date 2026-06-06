@@ -2,8 +2,8 @@
 #include "raylib.h"
 #include <cassert>
 
-void SceneManager::SwapScene(GameState& state, const Scene& scene) {
-    PopScene(state);
+void SceneManager::SetScene(GameState& state, const Scene& scene) {
+    Clear(state);
     PushScene(state, scene);
 }
 
@@ -38,7 +38,7 @@ void SceneManager::Update(GameState& state) {
     EndDrawing();
 }
 
-void SceneManager::Dispose(GameState& state) {
+void SceneManager::Clear(GameState& state) {
     while (!scenes.empty()) {
         PopScene(state);
     }

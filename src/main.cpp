@@ -1,8 +1,6 @@
 #include "game_state.hpp"
 #include "raylib.h"
-#include "scenes/game_scene.hpp"
-#include "scenes/test_scene.hpp"
-#include "scenes/ui_scene.hpp"
+#include "scenes/main_menu_scene.hpp"
 #include "systems/scene_manager.hpp"
 #include "systems/targeting.hpp"
 
@@ -13,8 +11,6 @@
 #include "systems/tower_system.hpp"
 
 void HandleInput(GameState& state) {
-    if (IsKeyDown(KEY_F1)) { SCENE_MANAGER.SwapScene(state, TEST_SCENE); }
-
     if (IsKeyDown(KEY_A)) { state.inputs.push_back(Input::A); }
     if (IsKeyDown(KEY_D)) { state.inputs.push_back(Input::D); }
     if (IsKeyDown(KEY_W)) { state.inputs.push_back(Input::W); }
@@ -41,7 +37,7 @@ int main() {
 
     GameState state = {};
 
-    SCENE_MANAGER.PushScene(state, UI_SCENE);
+    SCENE_MANAGER.PushScene(state, MAIN_MENU_SCENE);
 
     while (!state.should_exit && !WindowShouldClose()) {
         HandleInput(state);
@@ -49,7 +45,7 @@ int main() {
         SCENE_MANAGER.Update(state);
     }
 
-    SCENE_MANAGER.Dispose(state);
+    SCENE_MANAGER.Clear(state);
 
     CloseAudioDevice();
 

@@ -15,15 +15,15 @@ struct Scene {
 struct SceneManager {
     std::stack<Scene> scenes;
 
-    void SwapScene(GameState& state, const Scene& scene);
+    void SetScene(GameState& state, const Scene& scene);
 
     void PushScene(GameState& state, const Scene& scene);
 
     void PopScene(GameState& state);
 
-    void Update(GameState& state);
+    void Clear(GameState& state);
 
-    void Dispose(GameState& state);
+    void Update(GameState& state);
 };
 
 extern SceneManager SCENE_MANAGER;

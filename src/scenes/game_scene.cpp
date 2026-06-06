@@ -253,6 +253,8 @@ const std::array<InitialSpawnerPlacement, 3> initial_spawner_placements = {
 };
 
 void Init(GameState& state) {
+    state.Reset();
+
     for (InitialSpawnerPlacement placement : initial_spawner_placements) {
         for (int i = 0; i < placement.count; i++) {
             bool negative_x = GetRandomValue(0, 1) == 1;
