@@ -6,6 +6,8 @@
 #include <string>
 
 struct UI {
+    using ElementId = std::string;
+
     enum class LayoutDirection {
         Horizontal,
         Vertical
@@ -19,10 +21,12 @@ struct UI {
     };
 
     std::stack<Layout> layouts;
+    ElementId hot;
+    ElementId active;
 
-    void begin_layout(UI ui, LayoutDirection direction);
-    void end_layout(UI ui);
+    void begin_layout(LayoutDirection direction);
+    void end_layout();
 
-    bool button(UI ui, Vec2 size, std::string text, int font_size, Color color);
-    void text(UI ui, std::string text, int font_size, Color color);
+    bool button(ElementId id, Vec2 size, std::string text, int font_size, Color color);
+    void text(ElementId id, std::string text, int font_size, Color color);
 };

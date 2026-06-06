@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/test_scene.hpp"
+#include "scenes/ui_scene.hpp"
 #include "systems/scene_manager.hpp"
 #include "systems/targeting.hpp"
 
@@ -40,7 +41,7 @@ int main() {
 
     GameState state = {};
 
-    SCENE_MANAGER.PushScene(state, GAME_SCENE);
+    SCENE_MANAGER.PushScene(state, UI_SCENE);
 
     while (!state.should_exit && !WindowShouldClose()) {
         HandleInput(state);
