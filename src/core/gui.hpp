@@ -2,12 +2,15 @@
 
 #include "core/data.hpp"
 #include "raylib.h"
+#include <optional>
 #include <stack>
 #include <string>
+#include <unordered_map>
 
 const std::string NONE_ID = "NO_ID_SELECTED";
 
 struct UI {
+    struct ElementStyle {};
     struct ButtonColor {
         Color border;
         Color background;
@@ -28,18 +31,38 @@ struct UI {
         Vertical
     };
 
-    struct Layout {
-        LayoutDirection direction = LayoutDirection::Vertical;
-
-        Vec2 position;
-        Vec2 size = {};
+    enum class JustifyContent {
+        START,
+        END,
+        CENTER,
+        SPACE_BETWEEN,
+        SPACE_AROUND,
+        SPACE_EVENLY
     };
 
+    struct LayoutStyle {
+        LayoutDirection direction = LayoutDirection::Vertical;
+    };
+
+    struct Layout {
+        LayoutStyle style;
+
+        Vec2 position = {};
+        Vec2 size;
+    };
+
+    std::unordered_map<ElementId, Rect> previous_render_elements;
+    std::unordered_map<ElementId, Rect> current_render_elements;
     std::stack<Layout> layouts;
     ElementId hot = NONE_ID;
     ElementId active = NONE_ID;
 
-    void begin_layout(LayoutDirection direction);
+    bool building = false;
+
+    void begin_ui();
+    void end_ui();
+
+    void begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style);
     void end_layout();
 
     bool button(ElementId id, Vec2 size, std::string text, ButtonStyle);

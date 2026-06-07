@@ -43,7 +43,8 @@ void Update(GameState& state) {
 void Draw(GameState& state) {
     ClearBackground(ColorAlpha(GRAY, 0.6));
 
-    ui.begin_layout(UI::LayoutDirection::Vertical);
+    ui.begin_ui();
+    ui.begin_layout(Vec2{}, Vec2{0, 0}, {UI::LayoutDirection::Vertical});
 
     ui.text("txt_pause", "PAUSED", 40, BLACK);
 
@@ -55,6 +56,7 @@ void Draw(GameState& state) {
     if (ui.button("btn_quit", Vec2{.x = 400, .y = 100}, "Quit", BUTTON_STYLE)) state.should_exit = true;
 
     ui.end_layout();
+    ui.end_ui();
 }
 } // namespace
 
