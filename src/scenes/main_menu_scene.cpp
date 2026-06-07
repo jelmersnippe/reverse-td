@@ -9,30 +9,36 @@
 #include "systems/scene_manager.hpp"
 
 namespace {
-const UI::ElementStyle BUTTON_STYLE = {
-    .font_size = 24,
-    .padding = 8,
-    .color = {.border = BLACK, .background = WHITE, .text = BLACK},
-    .color_hover = {.border = BLACK, .background = GRAY, .text = WHITE},
-    .color_active = {.border = BLACK, .background = DARKGRAY, .text = WHITE},
-};
+const UI::ElementStyle BUTTON_STYLE = {.font_size = 24,
+                                       .padding = 8,
+                                       .width = 400,
+                                       .height = 100,
+                                       .color = {.border = BLACK, .background = WHITE, .text = BLACK},
+                                       .color_hover = {.border = BLACK, .background = GRAY, .text = WHITE},
+                                       .color_active = {.border = BLACK, .background = DARKGRAY, .text = WHITE}};
 UI ui = {};
 
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
     ui.begin_ui(Vec2{});
-    ui.begin_layout("layout_main_menu", Vec2{.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-                    {.direction = UI::LayoutDirection::Vertical});
+    ui.begin_layout("layout_main_menu",
+                    {.direction = UI::LayoutDirection::Vertical, .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT});
 
     ui.text("txt_title", "REVERSE TIDDY", {.font_size = 40});
 
-    if (ui.button("btn_start", Vec2{.x = 400, .y = 100}, "Start", BUTTON_STYLE))
-        SCENE_MANAGER.SetScene(state, GAME_SCENE);
-    if (ui.button("btn_test", Vec2{.x = 400, .y = 100}, "Test", BUTTON_STYLE))
-        SCENE_MANAGER.SetScene(state, TEST_SCENE);
-    if (ui.button("btn_ui", Vec2{.x = 400, .y = 100}, "UI", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
-    if (ui.button("btn_quit", Vec2{.x = 400, .y = 100}, "Quit", BUTTON_STYLE)) state.should_exit = true;
+    if (ui.begin_button("btn_start", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
+    ui.text("txt_start", "Start", {});
+    ui.end_button();
+    if (ui.begin_button("btn_test", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, TEST_SCENE);
+    ui.text("txt_start", "Test", {});
+    ui.end_button();
+    if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
+    ui.text("txt_start", "Ui", {});
+    ui.end_button();
+    if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
+    ui.text("txt_start", "Quit", {});
+    ui.end_button();
 
     ui.end_layout();
     ui.end_ui();

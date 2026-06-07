@@ -11,6 +11,8 @@ namespace {
 const UI::ElementStyle BUTTON_STYLE = {
     .font_size = 24,
     .padding = 8,
+    .width = 400,
+    .height = 100,
     .color =
         {
             .border = BLACK,
@@ -45,17 +47,26 @@ void Draw(GameState& state) {
     ClearBackground(ColorAlpha(GRAY, 0.6));
 
     ui.begin_ui(Vec2{});
-    ui.begin_layout("layout_pause", Vec2{.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-                    {.direction = UI::LayoutDirection::Vertical});
+    ui.begin_layout("layout_pause",
+                    {.direction = UI::LayoutDirection::Vertical, .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT});
 
     ui.text("txt_pause", "PAUSED", {.font_size = 40});
 
-    if (ui.button("btn_resume", Vec2{.x = 400, .y = 100}, "Resume", BUTTON_STYLE)) SCENE_MANAGER.PopScene(state);
-    if (ui.button("btn_restart", Vec2{.x = 400, .y = 100}, "Restart", BUTTON_STYLE))
-        SCENE_MANAGER.SetScene(state, GAME_SCENE);
-    if (ui.button("btn_menu", Vec2{.x = 400, .y = 100}, "Main Menu", BUTTON_STYLE))
-        SCENE_MANAGER.SetScene(state, MAIN_MENU_SCENE);
-    if (ui.button("btn_quit", Vec2{.x = 400, .y = 100}, "Quit", BUTTON_STYLE)) state.should_exit = true;
+    if (ui.begin_button("btn_resume", BUTTON_STYLE)) SCENE_MANAGER.PopScene(state);
+    ui.text("txt_start", "Resume", {});
+    ui.end_button();
+
+    if (ui.begin_button("btn_restart", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
+    ui.text("txt_start", "Restart", {});
+    ui.end_button();
+
+    if (ui.begin_button("btn_menu", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, MAIN_MENU_SCENE);
+    ui.text("txt_start", "Main menu", {});
+    ui.end_button();
+
+    if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
+    ui.text("txt_start", "Quit", {});
+    ui.end_button();
 
     ui.end_layout();
     ui.end_ui();
