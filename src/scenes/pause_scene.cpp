@@ -53,19 +53,19 @@ void Draw(GameState& state) {
     ui.text("txt_pause", "PAUSED", {.font_size = 40});
 
     if (ui.begin_button("btn_resume", BUTTON_STYLE)) SCENE_MANAGER.PopScene(state);
-    ui.text("txt_start", "Resume", {});
+    ui.text("txt_resume", "Resume", {});
     ui.end_button();
 
     if (ui.begin_button("btn_restart", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
-    ui.text("txt_start", "Restart", {});
+    ui.text("txt_restart", "Restart", {});
     ui.end_button();
 
     if (ui.begin_button("btn_menu", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, MAIN_MENU_SCENE);
-    ui.text("txt_start", "Main menu", {});
+    ui.text("txt_menu", "Main menu", {});
     ui.end_button();
 
     if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
-    ui.text("txt_start", "Quit", {});
+    ui.text("txt_quit", "Quit", {});
     ui.end_button();
 
     ui.end_layout();

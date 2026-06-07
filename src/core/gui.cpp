@@ -1,7 +1,7 @@
 #include "core/gui.hpp"
 #include "raylib.h"
 #include <cassert>
-#include <optional>
+#include <iostream>
 #include <unordered_map>
 
 // TODO: Make work for other shapes
@@ -80,6 +80,8 @@ void UI::end_ui() {
     for (const Element& element : this->current_render_elements) {
         draw_element(this, element);
 
+        assert(element_rects.find(element.id) == element_rects.end() && "Can not have duplicate element ids.");
+
         element_rects[element.id] = Rect{.position = element.position, .size = element.container_size};
     }
 
@@ -91,42 +93,45 @@ void UI::end_ui() {
 void position_children(UI* ui, UI::Element& element) {
     ui->current_render_elements.push_back(element);
 
-    Vec2 offset = {};
-    const Vec2 position =
-        Vec2{.x = element.position.x + element.style.padding, .y = element.position.y + element.style.padding};
-
-    const Vec2 available_container = Vec2{
-        .x = element.container_size.x - element.style.padding * 2,
-        .y = element.container_size.y - element.style.padding * 2,
-    };
-
-    switch (element.style.justify_content) {
-        case UI::JustifyContent::START:
-            break;
-        case UI::JustifyContent::END:
-            offset = Vec2{.x = available_container.x - element.content_size.x,
-                          .y = available_container.y - element.content_size.y};
-            break;
-        case UI::JustifyContent::CENTER:
-            offset = Vec2{.x = available_container.x / 2 - element.content_size.x / 2,
-                          .y = available_container.y / 2 - element.content_size.y / 2};
-            break;
-        case UI::JustifyContent::SPACE_BETWEEN:
-        case UI::JustifyContent::SPACE_AROUND:
-        case UI::JustifyContent::SPACE_EVENLY:
-            break;
+    Vec2 position = element.position;
+    Vec2 available_container = element.container_size;
+    if (element.style.padding != INVALID_INT) {
+        position = Vec2{.x = position.x + element.style.padding, .y = position.y + element.style.padding};
+        available_container = Vec2{
+            .x = available_container.x - element.style.padding * 2,
+            .y = available_container.y - element.style.padding * 2,
+        };
     }
 
+    Vec2 content_offset = {};
     for (UI::Element& child : element.children) {
+        Vec2 justify_offset = {};
+        switch (element.style.justify_content) {
+            case UI::JustifyContent::START:
+                break;
+            case UI::JustifyContent::END:
+                justify_offset = Vec2{.x = available_container.x - child.container_size.x,
+                                      .y = available_container.y - child.container_size.y};
+                break;
+            case UI::JustifyContent::CENTER:
+                justify_offset = Vec2{.x = available_container.x / 2 - child.container_size.x / 2,
+                                      .y = available_container.y / 2 - child.container_size.y / 2};
+                break;
+            case UI::JustifyContent::SPACE_BETWEEN:
+            case UI::JustifyContent::SPACE_AROUND:
+            case UI::JustifyContent::SPACE_EVENLY:
+                break;
+        }
+
         switch (element.style.direction) {
             case UI::LayoutDirection::Horizontal: {
-                child.position = Vec2{.x = position.x + offset.x, .y = position.y};
-                offset.x += child.container_size.x;
+                child.position = Vec2{.x = position.x + content_offset.x, .y = position.y + justify_offset.y};
+                content_offset.x += child.container_size.x;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
-                child.position = Vec2{.x = position.x, .y = position.y + offset.y};
-                offset.y += child.container_size.y;
+                child.position = Vec2{.x = position.x + justify_offset.x, .y = position.y + content_offset.y};
+                content_offset.y += child.container_size.y;
                 break;
             }
         }
@@ -156,8 +161,12 @@ void UI::Element::calculate_size() {
         }
     }
 
-    this->content_size =
-        Vec2{.x = this->style.padding * 2 + content_size.x, .y = this->style.padding * 2 + content_size.y};
+    if (this->style.padding != INVALID_INT) {
+        content_size =
+            Vec2{.x = content_size.x + this->style.padding * 2, .y = content_size.y + this->style.padding * 2};
+    }
+
+    this->content_size = content_size;
 
     if (this->container_size.x == INVALID_INT) this->container_size.x = this->content_size.x;
     if (this->container_size.y == INVALID_INT) this->container_size.y = this->content_size.y;

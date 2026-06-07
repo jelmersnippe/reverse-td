@@ -4,13 +4,12 @@
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
-#include <iostream>
 
 namespace {
-const UI::ElementStyle BUTTON_STYLE = {.font_size = 12,
+const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CENTER,
+                                       .font_size = 12,
                                        .padding = 8,
-                                       .width = 200,
-                                       .height = 20,
+                                       .width = 100,
                                        .color = {BLACK, WHITE, BLACK},
                                        .color_hover = {BLACK, GRAY, WHITE},
                                        .color_active = {BLACK, DARKGRAY, WHITE}};
@@ -23,67 +22,151 @@ void Draw(GameState& state) {
 
     // START - RED
     ui.begin_layout("layout_wrapper", {.direction = UI::LayoutDirection::Vertical,
+                                       .justify_content = UI::JustifyContent::START,
                                        .width = SCREEN_WIDTH,
                                        .height = SCREEN_HEIGHT,
                                        .color = {.border = RED}});
 
+    // START - YELLOW
+    ui.begin_layout("layout_vert", {.direction = UI::LayoutDirection::Vertical, .color = {.border = YELLOW}});
+
     // START - GREEN
-    ui.begin_layout("layout_hz", {.direction = UI::LayoutDirection::Horizontal, .color = {.border = GREEN}});
-    if (ui.begin_button("Button_1", {.font_size = 20,
-                                     .padding = 20,
-                                     .color = {BLACK, WHITE, BLACK},
-                                     .color_hover = {BLACK, GRAY, WHITE},
-                                     .color_active = {BLACK, DARKGRAY, WHITE}})) {
-        std::cout << "Button 1 clicked!" << std::endl;
-    }
-    ui.text("txt_button1", "Button 1 with extremely long extra text", {});
+    ui.begin_layout("layout_hz1", {.direction = UI::LayoutDirection::Horizontal, .color = {.border = GREEN}});
+
+    // START - ORANGE
+    ui.begin_layout("layout_vert1",
+                    {.direction = UI::LayoutDirection::Vertical, .width = 300, .color = {.border = ORANGE}});
+    ui.begin_button("btn_1_1", BUTTON_STYLE);
+    ui.text("txt_btn_1_1", "Button 1", {});
     ui.end_button();
 
-    ui.begin_button("Button_2", {.font_size = 12,
-                                 .padding = 75,
-                                 .color = {BLACK, WHITE, BLACK},
-                                 .color_hover = {BLACK, GRAY, WHITE},
-                                 .color_active = {BLACK, DARKGRAY, WHITE}});
-    ui.text("txt_button2", "Button 2", {});
+    ui.begin_button("btn_1_2", BUTTON_STYLE);
+    ui.text("txt_btn_1_2", "Button 2", {});
     ui.end_button();
 
-    ui.text("Text0", "Random text", {});
+    ui.begin_button("btn_1_3", BUTTON_STYLE);
+    ui.text("txt_btn_1_3", "Button 3", {});
+    ui.end_button();
+    ui.begin_button("btn_1_4", BUTTON_STYLE);
+    ui.text("txt_btn_1_4", "Button 4", {});
+    ui.end_button();
+
+    ui.end_layout();
+    // END - ORANGE
+
+    // START - PINK
+    ui.begin_layout("layout_vert2", {.direction = UI::LayoutDirection::Vertical,
+                                     .justify_content = UI::JustifyContent::END,
+                                     .width = 300,
+                                     .color = {.border = PINK}});
+    ui.begin_button("btn_2_1", BUTTON_STYLE);
+    ui.text("txt_btn_2_1", "Button 1", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_2", BUTTON_STYLE);
+    ui.text("txt_btn_2_2", "Button 2", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_3", BUTTON_STYLE);
+    ui.text("txt_btn_2_3", "Button 3", {});
+    ui.end_button();
+
+    ui.end_layout();
+    // END - PINK
 
     // START - BLUE
-    ui.begin_layout("layout_vert1", {.direction = UI::LayoutDirection::Vertical, .color = {.border = BLUE}});
-    ui.begin_button("Button_5", {.padding = 20,
-                                 .color = {BLACK, WHITE, BLACK},
-                                 .color_hover = {BLACK, GRAY, WHITE},
-                                 .color_active = {BLACK, DARKGRAY, WHITE}});
-    ui.text("txt_button5", "Button 5", {});
+    ui.begin_layout("layout_vert3", {.direction = UI::LayoutDirection::Vertical,
+                                     .justify_content = UI::JustifyContent::CENTER,
+                                     .width = 300,
+                                     .color = {.border = BLUE}});
+    ui.begin_button("btn_3_1", BUTTON_STYLE);
+    ui.text("txt_btn_3_1", "Button 1", {});
     ui.end_button();
+
+    ui.begin_button("btn_3_2", BUTTON_STYLE);
+    ui.text("txt_btn_3_2", "Button 2", {});
+    ui.end_button();
+
+    ui.begin_button("btn_3_3", BUTTON_STYLE);
+    ui.text("txt_btn_3_3", "Button 3", {});
+    ui.end_button();
+
     ui.end_layout();
     // END - BLUE
 
-    ui.begin_button("Button_3", BUTTON_STYLE);
-    ui.text("txt_button3", "Button 3", {});
-    ui.end_button();
-
-    ui.text("Text1", "Text here!", {});
     ui.end_layout();
     // END - GREEN
 
+    // START - GREEN
+    ui.begin_layout("layout_hz2", {.direction = UI::LayoutDirection::Horizontal, .color = {.border = GREEN}});
+
     // START - ORANGE
-    ui.begin_layout("layout_vert2", {.direction = UI::LayoutDirection::Vertical, .color = {.border = ORANGE}});
-    ui.begin_button("Button_7", BUTTON_STYLE);
-    ui.text("txt_button7", "Button 7", {});
+    ui.begin_layout("layout_vert2_1",
+                    {.direction = UI::LayoutDirection::Horizontal, .height = 200, .color = {.border = ORANGE}});
+    ui.begin_button("btn_2_2_1_1", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_1_1", "Button 1", {});
     ui.end_button();
 
-    ui.begin_button("Button_8", BUTTON_STYLE);
-    ui.text("txt_button8", "Button 8", {});
+    ui.begin_button("btn_2_2_1_2", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_1_2", "Button 2", {});
     ui.end_button();
 
-    ui.begin_button("Button_9", BUTTON_STYLE);
-    ui.text("txt_button9", "Button 9", {});
+    ui.begin_button("btn_2_2_1_3", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_1_3", "Button 3", {});
     ui.end_button();
-    ui.text("Text2", "Text here again!", {.font_size = 12});
+    ui.begin_button("btn_2_2_1_4", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_1_4", "Button 4", {});
+    ui.end_button();
+
     ui.end_layout();
     // END - ORANGE
+
+    // START - PINK
+    ui.begin_layout("layout_vert2_2", {.direction = UI::LayoutDirection::Horizontal,
+                                       .justify_content = UI::JustifyContent::END,
+                                       .height = 200,
+                                       .color = {.border = PINK}});
+    ui.begin_button("btn_2_2_1", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_1", "Button 1", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_2_2", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_2", "Button 2", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_2_3", BUTTON_STYLE);
+    ui.text("txt_btn_2_2_3", "Button 3", {});
+    ui.end_button();
+
+    ui.end_layout();
+    // END - PINK
+
+    // START - BLUE
+    ui.begin_layout("layout_vert2_3", {.direction = UI::LayoutDirection::Horizontal,
+                                       .justify_content = UI::JustifyContent::CENTER,
+                                       .height = 200,
+                                       .color = {.border = BLUE}});
+    ui.begin_button("btn_2_3_1", BUTTON_STYLE);
+    ui.text("txt_btn_2_3_1", "Button 1", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_3_2", BUTTON_STYLE);
+    ui.text("txt_btn_2_3_2", "Button 2", {});
+    ui.end_button();
+
+    ui.begin_button("btn_2_3_3", BUTTON_STYLE);
+    ui.text("txt_btn_2_3_3", "Button 3", {});
+    ui.end_button();
+
+    ui.end_layout();
+    // END - BLUE
+
+    ui.end_layout();
+    // END - GREEN
+
+    ui.end_layout();
+    // END - YELLOW
+
     ui.end_layout();
     // END - RED
 

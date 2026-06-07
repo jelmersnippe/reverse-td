@@ -2,14 +2,14 @@
 
 #include "core/data.hpp"
 #include "raylib.h"
-#include <optional>
+#include <climits>
 #include <stack>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 const std::string NONE_ID = "NO_ID_SELECTED";
-const int INVALID_INT = -1;
+const int INVALID_INT = INT_MAX;
 
 struct UI {
     enum class LayoutDirection {

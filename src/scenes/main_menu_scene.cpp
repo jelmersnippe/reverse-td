@@ -31,13 +31,13 @@ void Draw(GameState& state) {
     ui.text("txt_start", "Start", {});
     ui.end_button();
     if (ui.begin_button("btn_test", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, TEST_SCENE);
-    ui.text("txt_start", "Test", {});
+    ui.text("txt_test", "Test", {});
     ui.end_button();
     if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
-    ui.text("txt_start", "Ui", {});
+    ui.text("txt_ui", "Ui", {});
     ui.end_button();
     if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
-    ui.text("txt_start", "Quit", {});
+    ui.text("txt_quit", "Quit", {});
     ui.end_button();
 
     ui.end_layout();
