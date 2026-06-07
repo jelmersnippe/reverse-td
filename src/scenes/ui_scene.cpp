@@ -16,46 +16,34 @@ void Draw(GameState& state) {
     ui.begin_ui();
 
     ui.begin_layout(Vec2{.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT}, Vec2{0, 0},
-                    {.direction = UI::LayoutDirection::Vertical});
+                    {.direction = UI::LayoutDirection::Vertical, .justify_content = UI::JustifyContent::END});
 
     ui.begin_layout(Vec2{}, std::nullopt, {UI::LayoutDirection::Horizontal});
-    if (ui.button("Button_1", Vec2{.x = 200, .y = 20}, "Button 1",
-                  {.padding = 8,
-                   .font_size = 12,
+    if (ui.button("Button_1", std::nullopt, "Button 1 with extremely long extra text",
+                  {.padding = 20,
+                   .font_size = 20,
                    .color = {BLACK, WHITE, BLACK},
                    .hover_color = {BLACK, GRAY, WHITE},
                    .active_color = {BLACK, DARKGRAY, WHITE}})) {
         std::cout << "Button 1 clicked!" << std::endl;
     }
+    ui.button("Button_2", std::nullopt, "Button 2",
+              {.padding = 75,
+               .font_size = 12,
+               .color = {BLACK, WHITE, BLACK},
+               .hover_color = {BLACK, GRAY, WHITE},
+               .active_color = {BLACK, DARKGRAY, WHITE}});
     ui.text("Text0", "Random text", 12, BLACK);
 
     ui.begin_layout(Vec2{}, std::nullopt, {UI::LayoutDirection::Vertical});
-    ui.button("Button_4", Vec2{.x = 200, .y = 20}, "Button 4",
-              {.padding = 8,
-               .font_size = 12,
-               .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
-    ui.button("Button_5", Vec2{.x = 200, .y = 20}, "Button 5",
-              {.padding = 8,
-               .font_size = 12,
-               .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
-    ui.button("Button_6", Vec2{.x = 200, .y = 20}, "Button 6",
-              {.padding = 8,
+    ui.button("Button_5", std::nullopt, "Button 5",
+              {.padding = 20,
                .font_size = 12,
                .color = {BLACK, WHITE, BLACK},
                .hover_color = {BLACK, GRAY, WHITE},
                .active_color = {BLACK, DARKGRAY, WHITE}});
     ui.end_layout();
 
-    ui.button("Button_2", Vec2{.x = 200, .y = 20}, "Button 2",
-              {.padding = 8,
-               .font_size = 12,
-               .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
     ui.button("Button_3", Vec2{.x = 200, .y = 20}, "Button 3",
               {.padding = 8,
                .font_size = 12,

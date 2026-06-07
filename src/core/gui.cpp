@@ -70,7 +70,8 @@ void UI::end_layout() {
 
     Layout layout_to_finish = this->layouts.top();
 
-    if (layout_to_finish.container_size.x == 0 && layout_to_finish.container_size.y == 0) layout_to_finish.container_size = layout_to_finish.content_size;
+    if (layout_to_finish.container_size.x == 0 && layout_to_finish.container_size.y == 0)
+        layout_to_finish.container_size = layout_to_finish.content_size;
 
     this->layouts.pop();
 
@@ -114,7 +115,7 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id) {
     return result;
 }
 
-bool UI::button(ElementId id, Vec2 size, std::string text, ButtonStyle style) {
+bool UI::button(ElementId id, std::optional<Vec2> size, std::string text, ButtonStyle style) {
     Vec2 position = get_next_position(this);
     bool result = get_and_update_ui_state(this, id);
 
@@ -122,14 +123,22 @@ bool UI::button(ElementId id, Vec2 size, std::string text, ButtonStyle style) {
     if (this->hot == id) color = style.hover_color;
     if (this->active == id) color = style.active_color;
 
-    DrawRectangle(position.x, position.y, size.x, size.y, color.background);
-    DrawRectangleLines(position.x, position.y, size.x, size.y, color.border);
     const int text_width = MeasureText(text.c_str(), style.font_size);
-    DrawText(text.c_str(), position.x + size.x / 2 - text_width / 2, position.y + size.y / 2 - style.font_size / 2,
-             style.font_size, color.text);
 
-    this->current_render_elements[id] = Rect{.position = position, .size = size};
-    add_size_to_layout(&this->layouts.top(), size);
+    Vec2 calculated_size;
+    if (size.has_value()) {
+        calculated_size = size.value();
+    } else {
+        calculated_size = Vec2{.x = text_width + style.padding, .y = style.font_size + style.padding};
+    }
+
+    DrawRectangle(position.x, position.y, calculated_size.x, calculated_size.y, color.background);
+    DrawRectangleLines(position.x, position.y, calculated_size.x, calculated_size.y, color.border);
+    DrawText(text.c_str(), position.x + calculated_size.x / 2 - text_width / 2,
+             position.y + calculated_size.y / 2 - style.font_size / 2, style.font_size, color.text);
+
+    this->current_render_elements[id] = Rect{.position = position, .size = calculated_size};
+    add_size_to_layout(&this->layouts.top(), calculated_size);
 
     return result;
 }

@@ -42,6 +42,7 @@ struct UI {
 
     struct LayoutStyle {
         LayoutDirection direction = LayoutDirection::Vertical;
+        JustifyContent justify_content = JustifyContent::START;
     };
 
     struct Layout {
@@ -66,6 +67,7 @@ struct UI {
     void begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style);
     void end_layout();
 
-    bool button(ElementId id, Vec2 size, std::string text, ButtonStyle);
+    bool button(ElementId id, std::optional<Vec2> size, std::string text, ButtonStyle style);
+
     void text(ElementId id, std::string text, int font_size, Color color);
 };
