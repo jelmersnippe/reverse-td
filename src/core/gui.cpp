@@ -66,6 +66,29 @@ void UI::begin_layout(ElementId id, std::optional<Vec2> size, ElementStyle style
         Element{.id = id, .type = ElementType::CONTAINER, .container_size = calculated_size, .style = style});
 }
 
+void position_children(UI* ui, UI::Element& element) {
+    ui->current_render_elements.push_back(element);
+
+    int offset = 0;
+    const Vec2 position = element.position;
+
+    for (UI::Element& child : element.children) {
+        switch (element.style.direction) {
+            case UI::LayoutDirection::Horizontal: {
+                child.position = Vec2{.x = position.x + offset, .y = position.y};
+                offset += child.container_size.x;
+                break;
+            }
+            case UI::LayoutDirection::Vertical: {
+                child.position = Vec2{.x = position.x, .y = position.y + offset};
+                offset += child.container_size.y;
+                break;
+            }
+        }
+        position_children(ui, child);
+    }
+}
+
 void UI::end_layout() {
     assert(!this->elements.empty() && "No more layouts to pop");
 
@@ -73,44 +96,34 @@ void UI::end_layout() {
     assert(layout_to_finish.type == ElementType::CONTAINER && "Can't call end_layout for a non layout element.");
     this->elements.pop();
 
+    Vec2 size_to_add = Vec2{};
     for (Element& element : layout_to_finish.children) {
-        Vec2 size_to_add = Vec2{};
-        Vec2 position = layout_to_finish.position;
-
         switch (layout_to_finish.style.direction) {
             case UI::LayoutDirection::Horizontal: {
-                size_to_add.x = element.container_size.x;
-                const int current_size_y = layout_to_finish.content_size.y;
+                size_to_add.x += element.container_size.x;
+                const int current_size_y = size_to_add.y;
                 if (element.container_size.y > current_size_y)
-                    size_to_add.y = element.container_size.y - current_size_y;
-
-                element.position = Vec2{.x = position.x + layout_to_finish.content_size.x, .y = position.y};
+                    size_to_add.y = element.container_size.y;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
-                size_to_add.y = element.container_size.y;
-                const int current_size_x = layout_to_finish.content_size.x;
+                size_to_add.y += element.container_size.y;
+                const int current_size_x = size_to_add.x;
                 if (element.container_size.x > current_size_x)
-                    size_to_add.x = element.container_size.x - current_size_x;
-
-                element.position = Vec2{.x = position.x, .y = position.y + layout_to_finish.content_size.y};
+                    size_to_add.x = element.container_size.x;
                 break;
             }
         }
-
-        layout_to_finish.content_size = Vec2{.x = layout_to_finish.content_size.x + size_to_add.x,
-                                             .y = layout_to_finish.content_size.y + size_to_add.y};
-
-        this->current_render_elements.push_back(element);
     }
+
+    layout_to_finish.content_size = Vec2{.x = layout_to_finish.content_size.x + size_to_add.x,
+                                         .y = layout_to_finish.content_size.y + size_to_add.y};
 
     if (layout_to_finish.container_size.x == 0 && layout_to_finish.container_size.y == 0)
         layout_to_finish.container_size = layout_to_finish.content_size;
 
     if (this->elements.empty()) {
-        // TODO: Calculate all nested positions here?
-        // Currently element positions are relative to layout position, which is always 0,0
-        // for dynamic layouts. Real positions aren't available until the full tree is done
+        position_children(this, layout_to_finish);
         return;
     };
 
