@@ -48,7 +48,8 @@ struct UI {
         LayoutStyle style;
 
         Vec2 position = {};
-        Vec2 size;
+        Vec2 container_size = {};
+        Vec2 content_size = {};
     };
 
     std::unordered_map<ElementId, Rect> previous_render_elements;

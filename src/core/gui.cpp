@@ -26,9 +26,9 @@ Vec2 get_next_position(UI* ui) {
 
     switch (current_layout.style.direction) {
         case UI::LayoutDirection::Horizontal:
-            return Vec2{.x = current_layout.position.x + current_layout.size.x, .y = current_layout.position.y};
+            return Vec2{.x = current_layout.position.x + current_layout.content_size.x, .y = current_layout.position.y};
         case UI::LayoutDirection::Vertical:
-            return Vec2{.x = current_layout.position.x, .y = current_layout.position.y + current_layout.size.y};
+            return Vec2{.x = current_layout.position.x, .y = current_layout.position.y + current_layout.content_size.y};
     }
 }
 
@@ -38,19 +38,19 @@ void add_size_to_layout(UI::Layout* layout, Vec2 size) {
     switch (layout->style.direction) {
         case UI::LayoutDirection::Horizontal: {
             size_to_add.x = size.x;
-            const int current_size_y = layout->size.y;
+            const int current_size_y = layout->content_size.y;
             if (size.y > current_size_y) size_to_add.y = size.y - current_size_y;
             break;
         }
         case UI::LayoutDirection::Vertical: {
             size_to_add.y = size.y;
-            const int current_size_x = layout->size.x;
+            const int current_size_x = layout->content_size.x;
             if (size.x > current_size_x) size_to_add.x = size.x - current_size_x;
             break;
         }
     }
 
-    layout->size = {.x = layout->size.x + size_to_add.x, .y = layout->size.y + size_to_add.y};
+    layout->content_size = {.x = layout->content_size.x + size_to_add.x, .y = layout->content_size.y + size_to_add.y};
 }
 
 void UI::begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style) {
@@ -62,18 +62,21 @@ void UI::begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style
     } else {
         calculated_position = get_next_position(this);
     }
-    this->layouts.push(Layout{.style = style, .position = calculated_position, .size = size});
+    this->layouts.push(Layout{.style = style, .position = calculated_position, .container_size = size});
 }
 
 void UI::end_layout() {
     assert(!this->layouts.empty() && "No more layouts to pop");
 
-    const Vec2 size = this->layouts.top().size;
+    Layout layout_to_finish = this->layouts.top();
+
+    if (layout_to_finish.container_size.x == 0 && layout_to_finish.container_size.y == 0) layout_to_finish.container_size = layout_to_finish.content_size;
+
     this->layouts.pop();
 
     if (this->layouts.empty()) return;
 
-    add_size_to_layout(&this->layouts.top(), size);
+    add_size_to_layout(&this->layouts.top(), layout_to_finish.container_size);
 }
 
 // TODO: Make work for other shapes
@@ -97,14 +100,14 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id) {
 
         auto mouse_pos = GetMousePosition();
         if (CheckCollisionPointRec(mouse_pos, Rectangle{
-                                                           .x = (float)rect.position.x,
-                                                           .y = (float)rect.position.y,
-                                                           .width = (float)rect.size.x,
-                                                           .height = (float)rect.size.y,
-                                                       })) {
+                                                  .x = (float)rect.position.x,
+                                                  .y = (float)rect.position.y,
+                                                  .width = (float)rect.size.x,
+                                                  .height = (float)rect.size.y,
+                                              })) {
             ui->hot = id;
         } else if (ui->hot == id) {
-            ui-> hot = NONE_ID;
+            ui->hot = NONE_ID;
         }
     }
 
