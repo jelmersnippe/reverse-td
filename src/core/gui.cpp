@@ -2,82 +2,119 @@
 #include "raylib.h"
 #include <cassert>
 #include <optional>
+#include <unordered_map>
 
-void UI::begin_ui() {
+void draw_element(UI* ui, const UI::Element& element) {
+    switch (element.type) {
+        case UI::ElementType::CONTAINER:
+            DrawRectangleLines(element.position.x, element.position.y, element.container_size.x,
+                               element.container_size.y, element.style.color.border);
+            break;
+        case UI::ElementType::TEXT:
+            DrawText(element.text.c_str(), element.position.x, element.position.y, element.style.font_size,
+                     element.style.color.text);
+            break;
+        case UI::ElementType::BUTTON: {
+            UI::ButtonColor color = element.style.color;
+            if (ui->hot == element.id) color = element.style.color_hover;
+            if (ui->active == element.id) color = element.style.color_active;
+
+            DrawRectangle(element.position.x, element.position.y, element.content_size.x, element.content_size.y,
+                          color.background);
+            DrawRectangleLines(element.position.x, element.position.y, element.content_size.x, element.content_size.y,
+                               color.border);
+            const int text_width = MeasureText(element.text.c_str(), element.style.font_size);
+            DrawText(element.text.c_str(), element.position.x + element.content_size.x / 2 - text_width / 2,
+                     element.position.y + element.content_size.y / 2 - element.style.font_size / 2,
+                     element.style.font_size, color.text);
+            break;
+        }
+    }
+}
+
+void UI::begin_ui(Vec2 position) {
     assert(!this->building && "Already building the UI. Can't call begin_ui(). Make sure to call end_ui().");
 
     this->building = true;
+    this->top_left = position;
 }
 
 void UI::end_ui() {
-    assert(this->layouts.empty() &&
-           "Can't end_ui() with remaining layouts. Makes sure to call end_layout() for every layout.");
+    assert(this->elements.empty() &&
+           "Can't end_ui() with remaining elements. Makes sure to call end for every element.");
     assert(this->building && "Not building the UI. Can't call end_ui(). Make sure to call begin_ui().");
 
-    this->previous_render_elements = this->current_render_elements;
+    std::unordered_map<ElementId, Rect> element_rects = {};
+
+    for (const Element& element : this->current_render_elements) {
+        draw_element(this, element);
+
+        element_rects[element.id] = Rect{.position = element.position, .size = element.container_size};
+    }
+
+    this->previous_render_elements = element_rects;
     this->current_render_elements.clear();
     this->building = false;
 }
 
-Vec2 get_next_position(UI* ui) {
-    assert(!ui->layouts.empty() && "No layout to get next position from. Make sure to call begin_layout().");
-
-    UI::Layout& current_layout = ui->layouts.top();
-
-    switch (current_layout.style.direction) {
-        case UI::LayoutDirection::Horizontal:
-            return Vec2{.x = current_layout.position.x + current_layout.content_size.x, .y = current_layout.position.y};
-        case UI::LayoutDirection::Vertical:
-            return Vec2{.x = current_layout.position.x, .y = current_layout.position.y + current_layout.content_size.y};
-    }
-}
-
-void add_size_to_layout(UI::Layout* layout, Vec2 size) {
-    Vec2 size_to_add = Vec2{};
-
-    switch (layout->style.direction) {
-        case UI::LayoutDirection::Horizontal: {
-            size_to_add.x = size.x;
-            const int current_size_y = layout->content_size.y;
-            if (size.y > current_size_y) size_to_add.y = size.y - current_size_y;
-            break;
-        }
-        case UI::LayoutDirection::Vertical: {
-            size_to_add.y = size.y;
-            const int current_size_x = layout->content_size.x;
-            if (size.x > current_size_x) size_to_add.x = size.x - current_size_x;
-            break;
-        }
-    }
-
-    layout->content_size = {.x = layout->content_size.x + size_to_add.x, .y = layout->content_size.y + size_to_add.y};
-}
-
-void UI::begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style) {
+void UI::begin_layout(ElementId id, std::optional<Vec2> size, ElementStyle style) {
     assert(this->building && "Not building the UI. Can't call begin_layout(). Make sure to call begin_ui().");
 
-    Vec2 calculated_position;
-    if (position.has_value()) {
-        calculated_position = position.value();
-    } else {
-        calculated_position = get_next_position(this);
-    }
-    this->layouts.push(Layout{.style = style, .position = calculated_position, .container_size = size});
+    Vec2 calculated_size = {};
+    if (size.has_value()) { calculated_size = size.value(); }
+    this->elements.push(
+        Element{.id = id, .type = ElementType::CONTAINER, .container_size = calculated_size, .style = style});
 }
 
 void UI::end_layout() {
-    assert(!this->layouts.empty() && "No more layouts to pop");
+    assert(!this->elements.empty() && "No more layouts to pop");
 
-    Layout layout_to_finish = this->layouts.top();
+    Element layout_to_finish = this->elements.top();
+    assert(layout_to_finish.type == ElementType::CONTAINER && "Can't call end_layout for a non layout element.");
+    this->elements.pop();
+
+    for (Element& element : layout_to_finish.children) {
+        Vec2 size_to_add = Vec2{};
+        Vec2 position = layout_to_finish.position;
+
+        switch (layout_to_finish.style.direction) {
+            case UI::LayoutDirection::Horizontal: {
+                size_to_add.x = element.container_size.x;
+                const int current_size_y = layout_to_finish.content_size.y;
+                if (element.container_size.y > current_size_y)
+                    size_to_add.y = element.container_size.y - current_size_y;
+
+                element.position = Vec2{.x = position.x + layout_to_finish.content_size.x, .y = position.y};
+                break;
+            }
+            case UI::LayoutDirection::Vertical: {
+                size_to_add.y = element.container_size.y;
+                const int current_size_x = layout_to_finish.content_size.x;
+                if (element.container_size.x > current_size_x)
+                    size_to_add.x = element.container_size.x - current_size_x;
+
+                element.position = Vec2{.x = position.x, .y = position.y + layout_to_finish.content_size.y};
+                break;
+            }
+        }
+
+        layout_to_finish.content_size = Vec2{.x = layout_to_finish.content_size.x + size_to_add.x,
+                                             .y = layout_to_finish.content_size.y + size_to_add.y};
+
+        this->current_render_elements.push_back(element);
+    }
 
     if (layout_to_finish.container_size.x == 0 && layout_to_finish.container_size.y == 0)
         layout_to_finish.container_size = layout_to_finish.content_size;
 
-    this->layouts.pop();
+    if (this->elements.empty()) {
+        // TODO: Calculate all nested positions here?
+        // Currently element positions are relative to layout position, which is always 0,0
+        // for dynamic layouts. Real positions aren't available until the full tree is done
+        return;
+    };
 
-    if (this->layouts.empty()) return;
-
-    add_size_to_layout(&this->layouts.top(), layout_to_finish.container_size);
+    this->elements.top().children.push_back(layout_to_finish);
 }
 
 // TODO: Make work for other shapes
@@ -115,13 +152,8 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id) {
     return result;
 }
 
-bool UI::button(ElementId id, std::optional<Vec2> size, std::string text, ButtonStyle style) {
-    Vec2 position = get_next_position(this);
+bool UI::button(ElementId id, std::optional<Vec2> size, std::string text, ElementStyle style) {
     bool result = get_and_update_ui_state(this, id);
-
-    UI::ButtonColor color = style.color;
-    if (this->hot == id) color = style.hover_color;
-    if (this->active == id) color = style.active_color;
 
     const int text_width = MeasureText(text.c_str(), style.font_size);
 
@@ -132,22 +164,29 @@ bool UI::button(ElementId id, std::optional<Vec2> size, std::string text, Button
         calculated_size = Vec2{.x = text_width + style.padding, .y = style.font_size + style.padding};
     }
 
-    DrawRectangle(position.x, position.y, calculated_size.x, calculated_size.y, color.background);
-    DrawRectangleLines(position.x, position.y, calculated_size.x, calculated_size.y, color.border);
-    DrawText(text.c_str(), position.x + calculated_size.x / 2 - text_width / 2,
-             position.y + calculated_size.y / 2 - style.font_size / 2, style.font_size, color.text);
+    Element element = Element{.id = id,
+                              .type = ElementType::BUTTON,
+                              .container_size = calculated_size,
+                              .content_size = calculated_size,
+                              .style = style,
+                              .text = text};
 
-    this->current_render_elements[id] = Rect{.position = position, .size = calculated_size};
-    add_size_to_layout(&this->layouts.top(), calculated_size);
+    this->elements.top().children.push_back(element);
 
     return result;
 }
 
-void UI::text(ElementId id, std::string text, int font_size, Color color) {
-    Vec2 position = get_next_position(this);
+void UI::text(ElementId id, std::string text, ElementStyle style) {
+    const int text_width = MeasureText(text.c_str(), style.font_size);
 
-    const int text_width = MeasureText(text.c_str(), font_size);
-    DrawText(text.c_str(), position.x, position.y, font_size, color);
+    Vec2 size = Vec2{.x = text_width, .y = style.font_size};
 
-    add_size_to_layout(&this->layouts.top(), Vec2{.x = text_width, .y = font_size});
+    Element element = Element{.id = id,
+                              .type = ElementType::TEXT,
+                              .container_size = size,
+                              .content_size = size,
+                              .style = style,
+                              .text = text};
+
+    this->elements.top().children.push_back(element);
 }

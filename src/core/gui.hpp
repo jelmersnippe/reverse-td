@@ -6,26 +6,11 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 const std::string NONE_ID = "NO_ID_SELECTED";
 
 struct UI {
-    struct ElementStyle {};
-    struct ButtonColor {
-        Color border;
-        Color background;
-        Color text;
-    };
-    struct ButtonStyle {
-        int padding;
-        int font_size;
-        ButtonColor color;
-        ButtonColor hover_color;
-        ButtonColor active_color;
-    };
-
-    using ElementId = std::string;
-
     enum class LayoutDirection {
         Horizontal,
         Vertical
@@ -40,34 +25,61 @@ struct UI {
         SPACE_EVENLY
     };
 
-    struct LayoutStyle {
-        LayoutDirection direction = LayoutDirection::Vertical;
-        JustifyContent justify_content = JustifyContent::START;
+    enum class ElementType {
+        CONTAINER,
+        BUTTON,
+        TEXT,
     };
 
-    struct Layout {
-        LayoutStyle style;
+    struct ButtonColor {
+        Color border = BLACK;
+        Color background = WHITE;
+        Color text = BLACK;
+    };
 
+    struct ElementStyle {
+        LayoutDirection direction = LayoutDirection::Vertical;
+        JustifyContent justify_content = JustifyContent::START;
+        int font_size = 12;
+        int padding = 0;
+
+        ButtonColor color = {};
+        ButtonColor color_hover = {};
+        ButtonColor color_active = {};
+    };
+
+    using ElementId = std::string;
+
+    struct Element {
+        ElementId id;
+        ElementType type;
         Vec2 position = {};
         Vec2 container_size = {};
         Vec2 content_size = {};
+        ElementStyle style = {};
+
+        std::string text = "";
+
+        std::vector<Element> children = {};
     };
 
+    Vec2 top_left;
+
     std::unordered_map<ElementId, Rect> previous_render_elements;
-    std::unordered_map<ElementId, Rect> current_render_elements;
-    std::stack<Layout> layouts;
+    std::vector<Element> current_render_elements;
+    std::stack<Element> elements;
     ElementId hot = NONE_ID;
     ElementId active = NONE_ID;
 
     bool building = false;
 
-    void begin_ui();
+    void begin_ui(Vec2 position);
     void end_ui();
 
-    void begin_layout(Vec2 size, std::optional<Vec2> position, LayoutStyle style);
+    void begin_layout(ElementId id, std::optional<Vec2> size, ElementStyle style);
     void end_layout();
 
-    bool button(ElementId id, std::optional<Vec2> size, std::string text, ButtonStyle style);
+    bool button(ElementId id, std::optional<Vec2> size, std::string text, ElementStyle style);
 
-    void text(ElementId id, std::string text, int font_size, Color color);
+    void text(ElementId id, std::string text, ElementStyle style);
 };

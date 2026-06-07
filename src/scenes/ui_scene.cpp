@@ -13,66 +13,64 @@ UI ui = {};
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
-    ui.begin_ui();
+    ui.begin_ui(Vec2{});
 
-    ui.begin_layout(Vec2{.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT}, Vec2{0, 0},
+    ui.begin_layout("layout_wrapper", Vec2{.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
                     {.direction = UI::LayoutDirection::Vertical, .justify_content = UI::JustifyContent::END});
 
-    ui.begin_layout(Vec2{}, std::nullopt, {UI::LayoutDirection::Horizontal});
+    ui.begin_layout("layout_hz", std::nullopt, {.direction = UI::LayoutDirection::Horizontal});
     if (ui.button("Button_1", std::nullopt, "Button 1 with extremely long extra text",
-                  {.padding = 20,
-                   .font_size = 20,
+                  {.font_size = 20,
+                   .padding = 20,
                    .color = {BLACK, WHITE, BLACK},
-                   .hover_color = {BLACK, GRAY, WHITE},
-                   .active_color = {BLACK, DARKGRAY, WHITE}})) {
+                   .color_hover = {BLACK, GRAY, WHITE},
+                   .color_active = {BLACK, DARKGRAY, WHITE}})) {
         std::cout << "Button 1 clicked!" << std::endl;
     }
     ui.button("Button_2", std::nullopt, "Button 2",
-              {.padding = 75,
-               .font_size = 12,
+              {.font_size = 12,
+               .padding = 75,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
-    ui.text("Text0", "Random text", 12, BLACK);
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
+    ui.text("Text0", "Random text", {});
 
-    ui.begin_layout(Vec2{}, std::nullopt, {UI::LayoutDirection::Vertical});
+    ui.begin_layout("layout_vert1", std::nullopt, {UI::LayoutDirection::Vertical});
     ui.button("Button_5", std::nullopt, "Button 5",
               {.padding = 20,
-               .font_size = 12,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
     ui.end_layout();
 
     ui.button("Button_3", Vec2{.x = 200, .y = 20}, "Button 3",
               {.padding = 8,
-               .font_size = 12,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
-    ui.text("Text1", "Text here!", 12, BLACK);
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
+    ui.text("Text1", "Text here!", {});
     ui.end_layout();
 
-    ui.begin_layout(Vec2{}, std::nullopt, {UI::LayoutDirection::Vertical});
+    ui.begin_layout("layout_vert2", std::nullopt, {UI::LayoutDirection::Vertical});
     ui.button("Button_7", Vec2{.x = 200, .y = 20}, "Button 7",
-              {.padding = 8,
-               .font_size = 12,
+              {.font_size = 12,
+               .padding = 8,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
     ui.button("Button_8", Vec2{.x = 200, .y = 20}, "Button 8",
-              {.padding = 8,
-               .font_size = 12,
+              {.font_size = 12,
+               .padding = 8,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
     ui.button("Button_9", Vec2{.x = 200, .y = 20}, "Button 9",
-              {.padding = 8,
-               .font_size = 12,
+              {.font_size = 12,
+               .padding = 8,
                .color = {BLACK, WHITE, BLACK},
-               .hover_color = {BLACK, GRAY, WHITE},
-               .active_color = {BLACK, DARKGRAY, WHITE}});
-    ui.text("Text2", "Text here again!", 12, BLACK);
+               .color_hover = {BLACK, GRAY, WHITE},
+               .color_active = {BLACK, DARKGRAY, WHITE}});
+    ui.text("Text2", "Text here again!", {.font_size = 12});
     ui.end_layout();
     ui.end_layout();
 
