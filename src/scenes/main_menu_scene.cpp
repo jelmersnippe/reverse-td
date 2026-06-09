@@ -4,6 +4,7 @@
 #include "globals.hpp"
 #include "raylib.h"
 #include "scenes/game_scene.hpp"
+#include "scenes/particle_scene.hpp"
 #include "scenes/test_scene.hpp"
 #include "scenes/ui_scene.hpp"
 #include "systems/scene_manager.hpp"
@@ -41,6 +42,9 @@ void Draw(GameState& state) {
     ui.end_button();
     if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
     ui.text("txt_ui", "Ui", BUTTONTEXT_STYLE);
+    ui.end_button();
+    if (ui.begin_button("btn_particle", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, PARTICLE_SCENE);
+    ui.text("txt_particle", "Particle", BUTTONTEXT_STYLE);
     ui.end_button();
     if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
     ui.text("txt_quit", "Quit", BUTTONTEXT_STYLE);
