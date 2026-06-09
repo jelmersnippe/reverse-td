@@ -43,6 +43,7 @@ struct UI {
         JustifyContent justify_content = JustifyContent::START;
         int font_size = 12;
         int padding = INVALID_INT;
+        int gap = INVALID_INT;
         int width = INVALID_INT;
         int height = INVALID_INT;
 

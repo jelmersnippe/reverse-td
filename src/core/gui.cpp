@@ -1,7 +1,6 @@
 #include "core/gui.hpp"
 #include "raylib.h"
 #include <cassert>
-#include <iostream>
 #include <unordered_map>
 
 // TODO: Make work for other shapes
@@ -103,6 +102,19 @@ void position_children(UI* ui, UI::Element& element) {
         };
     }
 
+    int gap = 0;
+    if (element.style.gap != INVALID_INT) {
+        gap = element.style.gap;
+        switch (element.style.direction) {
+            case UI::LayoutDirection::Horizontal:
+                available_container.x -= gap * ((int)element.children.size() - 1);
+                break;
+            case UI::LayoutDirection::Vertical:
+                available_container.y -= gap * ((int)element.children.size() - 1);
+                break;
+        }
+    }
+
     Vec2 content_offset = {};
     for (UI::Element& child : element.children) {
         Vec2 justify_offset = {};
@@ -126,12 +138,12 @@ void position_children(UI* ui, UI::Element& element) {
         switch (element.style.direction) {
             case UI::LayoutDirection::Horizontal: {
                 child.position = Vec2{.x = position.x + content_offset.x, .y = position.y + justify_offset.y};
-                content_offset.x += child.container_size.x;
+                content_offset.x += child.container_size.x + gap;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
                 child.position = Vec2{.x = position.x + justify_offset.x, .y = position.y + content_offset.y};
-                content_offset.y += child.container_size.y;
+                content_offset.y += child.container_size.y + gap;
                 break;
             }
         }

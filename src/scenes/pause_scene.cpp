@@ -47,8 +47,11 @@ void Draw(GameState& state) {
     ClearBackground(ColorAlpha(GRAY, 0.6));
 
     ui.begin_ui(Vec2{});
-    ui.begin_layout("layout_pause",
-                    {.direction = UI::LayoutDirection::Vertical, .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT});
+    ui.begin_layout("layout_pause", {.direction = UI::LayoutDirection::Vertical,
+                                     .justify_content = UI::JustifyContent::CENTER,
+                                     .gap = 20,
+                                     .width = SCREEN_WIDTH,
+                                     .height = SCREEN_HEIGHT});
 
     ui.text("txt_pause", "PAUSED", {.font_size = 40});
 
