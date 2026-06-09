@@ -8,24 +8,14 @@
 #include "systems/scene_manager.hpp"
 
 namespace {
-const UI::ElementStyle BUTTON_STYLE = {
+const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CENTER,
+                                       .padding = 20,
+                                       .width = 400,
+                                       .color = {.border = BLACK, .background = WHITE, .text = BLACK},
+                                       .color_hover = {.border = BLACK, .background = GRAY, .text = WHITE},
+                                       .color_active = {.border = BLACK, .background = DARKGRAY, .text = WHITE}};
+const UI::ElementStyle BUTTONTEXT_STYLE = {
     .font_size = 24,
-    .padding = 8,
-    .width = 400,
-    .height = 100,
-    .color =
-        {
-            .border = BLACK,
-            .background = WHITE,
-            .text = BLACK,
-        },
-    .color_hover =
-        {
-            .border = BLACK,
-            .background = GRAY,
-            .text = WHITE,
-        },
-    .color_active = {.border = BLACK, .background = DARKGRAY, .text = WHITE},
 };
 UI ui = {};
 
@@ -49,6 +39,7 @@ void Draw(GameState& state) {
     ui.begin_ui(Vec2{});
     ui.begin_layout("layout_pause", {.direction = UI::LayoutDirection::Vertical,
                                      .justify_content = UI::JustifyContent::CENTER,
+                                     .align_items = UI::AlignItems::CENTER,
                                      .gap = 20,
                                      .width = SCREEN_WIDTH,
                                      .height = SCREEN_HEIGHT});
@@ -56,19 +47,19 @@ void Draw(GameState& state) {
     ui.text("txt_pause", "PAUSED", {.font_size = 40});
 
     if (ui.begin_button("btn_resume", BUTTON_STYLE)) SCENE_MANAGER.PopScene(state);
-    ui.text("txt_resume", "Resume", {});
+    ui.text("txt_resume", "Resume", BUTTONTEXT_STYLE);
     ui.end_button();
 
     if (ui.begin_button("btn_restart", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
-    ui.text("txt_restart", "Restart", {});
+    ui.text("txt_restart", "Restart", BUTTONTEXT_STYLE);
     ui.end_button();
 
     if (ui.begin_button("btn_menu", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, MAIN_MENU_SCENE);
-    ui.text("txt_menu", "Main menu", {});
+    ui.text("txt_menu", "Main menu", BUTTONTEXT_STYLE);
     ui.end_button();
 
     if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
-    ui.text("txt_quit", "Quit", {});
+    ui.text("txt_quit", "Quit", BUTTONTEXT_STYLE);
     ui.end_button();
 
     ui.end_layout();

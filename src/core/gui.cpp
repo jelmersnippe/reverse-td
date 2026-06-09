@@ -103,19 +103,22 @@ void position_children(UI* ui, UI::Element& element) {
     }
 
     int gap = 0;
-    if (element.style.gap != INVALID_INT) {
-        gap = element.style.gap;
-        switch (element.style.direction) {
-            case UI::LayoutDirection::Horizontal:
-                available_container.x -= gap * ((int)element.children.size() - 1);
-                break;
-            case UI::LayoutDirection::Vertical:
-                available_container.y -= gap * ((int)element.children.size() - 1);
-                break;
-        }
-    }
+    if (element.style.gap != INVALID_INT) gap = element.style.gap;
 
     Vec2 content_offset = {};
+    switch (element.style.align_items) {
+        case UI::AlignItems::START:
+            break;
+        case UI::AlignItems::CENTER:
+            content_offset = Vec2{.x = (available_container.x - element.content_size.x) / 2,
+                                  .y = (available_container.y - element.content_size.y) / 2};
+            break;
+        case UI::AlignItems::END:
+            content_offset = Vec2{.x = available_container.x - element.content_size.x,
+                                  .y = available_container.y - element.content_size.y};
+            break;
+    }
+
     for (UI::Element& child : element.children) {
         Vec2 justify_offset = {};
         switch (element.style.justify_content) {
@@ -126,8 +129,8 @@ void position_children(UI* ui, UI::Element& element) {
                                       .y = available_container.y - child.container_size.y};
                 break;
             case UI::JustifyContent::CENTER:
-                justify_offset = Vec2{.x = available_container.x / 2 - child.container_size.x / 2,
-                                      .y = available_container.y / 2 - child.container_size.y / 2};
+                justify_offset = Vec2{.x = (available_container.x - child.container_size.x) / 2,
+                                      .y = (available_container.y - child.container_size.y) / 2};
                 break;
             case UI::JustifyContent::SPACE_BETWEEN:
             case UI::JustifyContent::SPACE_AROUND:
@@ -170,6 +173,19 @@ void UI::Element::calculate_size() {
                 if (child.container_size.x > current_size_x) content_size.x = child.container_size.x;
                 break;
             }
+        }
+    }
+
+    int gap = 0;
+    if (this->style.gap != INVALID_INT) gap = ((int)this->children.size() - 1) * this->style.gap;
+    switch (this->style.direction) {
+        case UI::LayoutDirection::Horizontal: {
+            content_size.x += gap;
+            break;
+        }
+        case UI::LayoutDirection::Vertical: {
+            content_size.y += gap;
+            break;
         }
     }
 

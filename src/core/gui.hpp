@@ -26,6 +26,12 @@ struct UI {
         SPACE_EVENLY
     };
 
+    enum class AlignItems {
+        START,
+        CENTER,
+        END
+    };
+
     enum class ElementType {
         CONTAINER,
         BUTTON,
@@ -41,6 +47,7 @@ struct UI {
     struct ElementStyle {
         LayoutDirection direction = LayoutDirection::Vertical;
         JustifyContent justify_content = JustifyContent::START;
+        AlignItems align_items = AlignItems::START;
         int font_size = 12;
         int padding = INVALID_INT;
         int gap = INVALID_INT;

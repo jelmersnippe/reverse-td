@@ -26,6 +26,7 @@ void Draw(GameState& state) {
     ui.begin_ui(Vec2{});
     ui.begin_layout("layout_main_menu", {.direction = UI::LayoutDirection::Vertical,
                                          .justify_content = UI::JustifyContent::CENTER,
+                                         .align_items = UI::AlignItems::CENTER,
                                          .gap = 20,
                                          .width = SCREEN_WIDTH,
                                          .height = SCREEN_HEIGHT});
