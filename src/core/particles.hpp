@@ -79,6 +79,7 @@ struct Particle {
 
     void update(const float delta_time) {
         age += delta_time;
+        velocity += gravity * delta_time;
 
         const float t = std::ranges::clamp(age / lifetime, 0.0f, 1.0f);
 
@@ -95,11 +96,10 @@ struct Particle {
         if (speed_config.start != speed_config.end) {
             speed = lerp(speed_config.start, speed_config.end, t);
 
-            Vec2F normalized_dir = velocity.normalized();
-            velocity = Vec2F{.x = normalized_dir.x, .y = normalized_dir.y} * speed;
+            Vec2F dir = velocity.normalized();
+            velocity = Vec2F{.x = dir.x, .y = dir.y} * speed;
         }
 
-        velocity += gravity * delta_time;
         position += velocity * delta_time;
     }
 };
@@ -145,8 +145,7 @@ struct Emitter {
 
         Vec2F dir = {.x = std::cos(angle), .y = std::sin(angle)};
 
-        CreateEntity(pool, Particle(position, dir, {.x = 0, .y = 0}, speed, size,
-                                    particle_template.color, lifetime));
+        CreateEntity(pool, Particle(position, dir, {.x = 0, .y = 0}, speed, size, particle_template.color, lifetime));
     }
 };
 
