@@ -139,10 +139,13 @@ struct Emitter {
                                           .end = particle_template.size.end.get_random()};
         float lifetime = particle_template.lifetime.get_random();
 
-        float spread_angle = ((float)GetRandomValue(0, 100) / 100.0f) * spread - spread;
-        Vec2F spread = {.x = std::cos(spread_angle), .y = std::sin(spread_angle)};
+        float base_angle = std::atan2(direction.y, direction.x);
+        float offset = ((float)GetRandomValue(-100, 100) / 100.0f) * spread;
+        float angle = base_angle + offset;
 
-        CreateEntity(pool, Particle(position, direction + spread, {.x = 0, .y = 0}, speed, size,
+        Vec2F dir = {.x = std::cos(angle), .y = std::sin(angle)};
+
+        CreateEntity(pool, Particle(position, dir, {.x = 0, .y = 0}, speed, size,
                                     particle_template.color, lifetime));
     }
 };
