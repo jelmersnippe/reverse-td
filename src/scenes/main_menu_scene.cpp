@@ -11,6 +11,7 @@
 
 namespace {
 const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CENTER,
+                                       .align_items = UI::AlignItems::CENTER,
                                        .padding = 20,
                                        .width = 400,
                                        .color = {.border = BLACK, .background = WHITE, .text = BLACK},

@@ -3,14 +3,23 @@
 #include <cassert>
 #include <unordered_map>
 
-// TODO: Make work for other shapes
-bool get_and_update_ui_state(UI* ui, UI::ElementId id) {
+const float HOLD_THRESHOLD = 0.5f;
+
+bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
     bool result = false;
 
-    if (id == ui->active && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        if (id == ui->hot) result = true;
+    if (id == ui->active) {
+        ui->active_for += GetFrameTime();
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            // If mouse went up and hot
+            if (id == ui->hot) result = true;
 
-        ui->active = NONE_ID;
+            ui->active = NONE_ID;
+            ui->active_for = 0.0f;
+        } else if (hold && ui->active_for >= HOLD_THRESHOLD && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            // If hold is allowed, mouse is down for HOLD_THRESHOLD and hot
+            if (id == ui->hot) result = true;
+        }
     } else if (id == ui->hot && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         ui->active = id;
     }
@@ -38,6 +47,7 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id) {
     return result;
 }
 
+// TODO: Make work for other shapes
 void draw_element(UI* ui, const UI::Element& element) {
     switch (element.type) {
         case UI::ElementType::CONTAINER:
@@ -92,10 +102,11 @@ void UI::end_ui() {
 void position_children(UI* ui, UI::Element& element) {
     ui->current_render_elements.push_back(element);
 
-    Vec2 position = element.position;
+    Vec2 content_top_left = element.position;
     Vec2 available_container = element.container_size;
     if (element.style.padding != INVALID_INT) {
-        position = Vec2{.x = position.x + element.style.padding, .y = position.y + element.style.padding};
+        content_top_left =
+            Vec2{.x = content_top_left.x + element.style.padding, .y = content_top_left.y + element.style.padding};
         available_container = Vec2{
             .x = available_container.x - element.style.padding * 2,
             .y = available_container.y - element.style.padding * 2,
@@ -106,46 +117,59 @@ void position_children(UI* ui, UI::Element& element) {
     if (element.style.gap != INVALID_INT) gap = element.style.gap;
 
     Vec2 content_offset = {};
-    switch (element.style.align_items) {
-        case UI::AlignItems::START:
+    switch (element.style.justify_content) {
+        case UI::JustifyContent::CENTER:
+            content_offset = Vec2{
+                .x = (available_container.x - element.content_size.x) / 2,
+                .y = (available_container.y - element.content_size.y) / 2,
+            };
             break;
-        case UI::AlignItems::CENTER:
-            content_offset = Vec2{.x = (available_container.x - element.content_size.x) / 2,
-                                  .y = (available_container.y - element.content_size.y) / 2};
+        case UI::JustifyContent::END:
+            content_offset = Vec2{
+                .x = available_container.x - element.content_size.x,
+                .y = available_container.y - element.content_size.y,
+            };
             break;
-        case UI::AlignItems::END:
-            content_offset = Vec2{.x = available_container.x - element.content_size.x,
-                                  .y = available_container.y - element.content_size.y};
+        default:
             break;
     }
 
     for (UI::Element& child : element.children) {
+        Vec2 align_offset = {};
+        switch (element.style.align_items) {
+            case UI::AlignItems::START:
+                break;
+            case UI::AlignItems::CENTER:
+                align_offset = Vec2{.x = (available_container.x - child.container_size.x) / 2,
+                                    .y = (available_container.y - child.container_size.y) / 2};
+                break;
+            case UI::AlignItems::END:
+                align_offset = Vec2{.x = available_container.x - child.container_size.x,
+                                    .y = available_container.y - child.container_size.y};
+                break;
+        }
+
+        // TODO: Implement
         Vec2 justify_offset = {};
         switch (element.style.justify_content) {
-            case UI::JustifyContent::START:
-                break;
-            case UI::JustifyContent::END:
-                justify_offset = Vec2{.x = available_container.x - child.container_size.x,
-                                      .y = available_container.y - child.container_size.y};
-                break;
-            case UI::JustifyContent::CENTER:
-                justify_offset = Vec2{.x = (available_container.x - child.container_size.x) / 2,
-                                      .y = (available_container.y - child.container_size.y) / 2};
-                break;
             case UI::JustifyContent::SPACE_BETWEEN:
             case UI::JustifyContent::SPACE_AROUND:
             case UI::JustifyContent::SPACE_EVENLY:
+                break;
+            default:
                 break;
         }
 
         switch (element.style.direction) {
             case UI::LayoutDirection::Horizontal: {
-                child.position = Vec2{.x = position.x + content_offset.x, .y = position.y + justify_offset.y};
+                child.position = Vec2{.x = content_top_left.x + justify_offset.x + content_offset.x,
+                                      .y = content_top_left.y + align_offset.y};
                 content_offset.x += child.container_size.x + gap;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
-                child.position = Vec2{.x = position.x + justify_offset.x, .y = position.y + content_offset.y};
+                child.position = Vec2{.x = content_top_left.x + align_offset.x,
+                                      .y = content_top_left.y + justify_offset.y + content_offset.y};
                 content_offset.y += child.container_size.y + gap;
                 break;
             }
@@ -189,15 +213,13 @@ void UI::Element::calculate_size() {
         }
     }
 
-    if (this->style.padding != INVALID_INT) {
-        content_size =
-            Vec2{.x = content_size.x + this->style.padding * 2, .y = content_size.y + this->style.padding * 2};
-    }
-
     this->content_size = content_size;
 
-    if (this->container_size.x == INVALID_INT) this->container_size.x = this->content_size.x;
-    if (this->container_size.y == INVALID_INT) this->container_size.y = this->content_size.y;
+    int padding = 0;
+    if (this->style.padding != INVALID_INT) padding = this->style.padding;
+
+    if (this->container_size.x == INVALID_INT) this->container_size.x = this->content_size.x + padding * 2;
+    if (this->container_size.y == INVALID_INT) this->container_size.y = this->content_size.y + padding * 2;
 }
 
 void UI::begin_layout(ElementId id, ElementStyle style) {
@@ -216,6 +238,7 @@ void UI::end_layout() {
     layout.calculate_size();
 
     if (this->elements.empty()) {
+        layout.position = this->top_left;
         position_children(this, layout);
         return;
     };
@@ -223,8 +246,8 @@ void UI::end_layout() {
     this->elements.top().children.push_back(layout);
 }
 
-bool UI::begin_button(ElementId id, ElementStyle style) {
-    bool result = get_and_update_ui_state(this, id);
+bool UI::begin_button(ElementId id, ElementStyle style, bool hold) {
+    bool result = get_and_update_ui_state(this, id, hold);
 
     Element element = Element{.id = id, .type = ElementType::BUTTON, .style = style};
 

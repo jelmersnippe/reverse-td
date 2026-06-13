@@ -83,6 +83,7 @@ struct UI {
     std::stack<Element> elements;
     ElementId hot = NONE_ID;
     ElementId active = NONE_ID;
+    float active_for = 0.0f;
 
     bool building = false;
 
@@ -92,7 +93,7 @@ struct UI {
     void begin_layout(ElementId id, ElementStyle style);
     void end_layout();
 
-    bool begin_button(ElementId id, ElementStyle style);
+    bool begin_button(ElementId id, ElementStyle style, bool hold = false);
     void end_button();
 
     void text(ElementId id, std::string text, ElementStyle style);

@@ -6,7 +6,9 @@
 #include "raylib.h"
 
 namespace {
-const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CENTER,
+const UI::ElementStyle BUTTON_STYLE = {.direction = UI::LayoutDirection::Vertical,
+                                       .justify_content = UI::JustifyContent::CENTER,
+                                       .align_items = UI::AlignItems::CENTER,
                                        .font_size = 12,
                                        .padding = 8,
                                        .width = 100,
@@ -21,8 +23,11 @@ void horizontal_layout1() {
     ui.begin_layout(prefix, {.direction = UI::LayoutDirection::Horizontal, .gap = 20, .color = {.border = GREEN}});
 
     // START - ORANGE
-    ui.begin_layout(prefix + "layout_vert1",
-                    {.direction = UI::LayoutDirection::Vertical, .gap = 8, .width = 300, .color = {.border = ORANGE}});
+    ui.begin_layout(prefix + "layout_vert1", {.direction = UI::LayoutDirection::Vertical,
+                                              .justify_content = UI::JustifyContent::START,
+                                              .gap = 8,
+                                              .height = 200,
+                                              .color = {.border = ORANGE}});
     ui.begin_button(prefix + "btn_1_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_1_1", "Button 1", {});
     ui.end_button();
@@ -43,9 +48,9 @@ void horizontal_layout1() {
 
     // START - PINK
     ui.begin_layout(prefix + "layout_vert2", {.direction = UI::LayoutDirection::Vertical,
-                                              .justify_content = UI::JustifyContent::END,
+                                              .justify_content = UI::JustifyContent::CENTER,
                                               .gap = 8,
-                                              .width = 300,
+                                              .height = 200,
                                               .color = {.border = PINK}});
     ui.begin_button(prefix + "btn_2_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_2_1", "Button 1", {});
@@ -64,9 +69,9 @@ void horizontal_layout1() {
 
     // START - BLUE
     ui.begin_layout(prefix + "layout_vert3", {.direction = UI::LayoutDirection::Vertical,
-                                              .justify_content = UI::JustifyContent::CENTER,
+                                              .justify_content = UI::JustifyContent::END,
                                               .gap = 8,
-                                              .width = 300,
+                                              .height = 200,
                                               .color = {.border = BLUE}});
     ui.begin_button(prefix + "btn_3_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_3_1", "Button 1", {});
@@ -91,12 +96,14 @@ void horizontal_layout2() {
     const std::string prefix = "layout_hz2";
 
     // START - GREEN
-    ui.begin_layout(prefix, {.direction = UI::LayoutDirection::Horizontal, .gap = 20, .color = {.border = GREEN}});
+    ui.begin_layout(prefix, {.direction = UI::LayoutDirection::Vertical, .gap = 20, .color = {.border = GREEN}});
 
     // START - ORANGE
-    ui.begin_layout(
-        prefix + "layout_hor1",
-        {.direction = UI::LayoutDirection::Horizontal, .gap = 8, .height = 200, .color = {.border = ORANGE}});
+    ui.begin_layout(prefix + "layout_hor1", {.direction = UI::LayoutDirection::Horizontal,
+                                             .justify_content = UI::JustifyContent::START,
+                                             .gap = 8,
+                                             .width = 500,
+                                             .color = {.border = ORANGE}});
     ui.begin_button(prefix + "btn_1_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_1_1", "Button 1", {});
     ui.end_button();
@@ -117,9 +124,9 @@ void horizontal_layout2() {
 
     // START - PINK
     ui.begin_layout(prefix + "layout_hor2", {.direction = UI::LayoutDirection::Horizontal,
-                                             .justify_content = UI::JustifyContent::END,
+                                             .justify_content = UI::JustifyContent::CENTER,
                                              .gap = 8,
-                                             .height = 200,
+                                             .width = 500,
                                              .color = {.border = PINK}});
     ui.begin_button(prefix + "btn_2_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_2_1", "Button 1", {});
@@ -138,9 +145,9 @@ void horizontal_layout2() {
 
     // START - BLUE
     ui.begin_layout(prefix + "layout_hor3", {.direction = UI::LayoutDirection::Horizontal,
-                                             .justify_content = UI::JustifyContent::CENTER,
+                                             .justify_content = UI::JustifyContent::END,
                                              .gap = 8,
-                                             .height = 200,
+                                             .width = 500,
                                              .color = {.border = BLUE}});
     ui.begin_button(prefix + "btn_3_1", BUTTON_STYLE);
     ui.text(prefix + "txt_btn_3_1", "Button 1", {});
@@ -169,7 +176,7 @@ void horizontal_layout3() {
 
     // START - ORANGE
     ui.begin_layout(prefix + "layout_vert1", {.direction = UI::LayoutDirection::Vertical,
-                                              .justify_content = UI::JustifyContent::CENTER,
+                                              .justify_content = UI::JustifyContent::START,
                                               .align_items = UI::AlignItems::START,
                                               .gap = 8,
                                               .width = 200,
@@ -218,7 +225,7 @@ void horizontal_layout3() {
 
     // START - BLUE
     ui.begin_layout(prefix + "layout_vert3", {.direction = UI::LayoutDirection::Vertical,
-                                              .justify_content = UI::JustifyContent::CENTER,
+                                              .justify_content = UI::JustifyContent::END,
                                               .align_items = UI::AlignItems::END,
                                               .gap = 8,
                                               .width = 200,
