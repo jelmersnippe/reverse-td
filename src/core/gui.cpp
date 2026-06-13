@@ -129,13 +129,6 @@ void draw_element(UI* ui, UI::Element& element) {
             int h_pos = hue_rect.x + (hue_rect.width * (current_hsv.x / 360.0f));
             DrawRectangleLines(h_pos - 2, hue_rect.y, 4, hue_rect.height, WHITE);
 
-            DrawText(std::format("RGBA: ({}, {}, {}, {})", element.color.r, element.color.g, element.color.b,
-                                 element.color.a)
-                         .c_str(),
-                     element.position.x, hue_rect.y + hue_rect.height + 5, 12, BLACK);
-            DrawText(std::format("HSV: ({}, {}, {})", current_hsv.x, current_hsv.y, current_hsv.z).c_str(),
-                     element.position.x, hue_rect.y + hue_rect.height + 5 + 12, 12, BLACK);
-
             break;
         }
     }
