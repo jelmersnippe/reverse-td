@@ -36,7 +36,7 @@ void Update(GameState& state) {
 void Draw(GameState& state) {
     ClearBackground(ColorAlpha(GRAY, 0.6));
 
-    ui.begin_ui(Vec2{});
+    ui.begin_ui();
     ui.begin_layout("layout_pause", {.direction = UI::LayoutDirection::Vertical,
                                      .justify_content = UI::JustifyContent::CENTER,
                                      .align_items = UI::AlignItems::CENTER,

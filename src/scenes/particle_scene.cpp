@@ -24,7 +24,7 @@ void Update(GameState& state) {
     particle_system.update(GetFrameTime());
 }
 
-UI ui = {};
+UI ui = UI(Vec2{.x = 25, .y = 25});
 
 const UI::ElementStyle TEXT_STYLE = {.font_size = 16};
 
@@ -74,7 +74,7 @@ void Draw(GameState& state) {
         DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
     }
 
-    ui.begin_ui(Vec2{.x = 25, .y = 25});
+    ui.begin_ui();
 
     ui.begin_layout("ctr_particle_vars", {.direction = UI::LayoutDirection::Vertical});
 
@@ -82,6 +82,8 @@ void Draw(GameState& state) {
     ui_float_variable("velocity y", PARTICLE_TEMPLATE.velocity.y);
     ui_float_variable("size", PARTICLE_TEMPLATE.size);
     ui_float_variable("lifetime", PARTICLE_TEMPLATE.lifetime);
+
+    ui.color_picker("color", PARTICLE_TEMPLATE.color);
 
     ui.end_layout();
 

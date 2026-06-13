@@ -253,7 +253,7 @@ void horizontal_layout3() {
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
-    ui.begin_ui(Vec2{});
+    ui.begin_ui();
 
     // START - RED
     ui.begin_layout("layout_wrapper", {.direction = UI::LayoutDirection::Vertical,

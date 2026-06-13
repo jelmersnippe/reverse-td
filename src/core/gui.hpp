@@ -11,6 +11,23 @@
 const std::string NONE_ID = "NO_ID_SELECTED";
 const int INVALID_INT = INT_MAX;
 
+const float HOLD_THRESHOLD = 0.5f;
+const int COLOR_PICKER_WIDTH = 100;
+const int COLOR_PICKER_SV_RECT_HEIGHT = 70;
+const int COLOR_PICKER_GAP = 10;
+const int COLOR_PICKER_HUE_SLIDER_HEIGHT = 20;
+
+struct HSVRect {
+    Color color;
+    Vector3 hsv;
+    Texture2D texture;
+};
+
+struct HueStrip {
+    bool initialized = false;
+    Texture2D texture;
+};
+
 struct UI {
     enum class LayoutDirection {
         Horizontal,
@@ -36,6 +53,7 @@ struct UI {
         CONTAINER,
         BUTTON,
         TEXT,
+        COLOR_PICKER
     };
 
     struct ButtonColor {
@@ -70,6 +88,7 @@ struct UI {
         ElementStyle style = {};
 
         std::string text = "";
+        Color color = {};
 
         std::vector<Element> children = {};
 
@@ -77,6 +96,9 @@ struct UI {
     };
 
     Vec2 top_left;
+
+    HueStrip hue_strip = {};
+    std::unordered_map<ElementId, HSVRect> hsv_rects = {};
 
     std::unordered_map<ElementId, Rect> previous_render_elements;
     std::vector<Element> current_render_elements;
@@ -87,7 +109,7 @@ struct UI {
 
     bool building = false;
 
-    void begin_ui(Vec2 position);
+    void begin_ui();
     void end_ui();
 
     void begin_layout(ElementId id, ElementStyle style);
@@ -97,4 +119,10 @@ struct UI {
     void end_button();
 
     void text(ElementId id, std::string text, ElementStyle style);
+
+    void color_picker(ElementId id, Color& color);
+
+    UI(Vec2 position = Vec2{.x = 0, .y = 0}) : top_left(position) {}
+
+    void init_hue_strip();
 };

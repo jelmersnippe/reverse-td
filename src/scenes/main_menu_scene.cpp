@@ -20,12 +20,12 @@ const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CE
 const UI::ElementStyle BUTTONTEXT_STYLE = {
     .font_size = 24,
 };
-UI ui = {};
+UI ui = UI();
 
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
-    ui.begin_ui(Vec2{});
+    ui.begin_ui();
     ui.begin_layout("layout_main_menu", {.direction = UI::LayoutDirection::Vertical,
                                          .justify_content = UI::JustifyContent::CENTER,
                                          .align_items = UI::AlignItems::CENTER,

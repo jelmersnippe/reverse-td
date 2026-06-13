@@ -1,9 +1,29 @@
 #include "core/gui.hpp"
+#include "core/data.hpp"
 #include "raylib.h"
 #include <cassert>
+#include <format>
 #include <unordered_map>
 
-const float HOLD_THRESHOLD = 0.5f;
+void UI::init_hue_strip() {
+    const int width = COLOR_PICKER_WIDTH;
+    const int height = COLOR_PICKER_HUE_SLIDER_HEIGHT;
+    Image image = GenImageColor(width, height, BLACK);
+
+    for (float x = 0; x < width; x++) {
+        float h = 360.0f * (x / width);
+
+        for (int y = 0; y < height; y++) {
+            ImageDrawPixel(&image, (int)x, y, ColorFromHSV(h, 1.0, 1.0));
+        }
+    }
+
+    this->hue_strip = {
+        .initialized = true,
+        .texture = LoadTextureFromImage(image),
+    };
+    UnloadImage(image);
+}
 
 bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
     bool result = false;
@@ -48,7 +68,7 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
 }
 
 // TODO: Make work for other shapes
-void draw_element(UI* ui, const UI::Element& element) {
+void draw_element(UI* ui, UI::Element& element) {
     switch (element.type) {
         case UI::ElementType::CONTAINER:
             DrawRectangleLines(element.position.x, element.position.y, element.container_size.x,
@@ -69,14 +89,61 @@ void draw_element(UI* ui, const UI::Element& element) {
                                element.container_size.y, color.border);
             break;
         }
+
+        case UI::ElementType::COLOR_PICKER: {
+            const Rectangle sv_rect = Rectangle{
+                .x = (float)element.position.x,
+                .y = (float)element.position.y,
+                .width = (float)element.content_size.x,
+                .height = (float)(element.content_size.y - COLOR_PICKER_GAP - COLOR_PICKER_HUE_SLIDER_HEIGHT)};
+
+            const Rectangle hue_rect = Rectangle{.x = (float)element.position.x,
+                                                 .y = (float)element.position.y + sv_rect.height + COLOR_PICKER_GAP,
+                                                 .width = (float)element.content_size.x,
+                                                 .height = COLOR_PICKER_HUE_SLIDER_HEIGHT};
+
+            auto hsv_rect_iterator = ui->hsv_rects.find(element.id);
+            assert(hsv_rect_iterator != ui->hsv_rects.end() && "Color picker did not have hsv_rect generated.");
+
+            HSVRect hsv_rect = hsv_rect_iterator->second;
+
+            const Vector3 current_hsv = ColorToHSV(element.color);
+
+            DrawRectangleLinesEx(sv_rect, 1, BLACK);
+            DrawTexture(hsv_rect.texture, element.position.x, element.position.y, WHITE);
+
+            int s_pos = sv_rect.x + (sv_rect.width * current_hsv.y);
+            int v_pos = sv_rect.y + sv_rect.height - (sv_rect.height * current_hsv.z);
+            DrawCircle(s_pos, v_pos, 5, WHITE);
+            DrawCircleLines(s_pos, v_pos, 5, BLACK);
+
+            DrawRectangleLinesEx(hue_rect, 1, BLACK);
+
+            if (!ui->hue_strip.initialized) { ui->init_hue_strip(); }
+
+            assert(ui->hue_strip.initialized && "UI hue strip not initialized.");
+
+            DrawTexture(ui->hue_strip.texture, element.position.x,
+                        element.position.y + element.content_size.y - COLOR_PICKER_HUE_SLIDER_HEIGHT, WHITE);
+
+            int h_pos = hue_rect.x + (hue_rect.width * (current_hsv.x / 360.0f));
+            DrawRectangleLines(h_pos - 2, hue_rect.y, 4, hue_rect.height, WHITE);
+
+            DrawText(std::format("RGBA: ({}, {}, {}, {})", element.color.r, element.color.g, element.color.b,
+                                 element.color.a)
+                         .c_str(),
+                     element.position.x, hue_rect.y + hue_rect.height + 5, 12, BLACK);
+            DrawText(std::format("HSV: ({}, {}, {})", current_hsv.x, current_hsv.y, current_hsv.z).c_str(),
+                     element.position.x, hue_rect.y + hue_rect.height + 5 + 12, 12, BLACK);
+            break;
+        }
     }
 }
 
-void UI::begin_ui(Vec2 position) {
+void UI::begin_ui() {
     assert(!this->building && "Already building the UI. Can't call begin_ui(). Make sure to call end_ui().");
 
     this->building = true;
-    this->top_left = position;
 }
 
 void UI::end_ui() {
@@ -86,7 +153,7 @@ void UI::end_ui() {
 
     std::unordered_map<ElementId, Rect> element_rects = {};
 
-    for (const Element& element : this->current_render_elements) {
+    for (Element& element : this->current_render_elements) {
         draw_element(this, element);
 
         assert(element_rects.find(element.id) == element_rects.end() && "Can not have duplicate element ids.");
@@ -283,6 +350,45 @@ void UI::text(ElementId id, std::string text, ElementStyle style) {
                               .text = text};
 
     assert(!this->elements.empty() && "A parent element is required to place a text.");
+
+    this->elements.top().children.push_back(element);
+}
+
+void generate_hsv_texture(UI* ui, const UI::Element& element) {
+    const int width = element.content_size.x;
+    const int height = element.content_size.y - COLOR_PICKER_GAP - COLOR_PICKER_HUE_SLIDER_HEIGHT;
+    Image image = GenImageColor(width, height, BLACK);
+
+    Vector3 current_hsv = ColorToHSV(element.color);
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            float s = x / (float)(width - 1);
+            float v = 1.0f - y / (float)(height - 1);
+
+            ImageDrawPixel(&image, x, y, ColorFromHSV(current_hsv.x, s, v));
+        }
+    }
+
+    ui->hsv_rects[element.id] =
+        HSVRect{.color = element.color, .hsv = current_hsv, .texture = LoadTextureFromImage(image)};
+    UnloadImage(image);
+}
+
+void UI::color_picker(ElementId id, Color& color) {
+    Vec2 size = Vec2{.x = COLOR_PICKER_SV_RECT_HEIGHT + COLOR_PICKER_GAP + COLOR_PICKER_HUE_SLIDER_HEIGHT,
+                     .y = COLOR_PICKER_WIDTH};
+
+    Element element = Element{
+        .id = id, .type = ElementType::COLOR_PICKER, .container_size = size, .content_size = size, .color = color};
+
+    auto hsv_rect_iterator = this->hsv_rects.find(element.id);
+
+    if (hsv_rect_iterator == this->hsv_rects.end() || !ColorIsEqual(hsv_rect_iterator->second.color, element.color)) {
+        generate_hsv_texture(this, element);
+    }
+
+    assert(!this->elements.empty() && "A parent element is required to place a color picker.");
 
     this->elements.top().children.push_back(element);
 }
