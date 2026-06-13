@@ -5,20 +5,31 @@
 #include "core/particles.hpp"
 #include "format"
 #include "raylib.h"
+#include <ranges>
 
 namespace {
 
 ParticleSystem particle_system;
 
-ParticleTemplate PARTICLE_TEMPLATE = ParticleTemplate(Vec2F{.x = 0, .y = -100}, 10, RED, 1.5f);
+ParticleTemplate PARTICLE_TEMPLATE =
+    ParticleTemplate({.speed = {.start = {.min = 40, .max = 120}, .end = {.min = 10, .max = 30}},
+                      .size = {.start = {.min = 8, .max = 14}, .end = {.min = 0, .max = 4}},
+                      .color = {Color(255, 180, 50, 255), Color(40, 40, 40, 0)},
+                      .lifetime = {.min = 0.4f, .max = 1.0f},
+                      .gravity = {.x = 0, .y = -20}});
+Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
+                          .direction = {.x = 0, .y = -1},
+                          .spread = 0.6f,
+                          .particle_template = PARTICLE_TEMPLATE,
+                          .rate = 80,
+                          .duration = 20};
 
 void Update(GameState& state) {
     const Vector2 mouse_pos = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        particle_system.play({.position = {.x = mouse_pos.x, .y = mouse_pos.y},
-                              .particle_template = PARTICLE_TEMPLATE,
-                              .rate = 4,
-                              .duration = 5});
+        EMITTER.position = {.x = mouse_pos.x, .y = mouse_pos.y};
+        EMITTER.particle_template = PARTICLE_TEMPLATE;
+        particle_system.play(EMITTER);
     }
 
     particle_system.update(GetFrameTime());
@@ -61,6 +72,20 @@ void ui_float_variable(std::string label, float& variable) {
     ui.end_layout();
 }
 
+void ui_color_variable(std::string label, Color& variable) {
+    ui.begin_layout(
+        "variable_" + label,
+        {.direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER, .padding = 4, .gap = 8});
+
+    ui.text("txt_" + label, label, {});
+
+    ui.color_picker("cp_" + label, variable);
+    ui.text("text_" + label + "_start",
+            std::format("RGBA ({},{},{},{})", variable.r, variable.g, variable.b, variable.a), TEXT_STYLE);
+
+    ui.end_layout();
+}
+
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
@@ -78,12 +103,26 @@ void Draw(GameState& state) {
 
     ui.begin_layout("ctr_particle_vars", {.direction = UI::LayoutDirection::Vertical});
 
-    ui_float_variable("velocity x", PARTICLE_TEMPLATE.velocity.x);
-    ui_float_variable("velocity y", PARTICLE_TEMPLATE.velocity.y);
-    ui_float_variable("size", PARTICLE_TEMPLATE.size);
-    ui_float_variable("lifetime", PARTICLE_TEMPLATE.lifetime);
+    ui.text("txt_particle_template", "Particle config", {.font_size = 20});
 
-    ui.color_picker("color", PARTICLE_TEMPLATE.color);
+    ui_float_variable("speed start min", PARTICLE_TEMPLATE.speed.start.min);
+    ui_float_variable("speed start max", PARTICLE_TEMPLATE.speed.start.max);
+    ui_float_variable("speed end min", PARTICLE_TEMPLATE.speed.end.min);
+    ui_float_variable("speed end max", PARTICLE_TEMPLATE.speed.end.max);
+
+    ui_float_variable("size start min", PARTICLE_TEMPLATE.size.start.min);
+    ui_float_variable("size start max", PARTICLE_TEMPLATE.size.start.max);
+    ui_float_variable("size end min", PARTICLE_TEMPLATE.size.end.min);
+    ui_float_variable("size end max", PARTICLE_TEMPLATE.size.end.max);
+
+    ui_color_variable("color start", PARTICLE_TEMPLATE.color.start);
+    ui_color_variable("color end", PARTICLE_TEMPLATE.color.end);
+
+    ui_float_variable("lifetime min", PARTICLE_TEMPLATE.lifetime.min);
+    ui_float_variable("lifetime max", PARTICLE_TEMPLATE.lifetime.max);
+
+    ui_float_variable("gravity x", PARTICLE_TEMPLATE.gravity.x);
+    ui_float_variable("gravity y", PARTICLE_TEMPLATE.gravity.y);
 
     ui.end_layout();
 

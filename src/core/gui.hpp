@@ -11,7 +11,6 @@
 const std::string NONE_ID = "NO_ID_SELECTED";
 const int INVALID_INT = INT_MAX;
 
-const float BUTTON_HOLD_THRESHOLD = 0.5f;
 const int COLOR_PICKER_WIDTH = 100;
 const int COLOR_PICKER_SV_RECT_HEIGHT = 70;
 const int COLOR_PICKER_GAP = 10;
@@ -59,7 +58,7 @@ struct UI {
 
     struct HoldParams {
         bool hold_enabled = false;
-        float hold_threshold = 0.0f;
+        float hold_threshold = 0.5f;
         bool allow_outside = false;
     };
 
@@ -123,8 +122,7 @@ struct UI {
     void end_layout();
 
     bool begin_button(ElementId id, ElementStyle style,
-                      HoldParams hold_params = {
-                          .hold_enabled = false, .hold_threshold = BUTTON_HOLD_THRESHOLD, .allow_outside = false});
+                      HoldParams hold_params = {.hold_enabled = false, .hold_threshold = 0.5f, .allow_outside = false});
     void end_button();
 
     void text(ElementId id, std::string text, ElementStyle style);
