@@ -47,14 +47,14 @@ void ui_float_variable(std::string label, float& variable) {
 
     ui.text("txt_" + label, label, {});
 
-    if (ui.begin_button("btn_down_" + label, BUTTON_STYLE, true)) variable -= 1;
+    if (ui.begin_button("btn_down_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable -= 1;
 
     ui.text("btn_txt_down_" + label, "-", TEXT_STYLE);
     ui.end_button();
 
     ui.text("txt_value_" + label, std::format("{}", variable), TEXT_STYLE);
 
-    if (ui.begin_button("btn_up_" + label, BUTTON_STYLE, true)) variable += 1;
+    if (ui.begin_button("btn_up_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable += 1;
     ui.text("btn_txt_up_" + label, "+", TEXT_STYLE);
     ui.end_button();
 

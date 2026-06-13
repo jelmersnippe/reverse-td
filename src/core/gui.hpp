@@ -11,24 +11,24 @@
 const std::string NONE_ID = "NO_ID_SELECTED";
 const int INVALID_INT = INT_MAX;
 
-const float HOLD_THRESHOLD = 0.5f;
+const float BUTTON_HOLD_THRESHOLD = 0.5f;
 const int COLOR_PICKER_WIDTH = 100;
 const int COLOR_PICKER_SV_RECT_HEIGHT = 70;
 const int COLOR_PICKER_GAP = 10;
 const int COLOR_PICKER_HUE_SLIDER_HEIGHT = 20;
 
-struct HSVRect {
-    Color color;
-    Vector3 hsv;
-    Texture2D texture;
-};
-
-struct HueStrip {
-    bool initialized = false;
-    Texture2D texture;
-};
-
 struct UI {
+    struct HSVRect {
+        Color color;
+        Vector3 hsv;
+        Texture2D texture;
+    };
+
+    struct HueStrip {
+        bool initialized = false;
+        Texture2D texture;
+    };
+
     enum class LayoutDirection {
         Horizontal,
         Vertical
@@ -53,7 +53,14 @@ struct UI {
         CONTAINER,
         BUTTON,
         TEXT,
-        COLOR_PICKER
+        COLOR_RECT,
+        HUE_STRIP
+    };
+
+    struct HoldParams {
+        bool hold_enabled = false;
+        float hold_threshold = 0.0f;
+        bool allow_outside = false;
     };
 
     struct ButtonColor {
@@ -115,7 +122,9 @@ struct UI {
     void begin_layout(ElementId id, ElementStyle style);
     void end_layout();
 
-    bool begin_button(ElementId id, ElementStyle style, bool hold = false);
+    bool begin_button(ElementId id, ElementStyle style,
+                      HoldParams hold_params = {
+                          .hold_enabled = false, .hold_threshold = BUTTON_HOLD_THRESHOLD, .allow_outside = false});
     void end_button();
 
     void text(ElementId id, std::string text, ElementStyle style);

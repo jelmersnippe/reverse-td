@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include <cassert>
 #include <format>
+#include <iostream>
 #include <unordered_map>
 
 void UI::init_hue_strip() {
@@ -13,9 +14,7 @@ void UI::init_hue_strip() {
     for (float x = 0; x < width; x++) {
         float h = 360.0f * (x / width);
 
-        for (int y = 0; y < height; y++) {
-            ImageDrawPixel(&image, (int)x, y, ColorFromHSV(h, 1.0, 1.0));
-        }
+        ImageDrawLine(&image, x, 0, x, height, ColorFromHSV(h, 1.0, 1.0));
     }
 
     this->hue_strip = {
@@ -25,7 +24,7 @@ void UI::init_hue_strip() {
     UnloadImage(image);
 }
 
-bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
+bool get_and_update_ui_state(UI* ui, UI::ElementId id, UI::HoldParams hold_params) {
     bool result = false;
 
     if (id == ui->active) {
@@ -36,7 +35,8 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
 
             ui->active = NONE_ID;
             ui->active_for = 0.0f;
-        } else if (hold && ui->active_for >= HOLD_THRESHOLD && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        } else if (hold_params.hold_enabled && ui->active_for >= hold_params.hold_threshold &&
+                   IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             // If hold is allowed, mouse is down for HOLD_THRESHOLD and hot
             if (id == ui->hot) result = true;
         }
@@ -52,7 +52,8 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id, bool hold) {
         Rect rect = rect_it->second;
 
         auto mouse_pos = GetMousePosition();
-        if (CheckCollisionPointRec(mouse_pos, Rectangle{
+        if ((ui->active == id && hold_params.allow_outside) ||
+            CheckCollisionPointRec(mouse_pos, Rectangle{
                                                   .x = (float)rect.position.x,
                                                   .y = (float)rect.position.y,
                                                   .width = (float)rect.size.x,
@@ -90,26 +91,19 @@ void draw_element(UI* ui, UI::Element& element) {
             break;
         }
 
-        case UI::ElementType::COLOR_PICKER: {
-            const Rectangle sv_rect = Rectangle{
-                .x = (float)element.position.x,
-                .y = (float)element.position.y,
-                .width = (float)element.content_size.x,
-                .height = (float)(element.content_size.y - COLOR_PICKER_GAP - COLOR_PICKER_HUE_SLIDER_HEIGHT)};
-
-            const Rectangle hue_rect = Rectangle{.x = (float)element.position.x,
-                                                 .y = (float)element.position.y + sv_rect.height + COLOR_PICKER_GAP,
-                                                 .width = (float)element.content_size.x,
-                                                 .height = COLOR_PICKER_HUE_SLIDER_HEIGHT};
+        case UI::ElementType::COLOR_RECT: {
+            const Rectangle sv_rect = Rectangle{.x = (float)element.position.x,
+                                                .y = (float)element.position.y,
+                                                .width = (float)element.content_size.x,
+                                                .height = (float)element.content_size.y};
 
             auto hsv_rect_iterator = ui->hsv_rects.find(element.id);
             assert(hsv_rect_iterator != ui->hsv_rects.end() && "Color picker did not have hsv_rect generated.");
 
-            HSVRect hsv_rect = hsv_rect_iterator->second;
+            UI::HSVRect hsv_rect = hsv_rect_iterator->second;
 
             const Vector3 current_hsv = ColorToHSV(element.color);
 
-            DrawRectangleLinesEx(sv_rect, 1, BLACK);
             DrawTexture(hsv_rect.texture, element.position.x, element.position.y, WHITE);
 
             int s_pos = sv_rect.x + (sv_rect.width * current_hsv.y);
@@ -117,11 +111,17 @@ void draw_element(UI* ui, UI::Element& element) {
             DrawCircle(s_pos, v_pos, 5, WHITE);
             DrawCircleLines(s_pos, v_pos, 5, BLACK);
 
-            DrawRectangleLinesEx(hue_rect, 1, BLACK);
-
-            if (!ui->hue_strip.initialized) { ui->init_hue_strip(); }
+            break;
+        }
+        case UI::ElementType::HUE_STRIP: {
+            const Rectangle hue_rect = Rectangle{.x = (float)element.position.x,
+                                                 .y = (float)element.position.y,
+                                                 .width = (float)element.content_size.x,
+                                                 .height = (float)element.content_size.y};
 
             assert(ui->hue_strip.initialized && "UI hue strip not initialized.");
+
+            const Vector3 current_hsv = ColorToHSV(element.color);
 
             DrawTexture(ui->hue_strip.texture, element.position.x,
                         element.position.y + element.content_size.y - COLOR_PICKER_HUE_SLIDER_HEIGHT, WHITE);
@@ -135,6 +135,7 @@ void draw_element(UI* ui, UI::Element& element) {
                      element.position.x, hue_rect.y + hue_rect.height + 5, 12, BLACK);
             DrawText(std::format("HSV: ({}, {}, {})", current_hsv.x, current_hsv.y, current_hsv.z).c_str(),
                      element.position.x, hue_rect.y + hue_rect.height + 5 + 12, 12, BLACK);
+
             break;
         }
     }
@@ -313,8 +314,8 @@ void UI::end_layout() {
     this->elements.top().children.push_back(layout);
 }
 
-bool UI::begin_button(ElementId id, ElementStyle style, bool hold) {
-    bool result = get_and_update_ui_state(this, id, hold);
+bool UI::begin_button(ElementId id, ElementStyle style, HoldParams hold_params) {
+    bool result = get_and_update_ui_state(this, id, hold_params);
 
     Element element = Element{.id = id, .type = ElementType::BUTTON, .style = style};
 
@@ -356,7 +357,7 @@ void UI::text(ElementId id, std::string text, ElementStyle style) {
 
 void generate_hsv_texture(UI* ui, const UI::Element& element) {
     const int width = element.content_size.x;
-    const int height = element.content_size.y - COLOR_PICKER_GAP - COLOR_PICKER_HUE_SLIDER_HEIGHT;
+    const int height = element.content_size.y;
     Image image = GenImageColor(width, height, BLACK);
 
     Vector3 current_hsv = ColorToHSV(element.color);
@@ -371,24 +372,84 @@ void generate_hsv_texture(UI* ui, const UI::Element& element) {
     }
 
     ui->hsv_rects[element.id] =
-        HSVRect{.color = element.color, .hsv = current_hsv, .texture = LoadTextureFromImage(image)};
+        UI::HSVRect{.color = element.color, .hsv = current_hsv, .texture = LoadTextureFromImage(image)};
     UnloadImage(image);
 }
 
 void UI::color_picker(ElementId id, Color& color) {
-    Vec2 size = Vec2{.x = COLOR_PICKER_SV_RECT_HEIGHT + COLOR_PICKER_GAP + COLOR_PICKER_HUE_SLIDER_HEIGHT,
-                     .y = COLOR_PICKER_WIDTH};
+    Vec2 color_rect_size = Vec2{.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_SV_RECT_HEIGHT};
 
-    Element element = Element{
-        .id = id, .type = ElementType::COLOR_PICKER, .container_size = size, .content_size = size, .color = color};
+    Vec2 hue_strip_size = Vec2{.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_HUE_SLIDER_HEIGHT};
+    const std::string rect_id = id + "_rect";
+    const std::string strip_id = id + "_strip";
 
-    auto hsv_rect_iterator = this->hsv_rects.find(element.id);
+    begin_layout(id + "_layout", {.direction = LayoutDirection::Vertical, .gap = COLOR_PICKER_GAP});
 
-    if (hsv_rect_iterator == this->hsv_rects.end() || !ColorIsEqual(hsv_rect_iterator->second.color, element.color)) {
-        generate_hsv_texture(this, element);
+    Element color_rect = Element{.id = rect_id,
+                                 .type = ElementType::COLOR_RECT,
+                                 .container_size = color_rect_size,
+                                 .content_size = color_rect_size,
+                                 .color = color};
+    Element hue_strip = Element{.id = strip_id,
+                                .type = ElementType::HUE_STRIP,
+                                .container_size = hue_strip_size,
+                                .content_size = hue_strip_size,
+                                .color = color};
+
+    if (get_and_update_ui_state(this, rect_id, {.hold_enabled = true, .hold_threshold = 0.0f, .allow_outside = true})) {
+        Vector2 mouse_pos = GetMousePosition();
+
+        auto rect_it = this->previous_render_elements.find(rect_id);
+        assert(rect_it != this->previous_render_elements.end() && "Color rect used but not found in previous render.");
+
+        Rect rect = rect_it->second;
+        Vec2 rect_coords = {.x = std::clamp((int)mouse_pos.x - rect.position.x, 0, rect.size.x),
+                            .y = std::clamp((int)mouse_pos.y - rect.position.y, 0, rect.size.y)};
+        Vec2F sv_value = {
+            .x = std::clamp((float)rect_coords.x / (float)color_rect_size.x, 0.0f, 1.0f),
+            .y = std::clamp((float)(color_rect_size.y - rect_coords.y) / (float)color_rect_size.y, 0.0f, 1.0f)};
+
+        std::cout << "Updating SV to " << sv_value.x << "," << sv_value.y << std::endl;
+
+        const Vector3 hsv = ColorToHSV(color);
+        const Color new_color = ColorFromHSV(hsv.x, sv_value.x, sv_value.y);
+        color.r = new_color.r;
+        color.g = new_color.g;
+        color.b = new_color.b;
+        color.a = new_color.a;
+    } else if (get_and_update_ui_state(this, strip_id,
+                                       {.hold_enabled = true, .hold_threshold = 0.0f, .allow_outside = true})) {
+        Vector2 mouse_pos = GetMousePosition();
+
+        auto strip_it = this->previous_render_elements.find(strip_id);
+        assert(strip_it != this->previous_render_elements.end() && "Hue strip used but not found in previous render.");
+
+        Rect strip = strip_it->second;
+        int strip_x = std::clamp((int)mouse_pos.x - strip.position.x, 0, strip.size.x);
+        float h_value = std::clamp(((float)strip_x / (float)hue_strip_size.x) * 360.0f, 0.0f, 359.9f);
+
+        std::cout << "Updating H to " << h_value << std::endl;
+
+        const Vector3 hsv = ColorToHSV(color);
+        const Color new_color = ColorFromHSV(h_value, hsv.y, hsv.z);
+        color.r = new_color.r;
+        color.g = new_color.g;
+        color.b = new_color.b;
+        color.a = new_color.a;
     }
+
+    auto hsv_rect_iterator = this->hsv_rects.find(color_rect.id);
+
+    if (hsv_rect_iterator == this->hsv_rects.end() || !ColorIsEqual(hsv_rect_iterator->second.color, color)) {
+        generate_hsv_texture(this, color_rect);
+    }
+
+    if (!this->hue_strip.initialized) this->init_hue_strip();
 
     assert(!this->elements.empty() && "A parent element is required to place a color picker.");
 
-    this->elements.top().children.push_back(element);
+    this->elements.top().children.push_back(color_rect);
+    this->elements.top().children.push_back(hue_strip);
+
+    end_layout();
 }
