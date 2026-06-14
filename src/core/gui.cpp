@@ -1,8 +1,8 @@
 #include "core/gui.hpp"
 #include "core/data.hpp"
 #include "raylib.h"
+#include <algorithm>
 #include <cassert>
-#include <format>
 #include <iostream>
 #include <unordered_map>
 
@@ -72,6 +72,10 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id, UI::HoldParams hold_param
 void draw_element(UI* ui, UI::Element& element) {
     switch (element.type) {
         case UI::ElementType::CONTAINER:
+            if (!ColorIsEqual(element.style.color.background, TRANSPARENT)) {
+                DrawRectangle(element.position.x, element.position.y, element.container_size.x,
+                              element.container_size.y, element.style.color.background);
+            }
             DrawRectangleLines(element.position.x, element.position.y, element.container_size.x,
                                element.container_size.y, element.style.color.border);
             break;
@@ -178,6 +182,7 @@ void position_children(UI* ui, UI::Element& element) {
     if (element.style.gap != INVALID_INT) gap = element.style.gap;
 
     Vec2 content_offset = {};
+    Vec2 justify_offset = {};
     switch (element.style.justify_content) {
         case UI::JustifyContent::CENTER:
             content_offset = Vec2{
@@ -189,6 +194,14 @@ void position_children(UI* ui, UI::Element& element) {
             content_offset = Vec2{
                 .x = available_container.x - element.content_size.x,
                 .y = available_container.y - element.content_size.y,
+            };
+            break;
+        case UI::JustifyContent::SPACE_BETWEEN:
+            if (element.children.size() == 0) break;
+
+            justify_offset = Vec2{
+                .x = (available_container.x - element.content_size.x) / int(element.children.size() - 1),
+                .y = (available_container.y - element.content_size.y) / int(element.children.size() - 1),
             };
             break;
         default:
@@ -210,28 +223,17 @@ void position_children(UI* ui, UI::Element& element) {
                 break;
         }
 
-        // TODO: Implement
-        Vec2 justify_offset = {};
-        switch (element.style.justify_content) {
-            case UI::JustifyContent::SPACE_BETWEEN:
-            case UI::JustifyContent::SPACE_AROUND:
-            case UI::JustifyContent::SPACE_EVENLY:
-                break;
-            default:
-                break;
-        }
-
         switch (element.style.direction) {
             case UI::LayoutDirection::Horizontal: {
-                child.position = Vec2{.x = content_top_left.x + justify_offset.x + content_offset.x,
-                                      .y = content_top_left.y + align_offset.y};
-                content_offset.x += child.container_size.x + gap;
+                child.position =
+                    Vec2{.x = content_top_left.x + content_offset.x, .y = content_top_left.y + align_offset.y};
+                content_offset.x += child.container_size.x + justify_offset.x + gap;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
-                child.position = Vec2{.x = content_top_left.x + align_offset.x,
-                                      .y = content_top_left.y + justify_offset.y + content_offset.y};
-                content_offset.y += child.container_size.y + gap;
+                child.position =
+                    Vec2{.x = content_top_left.x + align_offset.x, .y = content_top_left.y + content_offset.y};
+                content_offset.y += child.container_size.y + justify_offset.y + gap;
                 break;
             }
         }
@@ -410,8 +412,9 @@ void UI::color_picker(ElementId id, Color& color) {
         color.g = new_color.g;
         color.b = new_color.b;
         color.a = new_color.a;
-    } else if (get_and_update_ui_state(this, strip_id,
-                                       {.hold_enabled = true, .hold_threshold = 0.0f, .allow_outside = true})) {
+    }
+    if (get_and_update_ui_state(this, strip_id,
+                                {.hold_enabled = true, .hold_threshold = 0.0f, .allow_outside = true})) {
         Vector2 mouse_pos = GetMousePosition();
 
         auto strip_it = this->previous_render_elements.find(strip_id);

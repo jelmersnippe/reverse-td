@@ -5,7 +5,6 @@
 #include "core/particles.hpp"
 #include "format"
 #include "raylib.h"
-#include <ranges>
 
 namespace {
 
@@ -14,15 +13,15 @@ ParticleSystem particle_system;
 ParticleTemplate PARTICLE_TEMPLATE =
     ParticleTemplate({.speed = {.start = {.min = 40, .max = 120}, .end = {.min = 10, .max = 30}},
                       .size = {.start = {.min = 8, .max = 14}, .end = {.min = 0, .max = 4}},
-                      .color = {Color(255, 180, 50, 255), Color(40, 40, 40, 0)},
+                      .color = {.start = Color(255, 180, 50, 255), .end = Color(40, 40, 40, 0)},
                       .lifetime = {.min = 0.4f, .max = 1.0f},
                       .gravity = {.x = 0, .y = -20}});
 Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
                           .direction = {.x = 0, .y = -1},
                           .spread = 0.6f,
                           .particle_template = PARTICLE_TEMPLATE,
-                          .rate = 80,
-                          .duration = 20};
+                          .rate = 60,
+                          .duration = 10};
 
 void Update(GameState& state) {
     const Vector2 mouse_pos = GetMousePosition();
@@ -37,51 +36,64 @@ void Update(GameState& state) {
 
 UI ui = UI(Vec2{.x = 25, .y = 25});
 
-const UI::ElementStyle TEXT_STYLE = {.font_size = 16};
+bool PARTICLES_COLLAPSED = false;
 
-const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CENTER,
-                                       .align_items = UI::AlignItems::CENTER,
-                                       .width = 24,
-                                       .height = 24,
-                                       .color_hover =
-                                           {
-                                               .background = GRAY,
-                                           },
-                                       .color_active = {
-                                           .background = DARKGRAY,
-                                       }};
+std::unordered_map<std::string, bool> is_collapsed_states = {};
 
 void ui_float_variable(std::string label, float& variable) {
-    ui.begin_layout(
-        "variable_" + label,
-        {.direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER, .padding = 4, .gap = 8});
+    const auto is_collapsed_it = is_collapsed_states.find(label);
+    bool is_collapsed = true;
+    if (is_collapsed_it != is_collapsed_states.end()) is_collapsed = is_collapsed_it->second;
 
-    ui.text("txt_" + label, label, {});
+    ui.begin_layout("variable_" + label, {.direction = UI::LayoutDirection::Vertical,
+                                          .padding = 4,
+                                          .gap = 8,
+                                          .width = INPUT_WIDTH,
+                                          .color = {.border = BLACK}});
 
-    if (ui.begin_button("btn_down_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable -= 1;
-
-    ui.text("btn_txt_down_" + label, "-", TEXT_STYLE);
+    // Label
+    if (ui.begin_button("btn_collapse_" + label, COLLAPSIBLE_BUTTON_STYLE)) is_collapsed_states[label] = !is_collapsed;
+    ui.text("txt_" + label, label, LABEL_TEXT_STYLE);
+    std::string caret = "/\\";
+    if (is_collapsed) caret = "\\/";
+    ui.text("txt_collapse_caret_" + label, caret, {.font_size = 20});
     ui.end_button();
 
-    ui.text("txt_value_" + label, std::format("{}", variable), TEXT_STYLE);
+    if (!is_collapsed) {
+        // Input
+        ui.begin_layout("input_" + label, INPUT_LAYOUT_STYLE);
+        ui.text("txt_value_" + label, std::format("{}", variable), BUTTON_TEXT_STYLE);
 
-    if (ui.begin_button("btn_up_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable += 1;
-    ui.text("btn_txt_up_" + label, "+", TEXT_STYLE);
-    ui.end_button();
+        // Buttons
+        ui.begin_layout("btns_" + label, {.direction = UI::LayoutDirection::Vertical});
+        if (ui.begin_button("btn_up_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable += 0.1f;
+        ui.text("btn_txt_up_" + label, "+", BUTTON_TEXT_STYLE);
+        ui.end_button();
+
+        if (ui.begin_button("btn_down_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable -= 0.1f;
+        ui.text("btn_txt_down_" + label, "-", BUTTON_TEXT_STYLE);
+        ui.end_button();
+
+        ui.end_layout();
+
+        ui.end_layout();
+    }
 
     ui.end_layout();
 }
 
 void ui_color_variable(std::string label, Color& variable) {
-    ui.begin_layout(
-        "variable_" + label,
-        {.direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER, .padding = 4, .gap = 8});
+    ui.begin_layout("variable_" + label, {.direction = UI::LayoutDirection::Vertical,
+                                          .padding = 4,
+                                          .gap = 8,
+                                          .width = INPUT_WIDTH,
+                                          .color = {.border = BLACK}});
 
-    ui.text("txt_" + label, label, {});
+    ui.text("txt_" + label, label, LABEL_TEXT_STYLE);
 
     ui.color_picker("cp_" + label, variable);
     ui.text("text_" + label + "_start",
-            std::format("RGBA ({},{},{},{})", variable.r, variable.g, variable.b, variable.a), TEXT_STYLE);
+            std::format("RGBA ({},{},{},{})", variable.r, variable.g, variable.b, variable.a), BUTTON_TEXT_STYLE);
 
     ui.end_layout();
 }
@@ -89,7 +101,7 @@ void ui_color_variable(std::string label, Color& variable) {
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
-    for (const Slot<Particle>& slot : particle_system.particle_pool.data) {
+    for (auto& slot : particle_system.particle_pool.data) {
         if (!slot.alive) continue;
 
         const Particle& particle = slot.ref;
@@ -101,28 +113,37 @@ void Draw(GameState& state) {
 
     ui.begin_ui();
 
-    ui.begin_layout("ctr_particle_vars", {.direction = UI::LayoutDirection::Vertical});
+    ui.begin_layout(
+        "ctr_particle_vars",
+        {.direction = UI::LayoutDirection::Vertical, .padding = 8, .color = {.border = BLACK, .background = WHITE}});
 
+    if (ui.begin_button("btn_particle_collapse", COLLAPSIBLE_BUTTON_STYLE)) PARTICLES_COLLAPSED = !PARTICLES_COLLAPSED;
     ui.text("txt_particle_template", "Particle config", {.font_size = 20});
+    std::string caret = "/\\";
+    if (PARTICLES_COLLAPSED) caret = "\\/";
+    ui.text("txt_particle_template_caret", caret, {.font_size = 20});
+    ui.end_button();
 
-    ui_float_variable("speed start min", PARTICLE_TEMPLATE.speed.start.min);
-    ui_float_variable("speed start max", PARTICLE_TEMPLATE.speed.start.max);
-    ui_float_variable("speed end min", PARTICLE_TEMPLATE.speed.end.min);
-    ui_float_variable("speed end max", PARTICLE_TEMPLATE.speed.end.max);
+    if (!PARTICLES_COLLAPSED) {
+        ui_float_variable("speed start min", PARTICLE_TEMPLATE.speed.start.min);
+        ui_float_variable("speed start max", PARTICLE_TEMPLATE.speed.start.max);
+        ui_float_variable("speed end min", PARTICLE_TEMPLATE.speed.end.min);
+        ui_float_variable("speed end max", PARTICLE_TEMPLATE.speed.end.max);
 
-    ui_float_variable("size start min", PARTICLE_TEMPLATE.size.start.min);
-    ui_float_variable("size start max", PARTICLE_TEMPLATE.size.start.max);
-    ui_float_variable("size end min", PARTICLE_TEMPLATE.size.end.min);
-    ui_float_variable("size end max", PARTICLE_TEMPLATE.size.end.max);
+        ui_float_variable("size start min", PARTICLE_TEMPLATE.size.start.min);
+        ui_float_variable("size start max", PARTICLE_TEMPLATE.size.start.max);
+        ui_float_variable("size end min", PARTICLE_TEMPLATE.size.end.min);
+        ui_float_variable("size end max", PARTICLE_TEMPLATE.size.end.max);
 
-    ui_color_variable("color start", PARTICLE_TEMPLATE.color.start);
-    ui_color_variable("color end", PARTICLE_TEMPLATE.color.end);
+        ui_color_variable("color start", PARTICLE_TEMPLATE.color.start);
+        ui_color_variable("color end", PARTICLE_TEMPLATE.color.end);
 
-    ui_float_variable("lifetime min", PARTICLE_TEMPLATE.lifetime.min);
-    ui_float_variable("lifetime max", PARTICLE_TEMPLATE.lifetime.max);
+        ui_float_variable("lifetime min", PARTICLE_TEMPLATE.lifetime.min);
+        ui_float_variable("lifetime max", PARTICLE_TEMPLATE.lifetime.max);
 
-    ui_float_variable("gravity x", PARTICLE_TEMPLATE.gravity.x);
-    ui_float_variable("gravity y", PARTICLE_TEMPLATE.gravity.y);
+        ui_float_variable("gravity x", PARTICLE_TEMPLATE.gravity.x);
+        ui_float_variable("gravity y", PARTICLE_TEMPLATE.gravity.y);
+    }
 
     ui.end_layout();
 

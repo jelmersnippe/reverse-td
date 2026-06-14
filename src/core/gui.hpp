@@ -11,6 +11,8 @@
 const std::string NONE_ID = "NO_ID_SELECTED";
 const int INVALID_INT = INT_MAX;
 
+#define TRANSPARENT CLITERAL(Color){0, 0, 0, 0}
+
 const int COLOR_PICKER_WIDTH = 100;
 const int COLOR_PICKER_SV_RECT_HEIGHT = 70;
 const int COLOR_PICKER_GAP = 10;
@@ -38,8 +40,6 @@ struct UI {
         END,
         CENTER,
         SPACE_BETWEEN,
-        SPACE_AROUND,
-        SPACE_EVENLY
     };
 
     enum class AlignItems {
@@ -63,7 +63,7 @@ struct UI {
     };
 
     struct ButtonColor {
-        Color border = BLACK;
+        Color border = TRANSPARENT;
         Color background = WHITE;
         Color text = BLACK;
     };
