@@ -169,17 +169,25 @@ void Draw(GameState& state) {
 
     if (!EMITTER_COLLAPSED) {
         // Type picker
-        ui.begin_layout("select_emitter_type",
-                        {.direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER});
-        if (ui.begin_button("option_point", {})) EMITTER.type = EmitterType::Point;
+        ui.begin_layout("select_emitter_type", {.direction = UI::LayoutDirection::Horizontal,
+                                                .justify_content = UI::JustifyContent::SPACE_BETWEEN,
+                                                .align_items = UI::AlignItems::CENTER,
+                                                .width = INPUT_WIDTH});
+        auto point_style = OPTION_STYLE;
+        if (EMITTER.type == EmitterType::Point) point_style.color.background = GRAY;
+        if (ui.begin_button("option_point", point_style)) EMITTER.type = EmitterType::Point;
         ui.text("option_txt_point", "Point", {});
         ui.end_button();
 
-        if (ui.begin_button("option_circle", {})) EMITTER.type = EmitterType::Circle;
+        auto circle_style = OPTION_STYLE;
+        if (EMITTER.type == EmitterType::Circle) circle_style.color.background = GRAY;
+        if (ui.begin_button("option_circle", circle_style)) EMITTER.type = EmitterType::Circle;
         ui.text("option_txt_circle", "Circle", {});
         ui.end_button();
 
-        if (ui.begin_button("option_box", {})) EMITTER.type = EmitterType::Box;
+        auto box_style = OPTION_STYLE;
+        if (EMITTER.type == EmitterType::Box) box_style.color.background = GRAY;
+        if (ui.begin_button("option_box", box_style)) EMITTER.type = EmitterType::Box;
         ui.text("option_txt_box", "Box", {});
         ui.end_button();
 

@@ -28,4 +28,16 @@ const UI::ElementStyle BUTTON_STYLE = {.justify_content = UI::JustifyContent::CE
                                            .background = DARKGRAY,
                                        }};
 
+const UI::ElementStyle OPTION_STYLE = {.justify_content = UI::JustifyContent::CENTER,
+                                       .align_items = UI::AlignItems::CENTER,
+                                       .padding = 8,
+                                       .color = {.border = BLACK},
+                                       .color_hover =
+                                           {
+                                               .background = GRAY,
+                                           },
+                                       .color_active = {
+                                           .background = DARKGRAY,
+                                       }};
+
 extern const Scene PARTICLE_SCENE;
