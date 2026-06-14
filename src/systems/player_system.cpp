@@ -1,6 +1,6 @@
 #include "player_system.hpp"
 
-#include "core/input.hpp"
+#include "core/asset_manager.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -70,18 +70,48 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         if (!player.alive) continue;
 
         const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
-        float mouse_angle =
-            atan2f(mouse_position.y - player.ref.position.y, mouse_position.x - player.ref.position.x) * RAD2DEG;
-        DrawRectanglePro(
-            Rectangle{.x = player.ref.position.x, .y = player.ref.position.y - 5.0f, .width = 50, .height = 10},
-            {.x = 0, .y = 5}, mouse_angle, BLACK);
-        DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
-                      PLAYER_SIZE, GREEN);
+        const Vector2 mouse_direction = mouse_position - player.ref.position;
+        float mouse_angle = atan2f(mouse_direction.y, mouse_direction.x) * RAD2DEG;
+
+        Vector2 hand_offset = {.x = 0, .y = 0};
+
+        // Player
+        auto player_sprite = get_sprite("player");
+        Rectangle player_source = {.x = 0, .y = 0, .width = 16, .height = 16};
+        if (mouse_direction.x < 0) player_source.width = -player_source.width;
+
+        DrawTexturePro(
+            player_sprite, player_source,
+            {.x = player.ref.position.x, .y = player.ref.position.y, .width = PLAYER_SIZE, .height = PLAYER_SIZE},
+            {.x = PLAYER_SIZE / 2, .y = PLAYER_SIZE / 2}, 0, WHITE);
+
+        // Gun
+        auto pistol_sprite = get_sprite("pistol");
+        Rectangle pistol_source = {
+            .x = 0, .y = 0, .width = (float)pistol_sprite.width, .height = (float)pistol_sprite.height};
+        Vector2 pistol_origin = {.x = (float)pistol_sprite.width * .5f, .y = (float)pistol_sprite.height * .5f};
+
+        const float rad = mouse_angle * DEG2RAD;
+        Vector2 rotated_offset = {.x = cosf(rad) * hand_offset.x - sinf(rad) * hand_offset.y,
+                                  .y = sinf(rad) * hand_offset.x + cosf(rad) * hand_offset.y};
+        Vector2 weapon_pos = player.ref.position + rotated_offset;
+        Rectangle pistol_dest = {.x = weapon_pos.x,
+                                 .y = weapon_pos.y,
+                                 .width = (float)pistol_sprite.width * 2,
+                                 .height = (float)pistol_sprite.height * 2};
+
+        if (mouse_direction.x < 0) {
+            pistol_source.height = -pistol_sprite.height;
+            pistol_origin.y += pistol_sprite.height;
+        }
+
+        DrawTexturePro(pistol_sprite, pistol_source, pistol_dest, pistol_origin, mouse_angle, WHITE);
+
+        // Health
         const Vector2 health_position = player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE};
         DrawHealth(health_position, player.ref.health);
 
         if (player.ref.regenerating) {
-
             const int text_width = MeasureText("Regenerating", 10);
             DrawText("Regenerating", health_position.x - text_width / 2, health_position.y - 10, 10, BLACK);
         }

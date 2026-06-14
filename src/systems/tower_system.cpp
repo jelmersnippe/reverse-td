@@ -1,5 +1,6 @@
 #include "tower_system.hpp"
 
+#include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
@@ -65,8 +66,7 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
 
         const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
                                         .y = tower.ref.position.y - TOWER_SIZE / 2};
-        DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE, TOWER_SIZE, BLACK);
-        DrawCircle(tower.ref.position.x, tower.ref.position.y, TOWER_SIZE * 0.3, BLUE);
+        DrawTexture(get_sprite("turret"), tower_top_left.x, tower_top_left.y, WHITE);
 
         if (tower.ref.scrapping) {
             DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10, 30, 5, BLACK);

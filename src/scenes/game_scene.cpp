@@ -199,7 +199,7 @@ void UpdateInputs(GameState& state) {
         if (active_player->time_since_last_shot >= TIME_BETWEEN_SHOTS) {
             const Vector2 direction = Vector2Normalize(
                 Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position));
-            auto barrel_end_pos = active_player->position + (direction * 50);
+            auto barrel_end_pos = active_player->position + (direction * 30);
             CreateEntity(state.projectiles, Projectile{.direction = direction,
                                                        .position = barrel_end_pos,
                                                        .life_time = 2.0,

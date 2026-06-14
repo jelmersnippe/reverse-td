@@ -1,3 +1,4 @@
+#include "core/asset_manager.hpp"
 #include "core/input.hpp"
 #include "core/key.hpp"
 #include "core/key_maps.hpp"
@@ -19,6 +20,9 @@ int main() {
     SetExitKey(KEY_NULL);
     SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
+
+    load_sprites();
+    load_sounds();
 
     KeyMaps::init();
 
@@ -42,6 +46,9 @@ int main() {
     SCENE_MANAGER.Clear(state);
 
     CloseAudioDevice();
+
+    unload_sounds();
+    unload_sprites();
 
     CloseWindow();
 
