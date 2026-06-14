@@ -3,7 +3,13 @@
 #include "raylib.h"
 #include "systems/targeting.hpp"
 
+enum class ProjectileType {
+    Player,
+    Enemy
+};
+
 struct Projectile {
+    ProjectileType type = ProjectileType::Player;
     Vector2 direction = {};
     Vector2 position = {};
     float life_time = 0;

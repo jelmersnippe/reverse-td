@@ -1,5 +1,6 @@
 #include "projectile_system.hpp"
 
+#include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/projectile.hpp"
 #include "game_state.hpp"
@@ -110,6 +111,26 @@ void DrawProjectiles(const EntityPool<Projectile>& projectiles) {
     for (const Slot<Projectile>& projectile : projectiles.data) {
         if (!projectile.alive) continue;
 
-        DrawCircle(projectile.ref.position.x, projectile.ref.position.y, PROJECTILE_SIZE, ORANGE);
+        Texture2D sprite;
+        float scale = 2;
+        switch (projectile.ref.type) {
+            case ProjectileType::Enemy:
+                sprite = get_sprite("enemy_projectile");
+                break;
+            case ProjectileType::Player:
+                sprite = get_sprite("player_projectile");
+                scale = 4;
+                break;
+        }
+
+        Rectangle source = {.x = 0, .y = 0, .width = (float)sprite.width, .height = (float)sprite.height};
+        Rectangle dest = {.x = projectile.ref.position.x,
+                          .y = projectile.ref.position.y,
+                          .width = sprite.width * scale,
+                          .height = sprite.height * scale};
+        Vector2 origin = {.x = dest.width * 0.5f, .y = dest.height * 0.5f};
+
+        DrawTexturePro(sprite, source, dest, origin,
+                       atan2f(projectile.ref.direction.y, projectile.ref.direction.x) * RAD2DEG, WHITE);
     }
 }

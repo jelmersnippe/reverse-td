@@ -15,7 +15,7 @@
 
 struct Targetable;
 
-const int STARTING_CURRENCY = 0;
+const int STARTING_CURRENCY = 10;
 
 struct GameState {
     bool should_exit = false;

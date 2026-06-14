@@ -66,7 +66,7 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
 
         const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
                                         .y = tower.ref.position.y - TOWER_SIZE / 2};
-        DrawTexture(get_sprite("turret"), tower_top_left.x, tower_top_left.y, WHITE);
+        DrawTextureEx(get_sprite("turret"), tower_top_left, 0, 4, WHITE);
 
         if (tower.ref.scrapping) {
             DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10, 30, 5, BLACK);

@@ -73,7 +73,7 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         const Vector2 mouse_direction = mouse_position - player.ref.position;
         float mouse_angle = atan2f(mouse_direction.y, mouse_direction.x) * RAD2DEG;
 
-        Vector2 hand_offset = {.x = 0, .y = 0};
+        Vector2 hand_offset = {.x = 8, .y = 0};
 
         // Player
         auto player_sprite = get_sprite("player");

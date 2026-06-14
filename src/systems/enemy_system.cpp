@@ -1,6 +1,7 @@
 #include "enemy_system.hpp"
 
 #include "array"
+#include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
@@ -217,7 +218,7 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
     for (const Slot<Enemy>& enemy : enemies.data) {
         if (!enemy.alive) continue;
 
-        DrawCircle(enemy.ref.position.x, enemy.ref.position.y, enemy.ref.size, enemy.ref.color);
+        DrawTextureEx(get_sprite("enemy"), enemy.ref.position, 0, (enemy.ref.size / 25) * 2, enemy.ref.color);
         DrawHealth(enemy.ref.position - Vector2{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
 
         std::string state_text;
