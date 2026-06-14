@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 // Emitter
 //  - position
@@ -147,8 +148,9 @@ struct Emitter {
         float lifetime = particle_template.lifetime.get_random();
 
         float base_angle = std::atan2(direction.y, direction.x);
-        float offset = ((float)GetRandomValue(-100, 100) / 100.0f) * spread;
-        float angle = base_angle + offset;
+        float spread_rad = spread * ((float)std::numbers::pi / 180.0f);
+        float angle_offset = ((float)GetRandomValue(-100, 100) / 100.0f) * spread_rad;
+        float angle = base_angle + angle_offset;
 
         Vec2F dir = {.x = std::cos(angle), .y = std::sin(angle)};
 

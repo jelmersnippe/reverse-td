@@ -43,8 +43,8 @@ bool EMITTER_COLLAPSED = false;
 
 std::unordered_map<std::string, bool> is_collapsed_states = {};
 
-template <typename T> std::string FormatValue(T value) {
-    if constexpr (std::floating_point<T>) { return std::format("{:.3f}", value); }
+template <typename T> std::string format_number(T value, int precision) {
+    if constexpr (std::floating_point<T>) { return std::format("{:.{}f}", value, precision); }
 
     return std::format("{}", value);
 };
@@ -67,7 +67,7 @@ template <typename T> void ui_number_variable(std::string label, T& variable, Ra
     if (!is_collapsed) {
         // Input
         ui.begin_layout("input_" + label, INPUT_LAYOUT_STYLE);
-        ui.text("txt_value_" + label, FormatValue(variable), BUTTON_TEXT_STYLE);
+        ui.text("txt_value_" + label, format_number(variable, 2), BUTTON_TEXT_STYLE);
 
         // Buttons
         ui.begin_layout("btns_" + label, {.direction = UI::LayoutDirection::Vertical});
@@ -166,10 +166,10 @@ void Draw(GameState& state) {
             ui_number_variable("box size y", EMITTER.box_size.y, {.min = 0, .max = MAXFLOAT});
         }
 
-        ui_number_variable("direction x", EMITTER.direction.x, {.min = -MAXFLOAT, .max = MAXFLOAT});
-        ui_number_variable("direction y", EMITTER.direction.y, {.min = -MAXFLOAT, .max = MAXFLOAT});
+        ui_number_variable("direction x", EMITTER.direction.x, {.min = -MAXFLOAT, .max = MAXFLOAT}, 0.1f);
+        ui_number_variable("direction y", EMITTER.direction.y, {.min = -MAXFLOAT, .max = MAXFLOAT}, 0.1f);
 
-        ui_number_variable("spread", EMITTER.spread, {.min = 0, .max = 3.6}, 0.1f);
+        ui_number_variable("spread", EMITTER.spread, {.min = 0, .max = 360}, 1.0f);
 
         ui_number_variable("rate", EMITTER.rate, {.min = 0, .max = MAXFLOAT}, 0.1f);
         ui_number_variable("burst", EMITTER.burst, {.min = 0, .max = INT_MAX});
