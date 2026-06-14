@@ -1,15 +1,16 @@
 #include "scenes/test_scene.hpp"
 #include "core/entity_pool.hpp"
+#include "core/input.hpp"
+#include "core/key.hpp"
 #include "entities/enemy.hpp"
+#include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "systems/enemy_system.hpp"
 #include "systems/player_system.hpp"
 #include "systems/projectile_system.hpp"
 #include "systems/scene_manager.hpp"
 #include "systems/spawner_system.hpp"
-#include "systems/targeting.hpp"
 
 #include "raymath.h"
 #include "rlgl.h"
@@ -68,64 +69,43 @@ void UpdateInputs(GameState& state) {
 
     const float camera_speed = (CAMERA_SPEED / state.camera.zoom) * delta_time;
 
-    for (Input input : state.inputs) {
-        switch (input) {
-            case Input::LeftMouse: {
-                for (Slot<Enemy>& enemy_slot : state.enemies.data) {
-                    enemy_slot.ref.state = EnemyState::Rally;
-                }
-                break;
-            }
-            case Input::One: {
-                Enemy new_enemy = melee_enemy;
-                new_enemy.position = destination;
-                new_enemy.target_position = destination;
-                new_enemy.damage = 0;
-                CreateEntity(state.enemies, new_enemy);
-                break;
-            }
-            case Input::Two: {
-                Enemy new_enemy = fast_enemy;
-                new_enemy.position = destination;
-                new_enemy.target_position = destination;
-                new_enemy.damage = 0;
-                CreateEntity(state.enemies, new_enemy);
-                break;
-            }
-            case Input::Three: {
-                Enemy new_enemy = ranged_enemy;
-                new_enemy.position = destination;
-                new_enemy.target_position = destination;
-                new_enemy.damage = 0;
-                CreateEntity(state.enemies, new_enemy);
-                break;
-            }
-            case Input::Four: {
-                Enemy new_enemy = tank_enemy;
-                new_enemy.position = destination;
-                new_enemy.target_position = destination;
-                new_enemy.damage = 0;
-                CreateEntity(state.enemies, new_enemy);
-                break;
-            }
-            case Input::W:
-                state.camera.target += {.x = 0, .y = -camera_speed};
-                break;
-            case Input::S:
-                state.camera.target += {.x = 0, .y = camera_speed};
-                break;
-            case Input::A:
-                state.camera.target += {.x = -camera_speed, .y = 0};
-                break;
-            case Input::D:
-                state.camera.target += {.x = camera_speed, .y = 0};
-                break;
-            default:
-                break;
+    if (input_frame.is_mouse_pressed(Mouse::Left)) {
+        for (Slot<Spawner>& spawner_slot : state.spawners.data) {
+            spawner_slot.ref.state = SpawnerState::Rallying;
         }
     }
-
-    state.inputs.clear();
+    if (input_frame.is_key_pressed(Key::Num1)) {
+        Enemy new_enemy = melee_enemy;
+        new_enemy.position = destination;
+        new_enemy.target_position = destination;
+        new_enemy.damage = 0;
+        CreateEntity(state.enemies, new_enemy);
+    }
+    if (input_frame.is_key_pressed(Key::Num2)) {
+        Enemy new_enemy = fast_enemy;
+        new_enemy.position = destination;
+        new_enemy.target_position = destination;
+        new_enemy.damage = 0;
+        CreateEntity(state.enemies, new_enemy);
+    }
+    if (input_frame.is_key_pressed(Key::Num3)) {
+        Enemy new_enemy = ranged_enemy;
+        new_enemy.position = destination;
+        new_enemy.target_position = destination;
+        new_enemy.damage = 0;
+        CreateEntity(state.enemies, new_enemy);
+    }
+    if (input_frame.is_key_pressed(Key::Num4)) {
+        Enemy new_enemy = tank_enemy;
+        new_enemy.position = destination;
+        new_enemy.target_position = destination;
+        new_enemy.damage = 0;
+        CreateEntity(state.enemies, new_enemy);
+    }
+    if (input_frame.is_key_down(Key::W)) state.camera.target += {.x = 0, .y = -camera_speed};
+    if (input_frame.is_key_down(Key::S)) state.camera.target += {.x = 0, .y = camera_speed};
+    if (input_frame.is_key_down(Key::A)) state.camera.target += {.x = -camera_speed, .y = 0};
+    if (input_frame.is_key_down(Key::D)) state.camera.target += {.x = camera_speed, .y = 0};
 }
 
 void Update(GameState& state) {

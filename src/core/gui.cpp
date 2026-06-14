@@ -1,9 +1,9 @@
 #include "core/gui.hpp"
 #include "core/data.hpp"
-#include "raylib.h"
+#include "core/input.hpp"
+#include "core/key.hpp"
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <unordered_map>
 
 void UI::init_hue_strip() {
@@ -29,18 +29,20 @@ bool get_and_update_ui_state(UI* ui, UI::ElementId id, UI::HoldParams hold_param
 
     if (id == ui->active) {
         ui->active_for += GetFrameTime();
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        if (input_frame.is_mouse_released(Mouse::Left)) {
             // If mouse went up and hot
             if (id == ui->hot) result = true;
 
             ui->active = NONE_ID;
             ui->active_for = 0.0f;
         } else if (hold_params.hold_enabled && ui->active_for >= hold_params.hold_threshold &&
-                   IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                   input_frame.is_mouse_down(Mouse::Left)) {
             // If hold is allowed, mouse is down for HOLD_THRESHOLD and hot
             if (id == ui->hot) result = true;
         }
-    } else if (id == ui->hot && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        input_frame.consume_mouse(Mouse::Left);
+    } else if (id == ui->hot && input_frame.is_mouse_pressed(Mouse::Left)) {
+        input_frame.consume_mouse(Mouse::Left);
         ui->active = id;
     }
 

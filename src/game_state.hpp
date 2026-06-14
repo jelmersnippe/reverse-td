@@ -15,23 +15,6 @@
 
 struct Targetable;
 
-enum class Input {
-    W,
-    A,
-    S,
-    D,
-    LeftMouse,
-    RightMouse,
-    X,
-    One,
-    Two,
-    Three,
-    Four,
-    MouseScrollUp,
-    MouseScrollDown,
-    Escape
-};
-
 const int STARTING_CURRENCY = 0;
 
 struct GameState {
@@ -41,7 +24,6 @@ struct GameState {
 
     std::vector<Targetable> targetables;
 
-    std::vector<Input> inputs = {};
     EntityPool<Player> players;
     EntityPool<Projectile> projectiles = {};
     EntityPool<Spawner> spawners = {};
@@ -59,7 +41,6 @@ struct GameState {
 
     void Reset() {
         active_player = {};
-        inputs.clear();
         players.clear();
         projectiles.clear();
         spawners.clear();

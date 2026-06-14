@@ -1,5 +1,6 @@
 #include "scenes/pause_scene.hpp"
 #include "core/gui.hpp"
+#include "core/input.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -20,17 +21,9 @@ const UI::ElementStyle BUTTONTEXT_STYLE = {
 UI ui = {};
 
 void Update(GameState& state) {
-    for (Input& input : state.inputs) {
-        switch (input) {
-            case Input::Escape:
-                if (SCENE_MANAGER.scenes.top().name == PAUSE_SCENE.name) { SCENE_MANAGER.PopScene(state); }
-                break;
-            default:
-                break;
-        }
+    if (input_frame.is_key_pressed(Key::Escape) && SCENE_MANAGER.scenes.top().name == PAUSE_SCENE.name) {
+        SCENE_MANAGER.PopScene(state);
     }
-
-    state.inputs.clear();
 }
 
 void Draw(GameState& state) {

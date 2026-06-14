@@ -2,6 +2,7 @@
 
 #include "core/data.hpp"
 #include "core/gui.hpp"
+#include "core/input.hpp"
 #include "core/particles.hpp"
 #include "format"
 #include "raylib.h"
@@ -27,7 +28,8 @@ Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
 
 void Update(GameState& state) {
     const Vector2 mouse_pos = GetMousePosition();
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+
+    if (input_frame.is_mouse_pressed(Mouse::Left)) {
         EMITTER.position = {.x = mouse_pos.x, .y = mouse_pos.y};
         EMITTER.particle_template = PARTICLE_TEMPLATE;
         particle_system.play(EMITTER);
