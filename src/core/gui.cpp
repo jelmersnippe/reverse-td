@@ -170,12 +170,18 @@ void position_children(UI* ui, UI::Element& element) {
     Vec2 content_top_left = element.position;
     Vec2 available_container = element.container_size;
     if (element.style.padding != INVALID_INT) {
-        content_top_left =
-            Vec2{.x = content_top_left.x + element.style.padding, .y = content_top_left.y + element.style.padding};
+        content_top_left += {.x = element.style.padding, .y = element.style.padding};
         available_container = Vec2{
             .x = available_container.x - element.style.padding * 2,
             .y = available_container.y - element.style.padding * 2,
         };
+    }
+
+    // TODO: Also do hot/active check and provide border_width option
+    if (!ColorIsEqual(element.style.color.border, TRANSPARENT)) {
+        Vec2 border_size = {.x = 1, .y = 1};
+        content_top_left += border_size;
+        available_container -= border_size * 2;
     }
 
     int gap = 0;
@@ -228,12 +234,18 @@ void position_children(UI* ui, UI::Element& element) {
                 child.position =
                     Vec2{.x = content_top_left.x + content_offset.x, .y = content_top_left.y + align_offset.y};
                 content_offset.x += child.container_size.x + justify_offset.x + gap;
+
+                // Flex 1
+                if (child.style.height == INVALID_INT) child.container_size.y = available_container.y;
                 break;
             }
             case UI::LayoutDirection::Vertical: {
                 child.position =
                     Vec2{.x = content_top_left.x + align_offset.x, .y = content_top_left.y + content_offset.y};
                 content_offset.y += child.container_size.y + justify_offset.y + gap;
+
+                // Flex 1
+                if (child.style.width == INVALID_INT) child.container_size.x = available_container.x;
                 break;
             }
         }

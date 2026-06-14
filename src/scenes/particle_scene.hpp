@@ -6,8 +6,7 @@
 const int INPUT_WIDTH = 200;
 const UI::ElementStyle COLLAPSIBLE_BUTTON_STYLE = {.direction = UI::LayoutDirection::Horizontal,
                                                    .justify_content = UI::JustifyContent::SPACE_BETWEEN,
-                                                   .align_items = UI::AlignItems::CENTER,
-                                                   .width = INPUT_WIDTH};
+                                                   .align_items = UI::AlignItems::CENTER};
 
 const UI::ElementStyle INPUT_LAYOUT_STYLE = {
     .direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER, .gap = 8};
