@@ -132,4 +132,6 @@ struct UI {
     UI(Vec2 position = Vec2{.x = 0, .y = 0}) : top_left(position) {}
 
     void init_hue_strip();
+
+    void draw();
 };

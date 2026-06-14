@@ -7,36 +7,8 @@
 #include "format"
 #include "raylib.h"
 #include <climits>
-#include <cmath>
 
 namespace {
-
-ParticleSystem particle_system;
-
-ParticleTemplate PARTICLE_TEMPLATE =
-    ParticleTemplate({.speed = {.start = {.min = 40, .max = 120}, .end = {.min = 10, .max = 30}},
-                      .size = {.start = {.min = 8, .max = 14}, .end = {.min = 0, .max = 4}},
-                      .color = {.start = Color(255, 180, 50, 255), .end = Color(40, 40, 40, 0)},
-                      .lifetime = {.min = 0.4f, .max = 1.0f},
-                      .gravity = {.x = 0, .y = -20}});
-Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
-                          .direction = {.x = 0, .y = -1},
-                          .spread = 0.6f,
-                          .particle_template = PARTICLE_TEMPLATE,
-                          .rate = 60,
-                          .duration = 10};
-
-void Update(GameState& state) {
-    const Vector2 mouse_pos = GetMousePosition();
-
-    if (input_frame.is_mouse_pressed(Mouse::Left)) {
-        EMITTER.position = {.x = mouse_pos.x, .y = mouse_pos.y};
-        EMITTER.particle_template = PARTICLE_TEMPLATE;
-        particle_system.play(EMITTER);
-    }
-
-    particle_system.update(GetFrameTime());
-}
 
 UI ui = UI(Vec2{.x = 25, .y = 25});
 
@@ -104,19 +76,22 @@ void ui_color_variable(std::string label, Color& variable) {
     ui.end_layout();
 }
 
-void Draw(GameState& state) {
-    ClearBackground(GRAY);
+ParticleSystem particle_system;
 
-    for (auto& slot : particle_system.particle_pool.data) {
-        if (!slot.alive) continue;
+ParticleTemplate PARTICLE_TEMPLATE =
+    ParticleTemplate({.speed = {.start = {.min = 40, .max = 120}, .end = {.min = 10, .max = 30}},
+                      .size = {.start = {.min = 8, .max = 14}, .end = {.min = 0, .max = 4}},
+                      .color = {.start = Color(255, 180, 50, 255), .end = Color(40, 40, 40, 0)},
+                      .lifetime = {.min = 0.4f, .max = 1.0f},
+                      .gravity = {.x = 0, .y = -20}});
+Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
+                          .direction = {.x = 0, .y = -1},
+                          .spread = 0.6f,
+                          .particle_template = PARTICLE_TEMPLATE,
+                          .rate = 60,
+                          .duration = 10};
 
-        const Particle& particle = slot.ref;
-
-        const Vec2F top_left = particle.position - Vec2F{.x = particle.size / 2, .y = particle.size / 2};
-
-        DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
-    }
-
+void update_ui() {
     ui.begin_ui();
 
     ui.begin_layout("ctr_config", {.direction = UI::LayoutDirection::Vertical,
@@ -225,6 +200,34 @@ void Draw(GameState& state) {
     ui.end_layout();
 
     ui.end_ui();
+}
+
+void Update(GameState& state) {
+    update_ui();
+
+    if (input_frame.is_mouse_pressed(Mouse::Left)) {
+        EMITTER.position = input_frame.state.mouse_position;
+        EMITTER.particle_template = PARTICLE_TEMPLATE;
+        particle_system.play(EMITTER);
+    }
+
+    particle_system.update(GetFrameTime());
+}
+
+void Draw(GameState& state) {
+    ClearBackground(GRAY);
+
+    for (auto& slot : particle_system.particle_pool.data) {
+        if (!slot.alive) continue;
+
+        const Particle& particle = slot.ref;
+
+        const Vec2F top_left = particle.position - Vec2F{.x = particle.size / 2, .y = particle.size / 2};
+
+        DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
+    }
+
+    ui.draw();
 }
 } // namespace
 

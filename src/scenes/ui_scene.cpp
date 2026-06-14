@@ -1,6 +1,7 @@
 #include "scenes/ui_scene.hpp"
 
 #include "core/gui.hpp"
+#include "core/key.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -250,9 +251,7 @@ void horizontal_layout3() {
     // END - GREEN
 }
 
-void Draw(GameState& state) {
-    ClearBackground(GRAY);
-
+void Update(GameState& state) {
     ui.begin_ui();
 
     // START - RED
@@ -277,6 +276,12 @@ void Draw(GameState& state) {
 
     ui.end_ui();
 }
+
+void Draw(GameState& state) {
+    ClearBackground(GRAY);
+
+    ui.draw();
+}
 } // namespace
 
-const Scene UI_SCENE = {.name = "UI", .init = nullptr, .update = nullptr, .draw = Draw, .destroy = nullptr};
+const Scene UI_SCENE = {.name = "UI", .init = nullptr, .update = Update, .draw = Draw, .destroy = nullptr};

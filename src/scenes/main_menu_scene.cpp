@@ -22,9 +22,7 @@ const UI::ElementStyle BUTTONTEXT_STYLE = {
 };
 UI ui = UI();
 
-void Draw(GameState& state) {
-    ClearBackground(GRAY);
-
+void Update(GameState& state) {
     ui.begin_ui();
     ui.begin_layout("layout_main_menu", {.direction = UI::LayoutDirection::Vertical,
                                          .justify_content = UI::JustifyContent::CENTER,
@@ -54,7 +52,13 @@ void Draw(GameState& state) {
     ui.end_layout();
     ui.end_ui();
 }
+
+void Draw(GameState& state) {
+    ClearBackground(GRAY);
+
+    ui.draw();
+}
 } // namespace
 
 const Scene MAIN_MENU_SCENE = {
-    .name = "Main Menu", .init = nullptr, .update = nullptr, .draw = Draw, .destroy = nullptr};
+    .name = "Main Menu", .init = nullptr, .update = Update, .draw = Draw, .destroy = nullptr};

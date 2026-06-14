@@ -143,6 +143,7 @@ void draw_element(UI* ui, UI::Element& element) {
 void UI::begin_ui() {
     assert(!this->building && "Already building the UI. Can't call begin_ui(). Make sure to call end_ui().");
 
+    this->current_render_elements.clear();
     this->building = true;
 }
 
@@ -154,16 +155,19 @@ void UI::end_ui() {
     std::unordered_map<ElementId, Rect> element_rects = {};
 
     for (Element& element : this->current_render_elements) {
-        draw_element(this, element);
-
         assert(element_rects.find(element.id) == element_rects.end() && "Can not have duplicate element ids.");
 
         element_rects[element.id] = Rect{.position = element.position, .size = element.container_size};
     }
 
     this->previous_render_elements = element_rects;
-    this->current_render_elements.clear();
     this->building = false;
+}
+
+void UI::draw() {
+    for (Element& element : this->current_render_elements) {
+        draw_element(this, element);
+    }
 }
 
 void position_children(UI* ui, UI::Element& element) {

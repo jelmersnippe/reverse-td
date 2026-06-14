@@ -21,14 +21,6 @@ const UI::ElementStyle BUTTONTEXT_STYLE = {
 UI ui = {};
 
 void Update(GameState& state) {
-    if (input_frame.is_key_pressed(Key::Escape) && SCENE_MANAGER.scenes.top().name == PAUSE_SCENE.name) {
-        SCENE_MANAGER.PopScene(state);
-    }
-}
-
-void Draw(GameState& state) {
-    ClearBackground(ColorAlpha(GRAY, 0.6));
-
     ui.begin_ui();
     ui.begin_layout("layout_pause", {.direction = UI::LayoutDirection::Vertical,
                                      .justify_content = UI::JustifyContent::CENTER,
@@ -57,6 +49,16 @@ void Draw(GameState& state) {
 
     ui.end_layout();
     ui.end_ui();
+
+    if (input_frame.is_key_pressed(Key::Escape) && SCENE_MANAGER.scenes.top().name == PAUSE_SCENE.name) {
+        SCENE_MANAGER.PopScene(state);
+    }
+}
+
+void Draw(GameState& state) {
+    ClearBackground(ColorAlpha(GRAY, 0.6));
+
+    ui.draw();
 }
 } // namespace
 
