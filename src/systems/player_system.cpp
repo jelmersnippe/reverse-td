@@ -10,6 +10,13 @@
 void Update(Player& player, GameState& state) {
     const float delta_time = GetFrameTime();
 
+    if (player.direction.x == 0 && player.direction.y == 0) {
+        player.animation_player.stop();
+    } else {
+        player.animation_player.play();
+    }
+    player.animation_player.update(delta_time);
+
     player.time_since_last_shot += delta_time;
     player.time_since_last_damage_taken += delta_time;
 
@@ -76,14 +83,12 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         Vector2 hand_offset = {.x = 8, .y = 0};
 
         // Player
-        auto player_sprite = get_sprite("player");
-        Rectangle player_source = {.x = 0, .y = 0, .width = 16, .height = 16};
-        if (mouse_direction.x < 0) player_source.width = -player_source.width;
+        Rectangle player_dest = {.x = player.ref.position.x - PLAYER_SIZE * 0.5f,
+                                 .y = player.ref.position.y - PLAYER_SIZE * 0.5f,
+                                 .width = PLAYER_SIZE,
+                                 .height = PLAYER_SIZE};
 
-        DrawTexturePro(
-            player_sprite, player_source,
-            {.x = player.ref.position.x, .y = player.ref.position.y, .width = PLAYER_SIZE, .height = PLAYER_SIZE},
-            {.x = PLAYER_SIZE / 2, .y = PLAYER_SIZE / 2}, 0, WHITE);
+        player.ref.animation_player.draw(player_dest, mouse_direction.x < 0);
 
         // Gun
         auto pistol_sprite = get_sprite("pistol");

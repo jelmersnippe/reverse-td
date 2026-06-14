@@ -4,6 +4,7 @@
 #include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/projectile.hpp"
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
@@ -64,7 +65,8 @@ void attack_melee(Enemy& enemy, Targetable& target, GameState& state) {
 void attack_ranged(Enemy& enemy, Targetable& target, GameState& state) {
     if (enemy.time_since_last_attack < enemy.attack_cooldown) return;
 
-    CreateEntity(state.projectiles, Projectile{.direction = Vector2Normalize(target.position - enemy.position),
+    CreateEntity(state.projectiles, Projectile{.type = ProjectileType::Enemy,
+                                               .direction = Vector2Normalize(target.position - enemy.position),
                                                .position = enemy.position,
                                                .life_time = 2.0,
                                                .speed = 800,
