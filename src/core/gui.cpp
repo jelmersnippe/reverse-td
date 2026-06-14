@@ -404,8 +404,6 @@ void UI::color_picker(ElementId id, Color& color) {
             .x = std::clamp((float)rect_coords.x / (float)color_rect_size.x, 0.0f, 1.0f),
             .y = std::clamp((float)(color_rect_size.y - rect_coords.y) / (float)color_rect_size.y, 0.0f, 1.0f)};
 
-        std::cout << "Updating SV to " << sv_value.x << "," << sv_value.y << std::endl;
-
         const Vector3 hsv = ColorToHSV(color);
         const Color new_color = ColorFromHSV(hsv.x, sv_value.x, sv_value.y);
         color.r = new_color.r;
@@ -423,8 +421,6 @@ void UI::color_picker(ElementId id, Color& color) {
         Rect strip = strip_it->second;
         int strip_x = std::clamp((int)mouse_pos.x - strip.position.x, 0, strip.size.x);
         float h_value = std::clamp(((float)strip_x / (float)hue_strip_size.x) * 360.0f, 0.0f, 359.9f);
-
-        std::cout << "Updating H to " << h_value << std::endl;
 
         const Vector3 hsv = ColorToHSV(color);
         const Color new_color = ColorFromHSV(h_value, hsv.y, hsv.z);

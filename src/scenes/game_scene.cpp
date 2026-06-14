@@ -268,8 +268,6 @@ void Init(GameState& state) {
             CreateEntity(state.spawners, {.position = {.x = (float)random_x, .y = (float)random_y},
                                           .spawn_amount = 1,
                                           .initial_spawn = placement.initial_enemy_spawn_count});
-
-            std::cout << "Created spawner at (" << random_x << ", " << random_y << ")" << std::endl;
         }
     }
 
