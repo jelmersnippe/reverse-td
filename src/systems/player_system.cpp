@@ -1,9 +1,11 @@
 #include "player_system.hpp"
 
+#include "core/input.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
 #include "raymath.h"
+#include <cmath>
 
 void Update(Player& player, GameState& state) {
     const float delta_time = GetFrameTime();
@@ -63,10 +65,16 @@ void UpdatePlayers(GameState& state) {
     }
 }
 
-void DrawPlayers(const EntityPool<Player>& players) {
+void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
     for (const Slot<Player>& player : players.data) {
         if (!player.alive) continue;
 
+        const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
+        float mouse_angle =
+            atan2f(mouse_position.y - player.ref.position.y, mouse_position.x - player.ref.position.x) * RAD2DEG;
+        DrawRectanglePro(
+            Rectangle{.x = player.ref.position.x, .y = player.ref.position.y - 5.0f, .width = 50, .height = 10},
+            {.x = 0, .y = 5}, mouse_angle, BLACK);
         DrawRectangle(player.ref.position.x - PLAYER_SIZE / 2, player.ref.position.y - PLAYER_SIZE / 2, PLAYER_SIZE,
                       PLAYER_SIZE, GREEN);
         const Vector2 health_position = player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE};

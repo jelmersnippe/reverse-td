@@ -5,30 +5,7 @@
 #include "raylib.h"
 
 #include <algorithm>
-#include <cmath>
 #include <numbers>
-
-// Emitter
-//  - position
-//  - type
-//  - rate (particles per second)
-//  - lifetime
-//
-// Particle
-//  - position
-//  - velocity
-//  - size
-//  - color
-//  - age
-//  - lifetime
-//
-// Emitter creates particles
-// Particles come from a pool
-//
-//
-float lerp(float start, float end, float t) {
-    return end + (1.0f - t) * (start - end);
-}
 
 template <typename T> struct Range {
     T min;
@@ -85,17 +62,17 @@ struct Particle {
         const float t = std::ranges::clamp(age / lifetime, 0.0f, 1.0f);
 
         if (!ColorIsEqual(color_config.start, color_config.end)) {
-            const unsigned char r = lerp(color_config.start.r, color_config.end.r, t);
-            const unsigned char g = lerp(color_config.start.g, color_config.end.g, t);
-            const unsigned char b = lerp(color_config.start.b, color_config.end.b, t);
-            const unsigned char a = lerp(color_config.start.a, color_config.end.a, t);
+            const unsigned char r = std::lerp(color_config.start.r, color_config.end.r, t);
+            const unsigned char g = std::lerp(color_config.start.g, color_config.end.g, t);
+            const unsigned char b = std::lerp(color_config.start.b, color_config.end.b, t);
+            const unsigned char a = std::lerp(color_config.start.a, color_config.end.a, t);
             color = Color(r, g, b, a);
         }
 
-        if (size_config.start != size_config.end) size = lerp(size_config.start, size_config.end, t);
+        if (size_config.start != size_config.end) size = std::lerp(size_config.start, size_config.end, t);
 
         if (speed_config.start != speed_config.end) {
-            speed = lerp(speed_config.start, speed_config.end, t);
+            speed = std::lerp(speed_config.start, speed_config.end, t);
 
             Vec2F dir = velocity.normalized();
             velocity = Vec2F{.x = dir.x, .y = dir.y} * speed;
@@ -204,6 +181,18 @@ struct ParticleSystem {
             slot.ref.update(deltaTime);
 
             if (slot.ref.age > slot.ref.lifetime) { DestroyEntity(particle_pool, slot.handle); }
+        }
+    }
+
+    void draw() const {
+        for (auto& slot : particle_pool.data) {
+            if (!slot.alive) continue;
+
+            const Particle& particle = slot.ref;
+
+            const Vec2F top_left = particle.position - Vec2F{.x = particle.size / 2, .y = particle.size / 2};
+
+            DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
         }
     }
 };

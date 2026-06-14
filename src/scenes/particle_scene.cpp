@@ -78,18 +78,19 @@ void ui_color_variable(std::string label, Color& variable) {
 
 ParticleSystem particle_system;
 
-ParticleTemplate PARTICLE_TEMPLATE =
-    ParticleTemplate({.speed = {.start = {.min = 40, .max = 120}, .end = {.min = 10, .max = 30}},
-                      .size = {.start = {.min = 8, .max = 14}, .end = {.min = 0, .max = 4}},
-                      .color = {.start = Color(255, 180, 50, 255), .end = Color(40, 40, 40, 0)},
-                      .lifetime = {.min = 0.4f, .max = 1.0f},
-                      .gravity = {.x = 0, .y = -20}});
+ParticleTemplate PARTICLE_TEMPLATE = ParticleTemplate({
+    .speed = {.start = {.min = 150, .max = 300}, .end = {.min = 50, .max = 100}},
+    .size = {.start = {.min = 6, .max = 14}, .end = {.min = 0, .max = 2}},
+    .color = {.start = Color(255, 255, 180, 255), .end = Color(255, 100, 20, 0)},
+    .lifetime = {.min = 0.03f, .max = 0.08f},
+});
 Emitter EMITTER = Emitter{.position = {.x = 0, .y = 0},
                           .direction = {.x = 0, .y = -1},
-                          .spread = 0.6f,
+                          .spread = 20,
                           .particle_template = PARTICLE_TEMPLATE,
-                          .rate = 60,
-                          .duration = 10};
+                          .rate = 0,
+                          .duration = 0,
+                          .burst = 50};
 
 void update_ui() {
     ui.begin_ui();
@@ -217,15 +218,7 @@ void Update(GameState& state) {
 void Draw(GameState& state) {
     ClearBackground(GRAY);
 
-    for (auto& slot : particle_system.particle_pool.data) {
-        if (!slot.alive) continue;
-
-        const Particle& particle = slot.ref;
-
-        const Vec2F top_left = particle.position - Vec2F{.x = particle.size / 2, .y = particle.size / 2};
-
-        DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
-    }
+    particle_system.draw();
 
     ui.draw();
 }

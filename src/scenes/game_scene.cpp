@@ -2,10 +2,12 @@
 
 #include "core/entity_pool.hpp"
 #include "core/input.hpp"
+#include "core/particles.hpp"
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
+#include "raymath.h"
 #include "scenes/pause_scene.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/pickup_system.hpp"
@@ -15,16 +17,44 @@
 #include "systems/spawner_system.hpp"
 #include "systems/targeting.hpp"
 
-#include "raymath.h"
 #include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
 #include <algorithm>
-#include <cstdlib>
 #include <format>
 
 namespace {
 
 const Vector2 screen_center = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
+
+const ParticleTemplate MUZZLE_SMOKE_PARTICLE = ParticleTemplate({
+    .speed = {.start = {.min = 20, .max = 80}, .end = {.min = 5, .max = 20}},
+    .size = {.start = {.min = 3, .max = 8}, .end = {.min = 12, .max = 24}},
+    .color = {.start = Color(120, 120, 120, 150), .end = Color(80, 80, 80, 0)},
+    .lifetime = {.min = 0.2f, .max = 0.5f},
+});
+Emitter MUZZLE_SMOKE_EMITTER = Emitter{.position = {.x = 0, .y = 0},
+                                       .direction = {.x = 0, .y = 0},
+                                       .spread = 40,
+                                       .particle_template = MUZZLE_SMOKE_PARTICLE,
+                                       .rate = 0,
+                                       .duration = 0,
+                                       .burst = 30};
+
+const ParticleTemplate MUZZLE_FLASH_PARTICLE = ParticleTemplate({
+    .speed = {.start = {.min = 150, .max = 300}, .end = {.min = 50, .max = 100}},
+    .size = {.start = {.min = 14, .max = 20}, .end = {.min = 0, .max = 2}},
+    .color = {.start = Color(255, 255, 180, 255), .end = Color(255, 100, 20, 0)},
+    .lifetime = {.min = 0.03f, .max = 0.08f},
+});
+Emitter MUZZLE_FLASH_EMITTER = Emitter{.position = {.x = 0, .y = 0},
+                                       .direction = {.x = 0, .y = 0},
+                                       .spread = 20,
+                                       .particle_template = MUZZLE_FLASH_PARTICLE,
+                                       .rate = 0,
+                                       .duration = 0,
+                                       .burst = 10};
+
+ParticleSystem particles{};
 
 void DrawUi(GameState& state) {
     // TOWER COST UI
@@ -74,16 +104,18 @@ void DrawUi(GameState& state) {
 }
 
 void Draw(GameState& state) {
-    ClearBackground(WHITE);
+    ClearBackground(GRAY);
 
     BeginMode2D(state.camera);
 
     DrawEnemies(state.enemies);
-    DrawPlayers(state.players);
+    DrawPlayers(state.players, state.camera);
     DrawProjectiles(state.projectiles);
     DrawSpawners(state.spawners);
     DrawTowers(state.towers, state.camera);
     DrawPickups(state.pickups);
+
+    particles.draw();
 
     EndMode2D();
 
@@ -147,8 +179,7 @@ void UpdateInputs(GameState& state) {
     Player* active_player = GetEntity(state.players, state.active_player);
 
     if (input_frame.is_key_pressed(Key::X)) {
-        for (size_t i = 0; i < state.towers.data.size(); i++) {
-            Slot<Tower>& slot = state.towers.data[i];
+        for (auto& slot : state.towers.data) {
             if (!slot.alive) continue;
 
             if (slot.ref.scrapping) continue;
@@ -166,14 +197,23 @@ void UpdateInputs(GameState& state) {
     if (input_frame.is_key_pressed(Key::Escape)) SCENE_MANAGER.PushScene(state, PAUSE_SCENE);
     if (input_frame.is_mouse_down(Mouse::Left)) {
         if (active_player->time_since_last_shot >= TIME_BETWEEN_SHOTS) {
-            const Vector2 direction =
-                Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position);
-            CreateEntity(state.projectiles, Projectile{.direction = Vector2Normalize(direction),
-                                                       .position = active_player->position,
+            const Vector2 direction = Vector2Normalize(
+                Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position));
+            auto barrel_end_pos = active_player->position + (direction * 50);
+            CreateEntity(state.projectiles, Projectile{.direction = direction,
+                                                       .position = barrel_end_pos,
                                                        .life_time = 2.0,
                                                        .damage = active_player->damage,
                                                        .flags = TARGET_SPAWNER | TARGET_ENEMY});
             active_player->time_since_last_shot = 0;
+
+            MUZZLE_FLASH_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
+            MUZZLE_FLASH_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
+            particles.play(MUZZLE_FLASH_EMITTER);
+
+            MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
+            MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
+            particles.play(MUZZLE_SMOKE_EMITTER);
         }
     }
 
@@ -198,6 +238,7 @@ void Update(GameState& state) {
     UpdateTowers(state);
     UpdateThreatDirector(state);
     UpdatePickups(state);
+    particles.update(GetFrameTime());
 }
 
 void Destroy(GameState& state) {
