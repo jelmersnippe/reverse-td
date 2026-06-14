@@ -37,8 +37,51 @@ void Update(GameState& state) {
 UI ui = UI(Vec2{.x = 25, .y = 25});
 
 bool PARTICLES_COLLAPSED = false;
+bool EMITTER_COLLAPSED = false;
 
 std::unordered_map<std::string, bool> is_collapsed_states = {};
+
+void ui_int_variable(std::string label, int& variable) {
+    const auto is_collapsed_it = is_collapsed_states.find(label);
+    bool is_collapsed = true;
+    if (is_collapsed_it != is_collapsed_states.end()) is_collapsed = is_collapsed_it->second;
+
+    ui.begin_layout("variable_" + label, {.direction = UI::LayoutDirection::Vertical,
+                                          .padding = 4,
+                                          .gap = 8,
+                                          .width = INPUT_WIDTH,
+                                          .color = {.border = BLACK}});
+
+    // Label
+    if (ui.begin_button("btn_collapse_" + label, COLLAPSIBLE_BUTTON_STYLE)) is_collapsed_states[label] = !is_collapsed;
+    ui.text("txt_" + label, label, LABEL_TEXT_STYLE);
+    std::string caret = "/\\";
+    if (is_collapsed) caret = "\\/";
+    ui.text("txt_collapse_caret_" + label, caret, {.font_size = 20});
+    ui.end_button();
+
+    if (!is_collapsed) {
+        // Input
+        ui.begin_layout("input_" + label, INPUT_LAYOUT_STYLE);
+        ui.text("txt_value_" + label, std::format("{}", variable), BUTTON_TEXT_STYLE);
+
+        // Buttons
+        ui.begin_layout("btns_" + label, {.direction = UI::LayoutDirection::Vertical});
+        if (ui.begin_button("btn_up_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable += 1;
+        ui.text("btn_txt_up_" + label, "+", BUTTON_TEXT_STYLE);
+        ui.end_button();
+
+        if (ui.begin_button("btn_down_" + label, BUTTON_STYLE, {.hold_enabled = true})) variable -= 1;
+        ui.text("btn_txt_down_" + label, "-", BUTTON_TEXT_STYLE);
+        ui.end_button();
+
+        ui.end_layout();
+
+        ui.end_layout();
+    }
+
+    ui.end_layout();
+}
 
 void ui_float_variable(std::string label, float& variable) {
     const auto is_collapsed_it = is_collapsed_states.find(label);
@@ -117,11 +160,53 @@ void Draw(GameState& state) {
         "ctr_particle_vars",
         {.direction = UI::LayoutDirection::Vertical, .padding = 8, .color = {.border = BLACK, .background = WHITE}});
 
+    if (ui.begin_button("btn_emitter_collapse", COLLAPSIBLE_BUTTON_STYLE)) EMITTER_COLLAPSED = !EMITTER_COLLAPSED;
+    ui.text("txt_emitter_template", "Emitter config", {.font_size = 20});
+    std::string emitter_caret = "/\\";
+    if (EMITTER_COLLAPSED) emitter_caret = "\\/";
+    ui.text("txt_emitter_template_caret", emitter_caret, {.font_size = 20});
+    ui.end_button();
+
+    if (!EMITTER_COLLAPSED) {
+        // Type picker
+        ui.begin_layout("select_emitter_type",
+                        {.direction = UI::LayoutDirection::Horizontal, .align_items = UI::AlignItems::CENTER});
+        if (ui.begin_button("option_point", {})) EMITTER.type = EmitterType::Point;
+        ui.text("option_txt_point", "Point", {});
+        ui.end_button();
+
+        if (ui.begin_button("option_circle", {})) EMITTER.type = EmitterType::Circle;
+        ui.text("option_txt_circle", "Circle", {});
+        ui.end_button();
+
+        if (ui.begin_button("option_box", {})) EMITTER.type = EmitterType::Box;
+        ui.text("option_txt_box", "Box", {});
+        ui.end_button();
+
+        ui.end_layout();
+
+        // Type param
+        if (EMITTER.type == EmitterType::Circle) {
+            ui_float_variable("radius", EMITTER.radius);
+        } else if (EMITTER.type == EmitterType::Box) {
+            ui_float_variable("box size x", EMITTER.box_size.x);
+            ui_float_variable("box size y", EMITTER.box_size.y);
+        }
+
+        ui_float_variable("direction x", EMITTER.direction.x);
+        ui_float_variable("direction y", EMITTER.direction.y);
+
+        ui_float_variable("spread", EMITTER.spread);
+
+        ui_float_variable("rate", EMITTER.rate);
+        ui_int_variable("burst", EMITTER.burst);
+    }
+
     if (ui.begin_button("btn_particle_collapse", COLLAPSIBLE_BUTTON_STYLE)) PARTICLES_COLLAPSED = !PARTICLES_COLLAPSED;
     ui.text("txt_particle_template", "Particle config", {.font_size = 20});
-    std::string caret = "/\\";
-    if (PARTICLES_COLLAPSED) caret = "\\/";
-    ui.text("txt_particle_template_caret", caret, {.font_size = 20});
+    std::string particle_caret = "/\\";
+    if (PARTICLES_COLLAPSED) particle_caret = "\\/";
+    ui.text("txt_particle_template_caret", particle_caret, {.font_size = 20});
     ui.end_button();
 
     if (!PARTICLES_COLLAPSED) {

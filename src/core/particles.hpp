@@ -105,7 +105,9 @@ struct Particle {
 };
 
 enum class EmitterType {
-    Point
+    Point,
+    Circle,
+    Box
 };
 
 struct Emitter {
@@ -114,10 +116,15 @@ struct Emitter {
     Vec2F direction = {};
     float spread = 0;
 
+    Vec2F box_size = {};
+    float radius = 0;
+
     ParticleTemplate particle_template;
     float rate;
     float duration;
     float age = 0;
+
+    int burst = 0;
 
     float time_since_last = 0;
 
@@ -145,7 +152,28 @@ struct Emitter {
 
         Vec2F dir = {.x = std::cos(angle), .y = std::sin(angle)};
 
-        CreateEntity(pool, Particle(position, dir, {.x = 0, .y = 0}, speed, size, particle_template.color, lifetime));
+        Vec2F particle_pos = position;
+        switch (type) {
+            case EmitterType::Point:
+                break;
+            case EmitterType::Circle: {
+                const float random_x = (float)GetRandomValue(-100, 100) / 100.0f;
+                const float random_y = (float)GetRandomValue(-100, 100) / 100.0f;
+                particle_pos += Vec2F{.x = random_x, .y = random_y} * radius;
+                break;
+            }
+            case EmitterType::Box: {
+                const float random_x = (float)GetRandomValue(0, 100) / 100.0f;
+                const float random_y = (float)GetRandomValue(0, 100) / 100.0f;
+                Vec2F position_in_box = {.x = random_x * box_size.x - (box_size.x / 2.0f),
+                                         .y = random_y * box_size.y - (box_size.y / 2.0f)};
+                particle_pos += position_in_box;
+                break;
+            }
+        }
+
+        CreateEntity(pool,
+                     Particle(particle_pos, dir, {.x = 0, .y = 0}, speed, size, particle_template.color, lifetime));
     }
 };
 
@@ -153,7 +181,13 @@ struct ParticleSystem {
     std::vector<Emitter> active_emitters;
     EntityPool<Particle> particle_pool;
 
-    void play(Emitter emitter) { active_emitters.push_back(emitter); }
+    void play(Emitter emitter) {
+        active_emitters.push_back(emitter);
+
+        for (int i = 0; i < emitter.burst; i++) {
+            emitter.emit(particle_pool);
+        }
+    }
 
     void update(const float deltaTime) {
         for (Emitter& emitter : active_emitters) {
