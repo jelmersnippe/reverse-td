@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/asset_manager.hpp"
 #include "core/data.hpp"
-#include "raylib.h"
+#include "core/renderer.hpp"
 #include <cassert>
 #include <string>
+#include <utility>
 
 struct AnimationInfo {
     std::string sprite_name;
@@ -19,17 +19,9 @@ struct AnimationPlayer {
     int current_frame = 0;
     float time_since_last_frame = 0;
 
-    Texture2D sprite = {};
     AnimationInfo info;
 
-    AnimationPlayer(AnimationInfo info) : info(info) {
-        this->sprite = get_sprite(info.sprite_name);
-
-        assert(this->sprite.width % this->info.sprite_size.x == 0 &&
-               "AnimationInfo sprite_size x does not match sprite sheet width");
-        assert(this->sprite.height % this->info.sprite_size.y == 0 &&
-               "AnimationInfo sprite_size y does not match sprite sheet height");
-    }
+    AnimationPlayer(AnimationInfo info) : info(std::move(info)) {}
 
     void play(int begin_frame = 0) {
         if (this->playing) return;
@@ -60,13 +52,9 @@ struct AnimationPlayer {
         }
     }
 
-    void draw(Rectangle destination, bool flip_x = false) const {
-        Rectangle source = {.x = (float)this->info.sprite_size.x * this->current_frame,
-                            .y = (float)this->info.sprite_size.y * this->current_frame,
-                            .width = (float)this->info.sprite_size.x,
-                            .height = (float)this->info.sprite_size.y};
-        if (flip_x) source.width = -source.width;
-
-        DrawTexturePro(this->sprite, source, destination, Vector2{0, 0}, 0, WHITE);
+    void draw(Vec2F center, Vec2F size, bool flip_x = false) const {
+        render_sprite(
+            SpriteInfo(this->info.sprite_name, this->info.sprite_size, this->current_frame, {.x = flip_x, .y = false}),
+            center, size);
     }
 };

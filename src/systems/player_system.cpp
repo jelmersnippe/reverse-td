@@ -1,6 +1,7 @@
 #include "player_system.hpp"
 
 #include "core/asset_manager.hpp"
+#include "core/renderer.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -80,37 +81,22 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         const Vector2 mouse_direction = mouse_position - player.ref.position;
         float mouse_angle = atan2f(mouse_direction.y, mouse_direction.x) * RAD2DEG;
 
-        Vector2 hand_offset = {.x = 8, .y = 0};
-
         // Player
-        Rectangle player_dest = {.x = player.ref.position.x - PLAYER_SIZE * 0.5f,
-                                 .y = player.ref.position.y - PLAYER_SIZE * 0.5f,
-                                 .width = PLAYER_SIZE,
-                                 .height = PLAYER_SIZE};
-
-        player.ref.animation_player.draw(player_dest, mouse_direction.x < 0);
+        player.ref.animation_player.draw(Vec2F{player.ref.position.x, player.ref.position.y},
+                                         {PLAYER_SIZE, PLAYER_SIZE}, mouse_direction.x < 0);
 
         // Gun
-        auto pistol_sprite = get_sprite("pistol");
-        Rectangle pistol_source = {
-            .x = 0, .y = 0, .width = (float)pistol_sprite.width, .height = (float)pistol_sprite.height};
-        Vector2 pistol_origin = {.x = (float)pistol_sprite.width * .5f, .y = (float)pistol_sprite.height * .5f};
-
+        // TODO: Extract into rotate_around helper
+        Vec2F hand_offset = {.x = 14.0f, .y = 0};
         const float rad = mouse_angle * DEG2RAD;
-        Vector2 rotated_offset = {.x = cosf(rad) * hand_offset.x - sinf(rad) * hand_offset.y,
-                                  .y = sinf(rad) * hand_offset.x + cosf(rad) * hand_offset.y};
-        Vector2 weapon_pos = player.ref.position + rotated_offset;
-        Rectangle pistol_dest = {.x = weapon_pos.x,
-                                 .y = weapon_pos.y,
-                                 .width = (float)pistol_sprite.width * 2,
-                                 .height = (float)pistol_sprite.height * 2};
+        Vec2F rotated_offset = {.x = cosf(rad) * hand_offset.x - sinf(rad) * hand_offset.y,
+                                .y = sinf(rad) * hand_offset.x + cosf(rad) * hand_offset.y};
+        Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + rotated_offset;
 
-        if (mouse_direction.x < 0) {
-            pistol_source.height = -pistol_sprite.height;
-            pistol_origin.y += pistol_sprite.height;
-        }
-
-        DrawTexturePro(pistol_sprite, pistol_source, pistol_dest, pistol_origin, mouse_angle, WHITE);
+        Vec2 sprite_size = {.x = 16, .y = 16};
+        Vec2F render_size = {.x = sprite_size.x * 2.0f, .y = sprite_size.y * 2.0f};
+        render_sprite(SpriteInfo("pistol", sprite_size, 0, {.x = false, .y = mouse_direction.x < 0}), weapon_pos,
+                      render_size, mouse_angle, WHITE);
 
         // Health
         const Vector2 health_position = player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE};

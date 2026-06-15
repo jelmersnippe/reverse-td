@@ -2,6 +2,7 @@
 
 #include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
+#include "core/renderer.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
@@ -32,6 +33,8 @@ void Update(Slot<Tower>& slot, GameState& state) {
     if (!target.has_value()) return;
 
     if (Vector2Distance(tower.position, target->position) > tower.range) return;
+
+    tower.target_position = Vec2F{.x = target->position.x, .y = target->position.y};
 
     // Attacking time
     if (tower.time_since_last_attack >= 60.0 / tower.fire_rate) {
@@ -64,9 +67,9 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
     for (const Slot<Tower>& tower : towers.data) {
         if (!tower.alive) continue;
 
-        const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
-                                        .y = tower.ref.position.y - TOWER_SIZE / 2};
-        DrawTextureEx(get_sprite("turret"), tower_top_left, 0, 4, WHITE);
+        Vec2F tower_pos = Vec2F{tower.ref.position.x, tower.ref.position.y};
+        render_sprite({"turret", {16, 16}}, tower_pos, Vec2F{TOWER_SIZE, TOWER_SIZE},
+                      tower_pos.angle_to(Vec2F{tower.ref.target_position}) + 90);
 
         if (tower.ref.scrapping) {
             DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10, 30, 5, BLACK);
@@ -77,6 +80,8 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
             int scrap_text_width = MeasureText(scrap_text, 12);
             DrawText(scrap_text, tower.ref.position.x - scrap_text_width / 2, tower.ref.position.y + 15, 12, BLACK);
         } else {
+            const Vector2 tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
+                                            .y = tower.ref.position.y - TOWER_SIZE / 2};
             const bool is_hovered = CheckCollisionPointRec(
                 mouse_position,
                 {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
