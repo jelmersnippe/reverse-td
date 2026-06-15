@@ -1,11 +1,11 @@
 #include "spawner_system.hpp"
 
 #include "core/entity_pool.hpp"
+#include "core/renderer.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
-#include "raylib.h"
-#include "raymath.h"
+#include "globals.hpp"
 #include "systems/threat_director.hpp"
 #include <algorithm>
 #include <cassert>
@@ -49,10 +49,10 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
     for (int i = 0; i < limited_count; i++) {
         Enemy new_enemy = get_spawn_option(spawn_table);
 
-        const int random_x = GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
-        const int random_y = GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
+        const float random_x = (float)GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
+        const float random_y = (float)GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
 
-        new_enemy.position = spawner.position + Vector2{.x = (float)random_x, .y = (float)random_y};
+        new_enemy.position = spawner.position + Vec2F{.x = random_x, .y = random_y};
         new_enemy.home = spawner_slot.handle;
         new_enemy.target_position = spawner.position;
         const EntityHandle created_enemy = CreateEntity(enemies, new_enemy);
@@ -146,9 +146,7 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
     for (const Slot<Spawner>& spawner : spawners.data) {
         if (!spawner.alive) continue;
 
-        const Vector2 spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
-                                          .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
-        DrawRectangleLines(spawner_top_left.x, spawner_top_left.y, SPAWNER_SIZE, SPAWNER_SIZE, BLACK);
+        render_rectangle(spawner.ref.position, {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}, BLACK, true);
         const int text_width = MeasureText("Spawner", 12);
         DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
 
@@ -168,9 +166,9 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
 
         if (spawner.ref.state == SpawnerState::Rallying) {
             DrawCircle(spawner.ref.rally_position.x, spawner.ref.rally_position.y, 5, BLACK);
-            DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
+            // DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
         }
 
-        DrawHealth(spawner.ref.position - Vector2{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
+        DrawHealth(spawner.ref.position - Vec2F{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
     }
 }

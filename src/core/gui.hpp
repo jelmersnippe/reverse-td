@@ -88,9 +88,9 @@ struct UI {
     struct Element {
         ElementId id;
         ElementType type;
-        Vec2 position = {};
-        Vec2 container_size = {};
-        Vec2 content_size = {};
+        Vec2F position = {};
+        Vec2F container_size = {};
+        Vec2F content_size = {};
         ElementStyle style = {};
 
         std::string text = "";
@@ -101,7 +101,7 @@ struct UI {
         void calculate_size();
     };
 
-    Vec2 top_left;
+    Vec2F top_left;
 
     HueStrip hue_strip = {};
     std::unordered_map<ElementId, HSVRect> hsv_rects = {};

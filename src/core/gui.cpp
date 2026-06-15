@@ -173,19 +173,19 @@ void UI::draw() {
 void position_children(UI* ui, UI::Element& element) {
     ui->current_render_elements.push_back(element);
 
-    Vec2 content_top_left = element.position;
-    Vec2 available_container = element.container_size;
+    Vec2F content_top_left = element.position;
+    Vec2F available_container = element.container_size;
     if (element.style.padding != INVALID_INT) {
-        content_top_left += {.x = element.style.padding, .y = element.style.padding};
-        available_container = Vec2{
-            .x = available_container.x - element.style.padding * 2,
-            .y = available_container.y - element.style.padding * 2,
+        content_top_left += {.x = (float)element.style.padding, .y = (float)element.style.padding};
+        available_container = {
+            .x = available_container.x - element.style.padding * 2.0f,
+            .y = available_container.y - element.style.padding * 2.0f,
         };
     }
 
     // TODO: Also do hot/active check and provide border_width option
     if (!ColorIsEqual(element.style.color.border, TRANSPARENT)) {
-        Vec2 border_size = {.x = 1, .y = 1};
+        Vec2F border_size = {.x = 1, .y = 1};
         content_top_left += border_size;
         available_container -= border_size * 2;
     }
@@ -193,17 +193,17 @@ void position_children(UI* ui, UI::Element& element) {
     int gap = 0;
     if (element.style.gap != INVALID_INT) gap = element.style.gap;
 
-    Vec2 content_offset = {};
-    Vec2 justify_offset = {};
+    Vec2F content_offset = {};
+    Vec2F justify_offset = {};
     switch (element.style.justify_content) {
         case UI::JustifyContent::CENTER:
-            content_offset = Vec2{
+            content_offset = {
                 .x = (available_container.x - element.content_size.x) / 2,
                 .y = (available_container.y - element.content_size.y) / 2,
             };
             break;
         case UI::JustifyContent::END:
-            content_offset = Vec2{
+            content_offset = {
                 .x = available_container.x - element.content_size.x,
                 .y = available_container.y - element.content_size.y,
             };
@@ -211,7 +211,7 @@ void position_children(UI* ui, UI::Element& element) {
         case UI::JustifyContent::SPACE_BETWEEN:
             if (element.children.size() == 0) break;
 
-            justify_offset = Vec2{
+            justify_offset = {
                 .x = (available_container.x - element.content_size.x) / int(element.children.size() - 1),
                 .y = (available_container.y - element.content_size.y) / int(element.children.size() - 1),
             };
@@ -221,24 +221,23 @@ void position_children(UI* ui, UI::Element& element) {
     }
 
     for (UI::Element& child : element.children) {
-        Vec2 align_offset = {};
+        Vec2F align_offset = {};
         switch (element.style.align_items) {
             case UI::AlignItems::START:
                 break;
             case UI::AlignItems::CENTER:
-                align_offset = Vec2{.x = (available_container.x - child.container_size.x) / 2,
-                                    .y = (available_container.y - child.container_size.y) / 2};
+                align_offset = {.x = (available_container.x - child.container_size.x) / 2,
+                                .y = (available_container.y - child.container_size.y) / 2};
                 break;
             case UI::AlignItems::END:
-                align_offset = Vec2{.x = available_container.x - child.container_size.x,
-                                    .y = available_container.y - child.container_size.y};
+                align_offset = {.x = available_container.x - child.container_size.x,
+                                .y = available_container.y - child.container_size.y};
                 break;
         }
 
         switch (element.style.direction) {
             case UI::LayoutDirection::Horizontal: {
-                child.position =
-                    Vec2{.x = content_top_left.x + content_offset.x, .y = content_top_left.y + align_offset.y};
+                child.position = {.x = content_top_left.x + content_offset.x, .y = content_top_left.y + align_offset.y};
                 content_offset.x += child.container_size.x + justify_offset.x + gap;
 
                 // Flex 1
@@ -246,8 +245,7 @@ void position_children(UI* ui, UI::Element& element) {
                 break;
             }
             case UI::LayoutDirection::Vertical: {
-                child.position =
-                    Vec2{.x = content_top_left.x + align_offset.x, .y = content_top_left.y + content_offset.y};
+                child.position = {.x = content_top_left.x + align_offset.x, .y = content_top_left.y + content_offset.y};
                 content_offset.y += child.container_size.y + justify_offset.y + gap;
 
                 // Flex 1
@@ -263,7 +261,7 @@ void UI::Element::calculate_size() {
     this->container_size.x = this->style.width;
     this->container_size.y = this->style.height;
 
-    Vec2 content_size = {};
+    Vec2F content_size = {};
     for (UI::Element& child : this->children) {
         switch (this->style.direction) {
             case UI::LayoutDirection::Horizontal: {
@@ -354,7 +352,7 @@ void UI::end_button() {
 void UI::text(ElementId id, std::string text, ElementStyle style) {
     const int text_width = MeasureText(text.c_str(), style.font_size);
 
-    Vec2 size = Vec2{.x = text_width, .y = style.font_size};
+    Vec2F size = {.x = (float)text_width, .y = (float)style.font_size};
 
     Element element = Element{.id = id,
                               .type = ElementType::TEXT,
@@ -390,9 +388,9 @@ void generate_hsv_texture(UI* ui, const UI::Element& element) {
 }
 
 void UI::color_picker(ElementId id, Color& color) {
-    Vec2 color_rect_size = Vec2{.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_SV_RECT_HEIGHT};
+    Vec2F color_rect_size = {.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_SV_RECT_HEIGHT};
 
-    Vec2 hue_strip_size = Vec2{.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_HUE_SLIDER_HEIGHT};
+    Vec2F hue_strip_size = {.x = COLOR_PICKER_WIDTH, .y = COLOR_PICKER_HUE_SLIDER_HEIGHT};
     const std::string rect_id = id + "_rect";
     const std::string strip_id = id + "_strip";
 
@@ -416,11 +414,11 @@ void UI::color_picker(ElementId id, Color& color) {
         assert(rect_it != this->previous_render_elements.end() && "Color rect used but not found in previous render.");
 
         Rect rect = rect_it->second;
-        Vec2 rect_coords = {.x = std::clamp((int)mouse_pos.x - rect.position.x, 0, rect.size.x),
-                            .y = std::clamp((int)mouse_pos.y - rect.position.y, 0, rect.size.y)};
+        Vec2F rect_coords = {.x = std::clamp(mouse_pos.x - rect.position.x, 0.0f, rect.size.x),
+                             .y = std::clamp(mouse_pos.y - rect.position.y, 0.0f, rect.size.y)};
         Vec2F sv_value = {
             .x = std::clamp((float)rect_coords.x / (float)color_rect_size.x, 0.0f, 1.0f),
-            .y = std::clamp((float)(color_rect_size.y - rect_coords.y) / (float)color_rect_size.y, 0.0f, 1.0f)};
+            .y = std::clamp(((float)color_rect_size.y - rect_coords.y) / (float)color_rect_size.y, 0.0f, 1.0f)};
 
         const Vector3 hsv = ColorToHSV(color);
         const Color new_color = ColorFromHSV(hsv.x, sv_value.x, sv_value.y);
@@ -437,7 +435,7 @@ void UI::color_picker(ElementId id, Color& color) {
         assert(strip_it != this->previous_render_elements.end() && "Hue strip used but not found in previous render.");
 
         Rect strip = strip_it->second;
-        int strip_x = std::clamp((int)mouse_pos.x - strip.position.x, 0, strip.size.x);
+        int strip_x = std::clamp(mouse_pos.x - strip.position.x, 0.0f, strip.size.x);
         float h_value = std::clamp(((float)strip_x / (float)hue_strip_size.x) * 360.0f, 0.0f, 359.9f);
 
         const Vector3 hsv = ColorToHSV(color);

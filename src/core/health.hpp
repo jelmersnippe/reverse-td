@@ -1,7 +1,6 @@
 #pragma once
 
-#include "raylib.h"
-#include <string>
+#include "core/data.hpp"
 struct Health {
     int max;
     int current;
@@ -9,4 +8,4 @@ struct Health {
     Health(int start) { max = start, current = start; }
 };
 
-void DrawHealth(const Vector2& position, const Health& health);
+void DrawHealth(const Vec2F& position, const Health& health);

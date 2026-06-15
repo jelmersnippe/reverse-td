@@ -1,10 +1,9 @@
 #include "threat_director.hpp"
+
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
-#include "raylib.h"
-#include "raymath.h"
 
 const int MIN_SPAWNER_RANGE = 300;
 const int MAX_SPAWNER_RANGE = 500;
@@ -37,8 +36,8 @@ void rally_spawners(GameState& state) {
         }
 
         for (Spawner*& closest_spawner : closest_spawners) {
-            if (Vector2Distance(closest_spawner->position, player->position) <
-                Vector2Distance(slot.ref.position, player->position))
+            if (closest_spawner->position.distance_to(player->position) <
+                slot.ref.position.distance_to(player->position))
                 continue;
 
             closest_spawner = &slot.ref;
@@ -47,7 +46,7 @@ void rally_spawners(GameState& state) {
     }
 
     for (Spawner*& spawner : closest_spawners) {
-        const Vector2 direction = Vector2Normalize(player->position - spawner->position);
+        const Vec2F direction = (player->position - spawner->position).normalized();
         spawner->rally_position = spawner->position + direction * RALLY_DISTANCE;
         spawner->state = SpawnerState::Rallying;
     }

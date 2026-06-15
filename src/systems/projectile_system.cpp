@@ -1,12 +1,12 @@
 #include "projectile_system.hpp"
 
 #include "core/asset_manager.hpp"
+#include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/projectile.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
-#include "raymath.h"
 #include "systems/targeting.hpp"
 
 // Returns a bool for if it should be destroyed
@@ -25,7 +25,7 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Enemy>& enemy : state.enemies.data) {
             if (!enemy.alive) continue;
 
-            hit = CheckCollisionPointCircle(projectile.position, enemy.ref.position, enemy.ref.size);
+            hit = collision_point_circle(projectile.position, enemy.ref.position, enemy.ref.size);
 
             if (!hit) continue;
 
@@ -40,11 +40,10 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Spawner>& spawner : state.spawners.data) {
             if (!spawner.alive) continue;
 
-            const Vector2 spawner_top_left =
-                Vector2{.x = spawner.ref.position.x - SPAWNER_SIZE / 2, .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
-            hit = CheckCollisionPointRec(
-                projectile.position,
-                {.x = spawner_top_left.x, .y = spawner_top_left.y, .width = SPAWNER_SIZE, .height = SPAWNER_SIZE});
+            const Vec2F spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
+                                            .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
+            hit = collision_point_rect(projectile.position,
+                                       {.position = spawner_top_left, .size = {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}});
 
             if (!hit) continue;
 
@@ -59,11 +58,10 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Tower>& tower : state.towers.data) {
             if (!tower.alive) continue;
 
-            const Vector2 tower_top_left =
-                Vector2{.x = tower.ref.position.x - TOWER_SIZE / 2, .y = tower.ref.position.y - TOWER_SIZE / 2};
-            hit = CheckCollisionPointRec(
-                projectile.position,
-                {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
+            const Vec2F tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
+                                          .y = tower.ref.position.y - TOWER_SIZE / 2};
+            hit = collision_point_rect(projectile.position,
+                                       {.position = tower_top_left, .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
 
             if (!hit) continue;
 
@@ -78,11 +76,10 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Player>& player : state.players.data) {
             if (!player.alive) continue;
 
-            const Vector2 player_top_left =
-                Vector2{.x = player.ref.position.x - TOWER_SIZE / 2, .y = player.ref.position.y - TOWER_SIZE / 2};
-            hit = CheckCollisionPointRec(
-                projectile.position,
-                {.x = player_top_left.x, .y = player_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
+            const Vec2F player_top_left = {.x = player.ref.position.x - TOWER_SIZE / 2,
+                                           .y = player.ref.position.y - TOWER_SIZE / 2};
+            hit = collision_point_rect(projectile.position,
+                                       {.position = player_top_left, .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
 
             if (!hit) continue;
 

@@ -1,13 +1,15 @@
 #include "scenes/game_scene.hpp"
 
+#include "core/camera.hpp"
+#include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "core/input.hpp"
 #include "core/particles.hpp"
+#include "core/renderer.hpp"
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"
-#include "raymath.h"
 #include "scenes/pause_scene.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/pickup_system.hpp"
@@ -23,8 +25,6 @@
 #include <format>
 
 namespace {
-
-const Vector2 screen_center = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
 
 const ParticleTemplate MUZZLE_SMOKE_PARTICLE = ParticleTemplate({
     .speed = {.start = {.min = 20, .max = 80}, .end = {.min = 5, .max = 20}},
@@ -58,9 +58,10 @@ ParticleSystem particles{};
 
 void DrawUi(GameState& state) {
     // TOWER COST UI
-    const Vector2 tower_center = Vector2{.x = screen_center.x, .y = SCREEN_HEIGHT - 50};
-    const Vector2 tower_top_left = tower_center - Vector2{.x = TOWER_SIZE / 4, .y = TOWER_SIZE / 4};
-    DrawRectangleLines(tower_top_left.x, tower_top_left.y, TOWER_SIZE / 2, TOWER_SIZE / 2, BLACK);
+    const Vec2F tower_center = Vec2F{.x = SCREEN_CENTER.x, .y = SCREEN_HEIGHT - 50};
+    const Vec2F tower_top_left = tower_center - Vec2F{.x = TOWER_SIZE / 4, .y = TOWER_SIZE / 4};
+
+    render_rectangle(tower_center, {.x = TOWER_SIZE, .y = TOWER_SIZE}, BLACK, true);
     DrawCircle(tower_center.x, tower_center.y, TOWER_SIZE * 0.15, BLUE);
 
     const int tower_text_width = MeasureText("Tower", 12);
@@ -68,7 +69,7 @@ void DrawUi(GameState& state) {
     DrawText("Tower", tower_center.x - tower_text_width / 2, tower_top_left.y - 12, 12, BLACK);
     Color cost_color = BLACK;
     if (state.currency < 10) cost_color = RED;
-    DrawText("10 [RMB]", screen_center.x - cost_text_width / 2, tower_top_left.y + TOWER_SIZE / 2 + 8, 12, cost_color);
+    DrawText("10 [RMB]", SCREEN_CENTER.x - cost_text_width / 2, tower_top_left.y + TOWER_SIZE / 2 + 8, 12, cost_color);
 
     // INFO AT TOP
     const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
@@ -83,20 +84,17 @@ void DrawUi(GameState& state) {
     Player* player = GetEntity(state.players, state.active_player);
     if (player != nullptr) {
         std::optional<Targetable> closest_spawner =
-            find_closest_target(state.camera.target, state.targetables, TARGET_SPAWNER);
+            find_closest_target(Vec2F{state.camera.target.x, state.camera.target.y}, state.targetables, TARGET_SPAWNER);
 
-        Vector2 top_left_screen_point = GetScreenToWorld2D({.x = 0, .y = 0}, state.camera);
         if (closest_spawner.has_value() &&
-            !CheckCollisionPointRec(closest_spawner->position, Rectangle{.x = top_left_screen_point.x,
-                                                                         .y = top_left_screen_point.y,
-                                                                         .width = SCREEN_WIDTH,
-                                                                         .height = SCREEN_HEIGHT})) {
-            Vector2 direction = Vector2Normalize(closest_spawner->position - player->position);
-            float angle = atan2f(direction.y, direction.x);
+            !collision_point_rect(
+                closest_spawner->position,
+                Rect{.position = get_world_position({.x = 0, .y = 0}, state.camera), .size = SCREEN_SIZE})) {
+            float angle = player->position.angle_to(closest_spawner->position);
 
-            Vector2 point_a = Vector2Rotate({.x = 200, .y = 0}, angle) + screen_center;
-            Vector2 point_b = Vector2Rotate({.x = 160, .y = -10.0f}, angle) + screen_center;
-            Vector2 point_c = Vector2Rotate({.x = 160, .y = 10.0f}, angle) + screen_center;
+            Vector2 point_a = Vector2Rotate({.x = 200, .y = 0}, angle) + SCREEN_CENTER;
+            Vector2 point_b = Vector2Rotate({.x = 160, .y = -10.0f}, angle) + SCREEN_CENTER;
+            Vector2 point_c = Vector2Rotate({.x = 160, .y = 10.0f}, angle) + SCREEN_CENTER;
 
             DrawTriangle(point_a, point_b, point_c, BLACK);
         }
@@ -122,8 +120,11 @@ void Draw(GameState& state) {
     DrawUi(state);
 }
 
-void build_tower(GameState& state, Vector2 position) {
+void build_tower(GameState& state, Vec2F position) {
     if (state.currency < TOWER_COST) return;
+
+    const Vec2F to_place_top_left = {.x = position.x - TOWER_SIZE / 2, .y = position.y - TOWER_SIZE / 2};
+    const Vec2F tower_size = {.x = TOWER_SIZE, .y = TOWER_SIZE};
 
     if (std::ranges::any_of(state.towers.data, [position](const Slot<Tower>& tower_ref) {
             return tower_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
@@ -161,11 +162,9 @@ void build_tower(GameState& state, Vector2 position) {
         })) {
         return;
     }
-    if (std::ranges::any_of(state.enemies.data, [position](const Slot<Enemy>& enemy_ref) {
-            return enemy_ref.alive && CheckCollisionPointRec(enemy_ref.ref.position, {.x = position.x - TOWER_SIZE / 2,
-                                                                                      .y = position.y - TOWER_SIZE / 2,
-                                                                                      .width = TOWER_SIZE,
-                                                                                      .height = TOWER_SIZE});
+    if (std::ranges::any_of(state.enemies.data, [to_place_top_left, tower_size](const Slot<Enemy>& enemy_ref) {
+            return enemy_ref.alive &&
+                   collision_point_rect(enemy_ref.ref.position, {.position = to_place_top_left, .size = tower_size});
         })) {
         return;
     }
@@ -175,7 +174,7 @@ void build_tower(GameState& state, Vector2 position) {
 }
 
 void UpdateInputs(GameState& state) {
-    const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), state.camera);
+    const Vec2F mouse_position = get_mouse_world_position(state.camera);
     Player* active_player = GetEntity(state.players, state.active_player);
 
     if (input_frame.is_key_pressed(Key::X)) {
@@ -184,12 +183,15 @@ void UpdateInputs(GameState& state) {
 
             if (slot.ref.scrapping) continue;
 
-            const bool is_hovered = CheckCollisionPointRec(mouse_position, {.x = slot.ref.position.x - TOWER_SIZE / 2,
-                                                                            .y = slot.ref.position.y - TOWER_SIZE / 2,
-                                                                            .width = TOWER_SIZE,
-                                                                            .height = TOWER_SIZE});
+            const bool is_hovered =
+                collision_point_rect(mouse_position, {.position =
+                                                          {
+                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
+                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
+                                                          },
+                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
 
-            if (!is_hovered || Vector2Distance(active_player->position, slot.ref.position) > PLAYER_RANGE) continue;
+            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
 
             slot.ref.scrapping = true;
         }
@@ -197,8 +199,8 @@ void UpdateInputs(GameState& state) {
     if (input_frame.is_key_pressed(Key::Escape)) SCENE_MANAGER.PushScene(state, PAUSE_SCENE);
     if (input_frame.is_mouse_down(Mouse::Left)) {
         if (active_player->time_since_last_shot >= TIME_BETWEEN_SHOTS) {
-            const Vector2 direction = Vector2Normalize(
-                Vector2Subtract(GetScreenToWorld2D(GetMousePosition(), state.camera), active_player->position));
+            const Vec2F direction =
+                active_player->position.direction_to(get_mouse_world_position(state.camera)).normalized();
             auto barrel_end_pos = active_player->position + (direction * 30);
             CreateEntity(state.projectiles, Projectile{.direction = direction,
                                                        .position = barrel_end_pos,
@@ -226,7 +228,8 @@ void UpdateInputs(GameState& state) {
 }
 void Update(GameState& state) {
     Player* active_player = GetEntity(state.players, state.active_player);
-    if (active_player != nullptr) state.camera.target = {active_player->position};
+    if (active_player != nullptr)
+        state.camera.target = Vector2{.x = active_player->position.x, .y = active_player->position.y};
 
     state.targetables = build_targetables(state);
 
@@ -286,9 +289,9 @@ void Init(GameState& state) {
         }
     }
 
-    Player player = {.position = Vector2{.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2}};
+    Player player = {.position = SCREEN_CENTER};
     state.active_player = CreateEntity(state.players, player);
-    state.camera.target = {player.position};
+    state.camera.target = Vector2{.x = player.position.x, .y = player.position.y};
 }
 
 } // namespace

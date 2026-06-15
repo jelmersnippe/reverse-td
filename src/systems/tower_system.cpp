@@ -1,12 +1,9 @@
 #include "tower_system.hpp"
 
-#include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "core/renderer.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
-#include "raymath.h"
 #include "systems/targeting.hpp"
 #include <format>
 
@@ -32,14 +29,14 @@ void Update(Slot<Tower>& slot, GameState& state) {
 
     if (!target.has_value()) return;
 
-    if (Vector2Distance(tower.position, target->position) > tower.range) return;
+    if (tower.position.distance_to(target->position) > tower.range) return;
 
     tower.target_position = Vec2F{.x = target->position.x, .y = target->position.y};
 
     // Attacking time
     if (tower.time_since_last_attack >= 60.0 / tower.fire_rate) {
-        const Vector2 direction = target->position - tower.position;
-        CreateEntity(state.projectiles, {.direction = Vector2Normalize(direction),
+        const Vec2F direction = target->position - tower.position;
+        CreateEntity(state.projectiles, {.direction = direction.normalized(),
                                          .position = tower.position,
                                          .life_time = 2.0,
                                          .damage = tower.damage,
@@ -67,14 +64,13 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
     for (const Slot<Tower>& tower : towers.data) {
         if (!tower.alive) continue;
 
-        Vec2F tower_pos = Vec2F{tower.ref.position.x, tower.ref.position.y};
-        render_sprite({"turret", {16, 16}}, tower_pos, Vec2F{TOWER_SIZE, TOWER_SIZE},
-                      tower_pos.angle_to(Vec2F{tower.ref.target_position}) + 90);
+        render_sprite({"turret", {16, 16}}, tower.ref.position, Vec2F{TOWER_SIZE, TOWER_SIZE},
+                      tower.ref.position.angle_to(Vec2F{tower.ref.target_position}) + 90);
 
         if (tower.ref.scrapping) {
-            DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10, 30, 5, BLACK);
-            DrawRectangle(tower.ref.position.x - 15, tower.ref.position.y + 10,
-                          30 * ((float)tower.ref.scrap_time / (float)tower.ref.time_to_scrap), 5, WHITE);
+            render_rectangle({.x = tower.ref.position.x, .y = tower.ref.position.y + 7.5f}, {.x = 30, .y = 5}, BLACK);
+            render_rectangle({.x = tower.ref.position.x, .y = tower.ref.position.y + 7.5f},
+                             {.x = 30 * ((float)tower.ref.scrap_time / (float)tower.ref.time_to_scrap), .y = 5}, WHITE);
 
             const char* scrap_text = "Scrapping..";
             int scrap_text_width = MeasureText(scrap_text, 12);
@@ -86,7 +82,7 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
                 mouse_position,
                 {.x = tower_top_left.x, .y = tower_top_left.y, .width = TOWER_SIZE, .height = TOWER_SIZE});
 
-            if (is_hovered && Vector2Distance(camera.target, tower.ref.position) < PLAYER_RANGE) {
+            if (is_hovered && Vec2F{camera.target.x, camera.target.y}.distance_to(tower.ref.position) < PLAYER_RANGE) {
                 std::string scrap_text = std::format("[x] Scrap for: {}", GetScrapValue(tower.ref));
                 int scrap_text_width = MeasureText(scrap_text.c_str(), 12);
                 DrawText(scrap_text.c_str(), tower.ref.position.x - scrap_text_width / 2, tower.ref.position.y + 10, 12,
@@ -94,6 +90,6 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
             }
         }
 
-        DrawHealth(tower.ref.position - Vector2{.x = 0, .y = TOWER_SIZE / 2 + 10}, tower.ref.health);
+        DrawHealth(tower.ref.position - Vec2F{.x = 0, .y = TOWER_SIZE / 2 + 10}, tower.ref.health);
     }
 }

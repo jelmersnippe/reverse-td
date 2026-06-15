@@ -1,5 +1,4 @@
 #include "systems/scene_manager.hpp"
-#include "raylib.h"
 #include <cassert>
 
 void SceneManager::SetScene(GameState& state, const Scene& scene) {
@@ -30,8 +29,6 @@ void SceneManager::Update(GameState& state) {
     if (current_scene.update != nullptr) current_scene.update(state);
 
     BeginDrawing();
-
-    DrawText(current_scene.name.c_str(), 5, 5, 12, BLACK);
 
     if (current_scene.draw != nullptr) current_scene.draw(state);
 

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "raylib.h"
+#include "core/data.hpp"
 
 const int SCREEN_WIDTH = 1440;
 const int SCREEN_HEIGHT = 1200;
-const Vector2 SCREEN_CENTER = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2};
+const Vec2F SCREEN_SIZE = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT};
+const Vec2F SCREEN_CENTER = SCREEN_SIZE * 0.5f;
 
 const int TARGET_FPS = 60;
 

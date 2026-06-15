@@ -12,6 +12,8 @@
 #define RAD2DEG (180.0f / PI)
 #endif
 
+struct Vec2F;
+
 struct Vec2 {
     int x = 0;
     int y = 0;
@@ -43,13 +45,18 @@ struct Vec2 {
         return Vec2{.x = (int)((float)x / value), .y = (int)((float)y / value)};
     }
 
-    int length() { return std::sqrt(x * x + y * y); }
+    int length() const { return std::sqrt(x * x + y * y); }
 
-    Vec2 normalized() {
+    Vec2 normalized() const {
         int len = length();
         if (len == 0) { return Vec2{}; }
 
         return {.x = x / len, .y = y / len};
+    }
+
+    float distance(Vec2 other) const {
+        Vec2 dif = other - *this;
+        return std::sqrt(dif.x * dif.x + dif.y * dif.y);
     }
 };
 
@@ -77,22 +84,29 @@ struct Vec2F {
     Vec2F operator*(const float& value) const { return Vec2F{.x = x * value, .y = y * value}; }
     Vec2F operator/(const float& value) const { return Vec2F{.x = x / value, .y = y / value}; }
 
-    float length() { return std::sqrt(x * x + y * y); }
+    float length() const { return std::sqrt(x * x + y * y); }
 
-    Vec2F normalized() {
+    Vec2F normalized() const {
         float len = length();
         if (len == 0.0f) { return Vec2F{}; }
 
         return {.x = x / len, .y = y / len};
     }
 
-    float angle_to(Vec2F position) {
+    float angle_to(Vec2F position) const {
         Vec2F direction = position - *this;
         return atan2f(direction.y, direction.x) * RAD2DEG;
     }
+
+    float distance_to(Vec2F other) const {
+        Vec2F dif = other - *this;
+        return std::sqrt(dif.x * dif.x + dif.y * dif.y);
+    }
+
+    Vec2F direction_to(Vec2F position) const { return position - *this; }
 };
 
 struct Rect {
-    Vec2 position;
-    Vec2 size;
+    Vec2F position;
+    Vec2F size;
 };

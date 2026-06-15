@@ -3,7 +3,6 @@
 #include "core/input.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/main_menu_scene.hpp"
 #include "systems/scene_manager.hpp"

@@ -14,7 +14,7 @@ void kill_entity(GameState& state, Targetable& target) {
             if (killed_enemy == nullptr) break;
 
             const int value = killed_enemy->value;
-            const Vector2 position = killed_enemy->position;
+            const Vec2F position = killed_enemy->position;
 
             DestroyEntity(state.enemies, target.handle);
             state.threat_director.threat += 0.005f;
@@ -28,15 +28,15 @@ void kill_entity(GameState& state, Targetable& target) {
             if (killed_spawner == nullptr) break;
 
             const int value = 5;
-            const Vector2 position = killed_spawner->position;
+            const Vec2F position = killed_spawner->position;
 
             DestroyEntity(state.spawners, target.handle);
             for (int i = 0; i < value; i++) {
-                int random_x = GetRandomValue(0, 50) - 25;
-                int random_y = GetRandomValue(0, 50) - 25;
+                float random_x = (float)GetRandomValue(0, 50) - 25;
+                float random_y = (float)GetRandomValue(0, 50) - 25;
                 CreateEntity(
                     state.pickups,
-                    Pickup{.position = Vector2{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});
+                    Pickup{.position = Vec2F{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});
             }
             state.threat_director.threat += 0.03f;
             break;

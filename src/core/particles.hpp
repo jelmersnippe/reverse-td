@@ -2,6 +2,7 @@
 
 #include "core/data.hpp"
 #include "core/entity_pool.hpp"
+#include "core/renderer.hpp"
 #include "raylib.h"
 
 #include <algorithm>
@@ -190,9 +191,7 @@ struct ParticleSystem {
 
             const Particle& particle = slot.ref;
 
-            const Vec2F top_left = particle.position - Vec2F{.x = particle.size / 2, .y = particle.size / 2};
-
-            DrawRectangle((int)top_left.x, (int)top_left.y, (int)particle.size, (int)particle.size, particle.color);
+            render_rectangle(particle.position, {.x = particle.size, .y = particle.size}, particle.color);
         }
     }
 };

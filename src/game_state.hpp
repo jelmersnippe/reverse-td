@@ -1,11 +1,9 @@
 #pragma once
 
-#include "entities/pickup.hpp"
-#include "globals.hpp"
-#include "raylib.h"
-
+#include "core/camera.hpp"
 #include "core/entity_pool.hpp"
 #include "entities/enemy.hpp"
+#include "entities/pickup.hpp"
 #include "entities/player.hpp"
 #include "entities/projectile.hpp"
 #include "entities/spawner.hpp"
@@ -34,10 +32,10 @@ struct GameState {
 
     int currency = STARTING_CURRENCY;
 
-    Camera2D camera = {.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
-                       .target = {.x = 0, .y = 0},
-                       .rotation = 0.0f,
-                       .zoom = 1.0f};
+    MainCamera camera = {.offset = {.x = SCREEN_WIDTH / 2, .y = SCREEN_HEIGHT / 2},
+                         .target = {.x = 0, .y = 0},
+                         .rotation = 0.0f,
+                         .zoom = 1.0f};
 
     void Reset() {
         active_player = {};
@@ -58,6 +56,6 @@ void apply_damage(GameState& state, Targetable& target, int amount);
 
 struct CollisionResult {
     bool collided = false;
-    Vector2 location = {};
+    Vec2F location = {};
 };
-CollisionResult check_player_collision(GameState& state, Vector2 position);
+CollisionResult check_player_collision(GameState& state, Vec2F position);

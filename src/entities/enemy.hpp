@@ -2,9 +2,9 @@
 
 #include "core/entity_pool.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 
 #include "core/health.hpp"
+#include "raylib.h"
 #include "systems/targeting.hpp"
 #include <cstdint>
 #include <optional>
@@ -35,9 +35,9 @@ struct Enemy {
     EntityHandle home = {};
     SeekBehavior seek_behavior = SeekBehavior::SimpleFollow;
     AttackBehavior attack_behavior = AttackBehavior::Melee;
-    Vector2 position = {};
+    Vec2F position = {};
     // Used for wander+rally
-    Vector2 target_position = {};
+    Vec2F target_position = {};
     bool rallied = false;
     // Used for seek + attack
     std::optional<Targetable> target = std::nullopt;

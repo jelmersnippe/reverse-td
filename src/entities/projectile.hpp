@@ -1,6 +1,5 @@
 #pragma once
 
-#include "raylib.h"
 #include "systems/targeting.hpp"
 
 enum class ProjectileType {
@@ -10,8 +9,8 @@ enum class ProjectileType {
 
 struct Projectile {
     ProjectileType type = ProjectileType::Player;
-    Vector2 direction = {};
-    Vector2 position = {};
+    Vec2F direction = {};
+    Vec2F position = {};
     float life_time = 0;
     float time_alive = 0;
     float speed = 1500;

@@ -1,15 +1,13 @@
 #pragma once
 
 #include "core/animation_player.hpp"
-#include "raylib.h"
-
 #include "core/health.hpp"
 
 struct Player {
     AnimationPlayer animation_player =
         AnimationPlayer({.sprite_name = "player", .sprite_size = {.x = 16, .y = 16}, .frame_count = 4});
-    Vector2 position = {};
-    Vector2 direction = {};
+    Vec2F position = {};
+    Vec2F direction = {};
     Health health = Health(100);
     int damage = 25;
     float time_since_last_shot = 0;

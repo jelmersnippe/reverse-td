@@ -1,7 +1,6 @@
 #include "scenes/ui_scene.hpp"
 
 #include "core/gui.hpp"
-#include "core/key.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
 #include "raylib.h"

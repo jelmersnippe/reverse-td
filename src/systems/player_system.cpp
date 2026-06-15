@@ -1,11 +1,8 @@
 #include "player_system.hpp"
 
-#include "core/asset_manager.hpp"
 #include "core/renderer.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
-#include "raymath.h"
 #include <cmath>
 
 void Update(Player& player, GameState& state) {
@@ -45,9 +42,9 @@ void Update(Player& player, GameState& state) {
     float speed = player.speed;
     if (player.time_since_last_shot < TIME_BETWEEN_SHOTS) { speed *= player.attacking_speed_modifier; }
 
-    Vector2 velocity = Vector2Normalize(player.direction) * speed * delta_time;
+    Vec2F velocity = player.direction.normalized() * speed * delta_time;
 
-    Vector2 new_position = player.position;
+    Vec2F new_position = player.position;
 
     new_position.x += velocity.x;
     const CollisionResult collision_x = check_player_collision(state, new_position);
@@ -78,12 +75,13 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         if (!player.alive) continue;
 
         const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
-        const Vector2 mouse_direction = mouse_position - player.ref.position;
-        float mouse_angle = atan2f(mouse_direction.y, mouse_direction.x) * RAD2DEG;
+        float mouse_angle = player.ref.position.angle_to(Vec2F{mouse_position.x, mouse_position.y});
+        ;
+        bool flipped = mouse_angle > 90 || mouse_angle < -90;
 
         // Player
         player.ref.animation_player.draw(Vec2F{player.ref.position.x, player.ref.position.y},
-                                         {PLAYER_SIZE, PLAYER_SIZE}, mouse_direction.x < 0);
+                                         {PLAYER_SIZE, PLAYER_SIZE}, flipped);
 
         // Gun
         // TODO: Extract into rotate_around helper
@@ -95,11 +93,11 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
 
         Vec2 sprite_size = {.x = 16, .y = 16};
         Vec2F render_size = {.x = sprite_size.x * 2.0f, .y = sprite_size.y * 2.0f};
-        render_sprite(SpriteInfo("pistol", sprite_size, 0, {.x = false, .y = mouse_direction.x < 0}), weapon_pos,
-                      render_size, mouse_angle, WHITE);
+        render_sprite(SpriteInfo("pistol", sprite_size, 0, {.x = false, .y = flipped}), weapon_pos, render_size,
+                      mouse_angle, WHITE);
 
         // Health
-        const Vector2 health_position = player.ref.position - Vector2{.x = 0, .y = PLAYER_SIZE};
+        const Vec2F health_position = player.ref.position - Vec2F{.x = 0, .y = PLAYER_SIZE};
         DrawHealth(health_position, player.ref.health);
 
         if (player.ref.regenerating) {

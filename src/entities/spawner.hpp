@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/entity_pool.hpp"
-#include "raylib.h"
-
 #include "core/health.hpp"
 #include <vector>
 
@@ -16,7 +14,7 @@ const int RALLY_DISTANCE = 250;
 const float RESET_TIME = 10;
 
 struct Spawner {
-    Vector2 position = {};
+    Vec2F position = {};
     Health health = Health(500);
     float spawn_cooldown = 10;
     int spawn_amount = 1;
@@ -24,7 +22,7 @@ struct Spawner {
     float time_since_last_spawn = 0;
     bool initial_spawn_happened = false;
 
-    Vector2 rally_position = {};
+    Vec2F rally_position = {};
     int max_spawn = 6;
 
     std::vector<EntityHandle> active_enemies = {};
