@@ -28,10 +28,10 @@
 namespace {
 
 const ParticleTemplate MUZZLE_SMOKE_PARTICLE = ParticleTemplate({
-    .speed = {.start = {.min = 20, .max = 80}, .end = {.min = 5, .max = 20}},
-    .size = {.start = {.min = 3, .max = 8}, .end = {.min = 12, .max = 24}},
-    .color = {.start = Color(120, 120, 120, 150), .end = Color(80, 80, 80, 0)},
-    .lifetime = {.min = 0.2f, .max = 0.5f},
+    .speed = {.start = {.min = 60, .max = 80}, .end = {.min = 5, .max = 20}},
+    .size = {.start = {.min = 2, .max = 4}, .end = {.min = 0, .max = 1}},
+    .color = {.start = WHITE, .end = Color(255, 255, 255, 0)},
+    .lifetime = {.min = 0.1f, .max = 0.3f},
 });
 Emitter MUZZLE_SMOKE_EMITTER = Emitter{.position = {.x = 0, .y = 0},
                                        .direction = {.x = 0, .y = 0},
@@ -197,6 +197,7 @@ void UpdateInputs(GameState& state) {
         if (active_player->time_since_last_shot >= TIME_BETWEEN_SHOTS) {
             const Vec2F direction =
                 active_player->position.direction_to(get_mouse_world_position(state.camera)).normalized();
+            // TODO: Get this from the pistol?
             auto barrel_end_pos = active_player->position + (direction * 30);
             CreateEntity(state.projectiles, Projectile{.direction = direction,
                                                        .position = barrel_end_pos,

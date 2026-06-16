@@ -83,7 +83,7 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
                                          {.x = PLAYER_SIZE, .y = PLAYER_SIZE}, flipped);
 
         // Gun
-        Vec2F hand_offset = Vec2F{.x = 14.0f, .y = 0}.rotate_to(mouse_angle);
+        Vec2F hand_offset = Vec2F{.x = 14.0f, .y = 6}.rotate_to(mouse_angle);
         Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + hand_offset;
 
         Vec2 sprite_size = {.x = 16, .y = 16};
