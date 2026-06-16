@@ -213,6 +213,8 @@ void UpdateInputs(GameState& state) {
             MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
             MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
             particles.play(MUZZLE_SMOKE_EMITTER);
+
+            PlaySound(get_sound("pistol"));
         }
     }
 

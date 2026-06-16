@@ -83,8 +83,9 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
                                          {.x = PLAYER_SIZE, .y = PLAYER_SIZE}, flipped);
 
         // Gun
-        Vec2F hand_offset = Vec2F{.x = 14.0f, .y = 6}.rotate_to(mouse_angle);
-        Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + hand_offset;
+        const Vec2F hand_offset = {.x = 14.0f, .y = flipped ? -6.0f : 6.0f};
+        Vec2F rotated_hand_offset = hand_offset.rotate_to(mouse_angle);
+        Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + rotated_hand_offset;
 
         Vec2 sprite_size = {.x = 16, .y = 16};
         Vec2F render_size = {.x = sprite_size.x * 2.0f, .y = sprite_size.y * 2.0f};
