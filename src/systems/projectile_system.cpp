@@ -6,7 +6,6 @@
 #include "entities/projectile.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "systems/targeting.hpp"
 
 // Returns a bool for if it should be destroyed

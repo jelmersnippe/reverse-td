@@ -1,9 +1,9 @@
 #include "game_state.hpp"
 #include "core/entity_pool.hpp"
+#include "core/random.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "systems/targeting.hpp"
 
 void kill_entity(GameState& state, Targetable& target) {
@@ -32,8 +32,8 @@ void kill_entity(GameState& state, Targetable& target) {
 
             DestroyEntity(state.spawners, target.handle);
             for (int i = 0; i < value; i++) {
-                float random_x = (float)GetRandomValue(0, 50) - 25;
-                float random_y = (float)GetRandomValue(0, 50) - 25;
+                float random_x = random_float(-25, 25);
+                float random_y = random_float(-25, 25);
                 CreateEntity(
                     state.pickups,
                     Pickup{.position = Vec2F{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});

@@ -3,7 +3,6 @@
 #include "core/gui.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 
 namespace {
 const UI::ElementStyle BUTTON_STYLE = {.direction = UI::LayoutDirection::Vertical,

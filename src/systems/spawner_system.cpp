@@ -1,6 +1,7 @@
 #include "spawner_system.hpp"
 
 #include "core/entity_pool.hpp"
+#include "core/random.hpp"
 #include "core/renderer.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
@@ -12,7 +13,7 @@
 
 Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
 
-    const float rng = (float)GetRandomValue(0, 100) / 100.0f;
+    const float rng = random_float(0, 1);
     float weight = 0;
 
     for (const SpawnOption& option : spawn_table) {
@@ -49,8 +50,8 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
     for (int i = 0; i < limited_count; i++) {
         Enemy new_enemy = get_spawn_option(spawn_table);
 
-        const float random_x = (float)GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
-        const float random_y = (float)GetRandomValue(0, SPAWNER_OFFSET) - SPAWNER_OFFSET;
+        const float random_x = random_float(-SPAWNER_OFFSET, SPAWNER_OFFSET);
+        const float random_y = random_float(-SPAWNER_OFFSET, SPAWNER_OFFSET);
 
         new_enemy.position = spawner.position + Vec2F{.x = random_x, .y = random_y};
         new_enemy.home = spawner_slot.handle;

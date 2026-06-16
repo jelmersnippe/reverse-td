@@ -2,8 +2,8 @@
 
 #include "core/data.hpp"
 #include "core/entity_pool.hpp"
+#include "core/random.hpp"
 #include "core/renderer.hpp"
-#include "raylib.h"
 
 #include <algorithm>
 #include <numbers>
@@ -15,7 +15,7 @@ template <typename T> struct Range {
     T get_random() {
         if (min == max) return min;
 
-        return min + ((float)GetRandomValue(0, 100) / 100.0f) * (max - min);
+        return random_float(min, max);
     }
 };
 
@@ -127,7 +127,7 @@ struct Emitter {
 
         float base_angle = std::atan2(direction.y, direction.x);
         float spread_rad = spread * ((float)std::numbers::pi / 180.0f);
-        float angle_offset = ((float)GetRandomValue(-100, 100) / 100.0f) * spread_rad;
+        float angle_offset = random_float(-spread_rad, spread_rad);
         float angle = base_angle + angle_offset;
 
         Vec2F dir = {.x = std::cos(angle), .y = std::sin(angle)};
@@ -137,16 +137,15 @@ struct Emitter {
             case EmitterType::Point:
                 break;
             case EmitterType::Circle: {
-                const float random_x = (float)GetRandomValue(-100, 100) / 100.0f;
-                const float random_y = (float)GetRandomValue(-100, 100) / 100.0f;
-                particle_pos += Vec2F{.x = random_x, .y = random_y} * radius;
+                const float random_x = random_float(-radius, radius);
+                const float random_y = random_float(-radius, radius);
+                particle_pos += Vec2F{.x = random_x, .y = random_y};
                 break;
             }
             case EmitterType::Box: {
-                const float random_x = (float)GetRandomValue(0, 100) / 100.0f;
-                const float random_y = (float)GetRandomValue(0, 100) / 100.0f;
-                Vec2F position_in_box = {.x = random_x * box_size.x - (box_size.x / 2.0f),
-                                         .y = random_y * box_size.y - (box_size.y / 2.0f)};
+                const float random_x = random_float(0, box_size.x);
+                const float random_y = random_float(0, box_size.y);
+                Vec2F position_in_box = {.x = random_x, .y = random_y};
                 particle_pos += position_in_box;
                 break;
             }

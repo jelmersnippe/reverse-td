@@ -30,7 +30,7 @@ inline void render_sprite(SpriteInfo info, Vec2F center, Vec2F size, float angle
                         .height = (float)info.size.y};
 
     Rectangle dest = {.x = center.x, .y = center.y, .width = size.x, .height = size.y};
-    Vector2 origin = {size.x * 0.5f, size.y * 0.5f};
+    Vector2 origin = {.x = size.x * 0.5f, .y = size.y * 0.5f};
 
     if (info.should_flip.x) { source.width = -info.size.x; }
     if (info.should_flip.y) { source.height = -info.size.y; }
@@ -45,4 +45,8 @@ inline void render_rectangle(Vec2F center, Vec2F size, Color color, bool outline
     } else {
         DrawRectangle(top_left.x, top_left.y, size.x, size.y, color);
     }
+}
+
+inline void render_triangle(Vec2F point_a, Vec2F point_b, Vec2F point_c, Color color) {
+    DrawTriangle(point_a.to_raylib(), point_b.to_raylib(), point_c.to_raylib(), color);
 }

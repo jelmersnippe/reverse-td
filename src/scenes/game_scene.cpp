@@ -5,11 +5,11 @@
 #include "core/entity_pool.hpp"
 #include "core/input.hpp"
 #include "core/particles.hpp"
+#include "core/random.hpp"
 #include "core/renderer.hpp"
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "scenes/pause_scene.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/pickup_system.hpp"
@@ -92,11 +92,11 @@ void DrawUi(GameState& state) {
                 Rect{.position = get_world_position({.x = 0, .y = 0}, state.camera), .size = SCREEN_SIZE})) {
             float angle = player->position.angle_to(closest_spawner->position);
 
-            Vector2 point_a = Vector2Rotate({.x = 200, .y = 0}, angle) + SCREEN_CENTER;
-            Vector2 point_b = Vector2Rotate({.x = 160, .y = -10.0f}, angle) + SCREEN_CENTER;
-            Vector2 point_c = Vector2Rotate({.x = 160, .y = 10.0f}, angle) + SCREEN_CENTER;
+            Vec2F point_a = Vec2F{.x = 200, .y = 0}.rotate_to(angle) + SCREEN_CENTER;
+            Vec2F point_b = Vec2F{.x = 160, .y = -10}.rotate_to(angle) + SCREEN_CENTER;
+            Vec2F point_c = Vec2F{.x = 160, .y = 10}.rotate_to(angle) + SCREEN_CENTER;
 
-            DrawTriangle(point_a, point_b, point_c, BLACK);
+            render_triangle(point_a, point_b, point_c, BLACK);
         }
     }
 }
@@ -275,15 +275,15 @@ void Init(GameState& state) {
 
     for (InitialSpawnerPlacement placement : initial_spawner_placements) {
         for (int i = 0; i < placement.count; i++) {
-            bool negative_x = GetRandomValue(0, 1) == 1;
-            bool negative_y = GetRandomValue(0, 1) == 1;
-            int random_x = GetRandomValue((int)placement.min_distance.x, (int)placement.max_distance.x);
-            int random_y = GetRandomValue((int)placement.min_distance.y, (int)placement.max_distance.y);
+            bool negative_x = random_int(0, 1) == 1;
+            bool negative_y = random_int(0, 1) == 1;
+            float random_x = random_float(placement.min_distance.x, placement.max_distance.x);
+            float random_y = random_float(placement.min_distance.y, placement.max_distance.y);
 
             if (negative_x) random_x = -random_x;
             if (negative_y) random_y = -random_y;
 
-            CreateEntity(state.spawners, {.position = {.x = (float)random_x, .y = (float)random_y},
+            CreateEntity(state.spawners, {.position = {.x = random_x, .y = random_y},
                                           .spawn_amount = 1,
                                           .initial_spawn = placement.initial_enemy_spawn_count});
         }

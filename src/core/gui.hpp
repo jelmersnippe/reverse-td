@@ -129,7 +129,7 @@ struct UI {
 
     void color_picker(ElementId id, Color& color);
 
-    UI(Vec2 position = Vec2{.x = 0, .y = 0}) : top_left(position) {}
+    UI(Vec2F position = Vec2F{.x = 0, .y = 0}) : top_left(position) {}
 
     void init_hue_strip();
 

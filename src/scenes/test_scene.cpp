@@ -1,4 +1,5 @@
 #include "scenes/test_scene.hpp"
+#include "core/camera.hpp"
 #include "core/entity_pool.hpp"
 #include "core/input.hpp"
 #include "core/key.hpp"
@@ -12,7 +13,6 @@
 #include "systems/scene_manager.hpp"
 #include "systems/spawner_system.hpp"
 
-#include "raymath.h"
 #include "rlgl.h"
 #include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
@@ -65,7 +65,7 @@ void UpdateInputs(GameState& state) {
 
     state.camera.zoom = expf(logf(state.camera.zoom) + ((float)GetMouseWheelMove() * 0.1f));
 
-    const Vector2 destination = GetScreenToWorld2D(GetMousePosition(), state.camera);
+    const Vec2F destination = get_mouse_world_position(state.camera);
 
     const float camera_speed = (CAMERA_SPEED / state.camera.zoom) * delta_time;
 
@@ -102,10 +102,10 @@ void UpdateInputs(GameState& state) {
         new_enemy.damage = 0;
         CreateEntity(state.enemies, new_enemy);
     }
-    if (input_frame.is_key_down(Key::W)) state.camera.target += {.x = 0, .y = -camera_speed};
-    if (input_frame.is_key_down(Key::S)) state.camera.target += {.x = 0, .y = camera_speed};
-    if (input_frame.is_key_down(Key::A)) state.camera.target += {.x = -camera_speed, .y = 0};
-    if (input_frame.is_key_down(Key::D)) state.camera.target += {.x = camera_speed, .y = 0};
+    if (input_frame.is_key_down(Key::W)) state.camera.target.y -= camera_speed;
+    if (input_frame.is_key_down(Key::S)) state.camera.target.y += camera_speed;
+    if (input_frame.is_key_down(Key::A)) state.camera.target.x -= camera_speed;
+    if (input_frame.is_key_down(Key::D)) state.camera.target.x += camera_speed;
 }
 
 void Update(GameState& state) {

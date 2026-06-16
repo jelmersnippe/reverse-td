@@ -2,6 +2,7 @@
 
 #include "array"
 #include "core/entity_pool.hpp"
+#include "core/random.hpp"
 #include "core/renderer.hpp"
 #include "entities/enemy.hpp"
 #include "entities/projectile.hpp"
@@ -97,12 +98,12 @@ Vec2F get_wander_direction(Enemy& enemy, const Vec2F center, const float range, 
     };
 
     // Set new wander target
-    const float random_x = (float)GetRandomValue(0, 100) * (range / 100.0) - (range / 2.0);
-    const float random_y = (float)GetRandomValue(0, 100) * (range / 100.0) - (range / 2.0);
+    const float random_x = random_float(-range, range);
+    const float random_y = random_float(-range, range);
     const Vec2F wander_offset = Vec2F{.x = random_x, .y = random_y};
 
     enemy.target_position = center + wander_offset;
-    enemy.remaining_idle_time = (float)GetRandomValue(0, 100) * (max_idle / 100.0) + min_idle;
+    enemy.remaining_idle_time = random_float(min_idle, max_idle);
 
     return enemy.position.direction_to(enemy.target_position).normalized();
 }

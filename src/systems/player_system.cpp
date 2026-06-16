@@ -75,21 +75,16 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         if (!player.alive) continue;
 
         const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
-        float mouse_angle = player.ref.position.angle_to(Vec2F{mouse_position.x, mouse_position.y});
-        ;
+        float mouse_angle = player.ref.position.angle_to(Vec2F{.x = mouse_position.x, .y = mouse_position.y});
         bool flipped = mouse_angle > 90 || mouse_angle < -90;
 
         // Player
-        player.ref.animation_player.draw(Vec2F{player.ref.position.x, player.ref.position.y},
-                                         {PLAYER_SIZE, PLAYER_SIZE}, flipped);
+        player.ref.animation_player.draw(Vec2F{.x = player.ref.position.x, .y = player.ref.position.y},
+                                         {.x = PLAYER_SIZE, .y = PLAYER_SIZE}, flipped);
 
         // Gun
-        // TODO: Extract into rotate_around helper
-        Vec2F hand_offset = {.x = 14.0f, .y = 0};
-        const float rad = mouse_angle * DEG2RAD;
-        Vec2F rotated_offset = {.x = cosf(rad) * hand_offset.x - sinf(rad) * hand_offset.y,
-                                .y = sinf(rad) * hand_offset.x + cosf(rad) * hand_offset.y};
-        Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + rotated_offset;
+        Vec2F hand_offset = Vec2F{.x = 14.0f, .y = 0}.rotate_to(mouse_angle);
+        Vec2F weapon_pos = Vec2F{.x = player.ref.position.x, .y = player.ref.position.y} + hand_offset;
 
         Vec2 sprite_size = {.x = 16, .y = 16};
         Vec2F render_size = {.x = sprite_size.x * 2.0f, .y = sprite_size.y * 2.0f};

@@ -5,12 +5,11 @@
 #include "core/input.hpp"
 #include "core/particles.hpp"
 #include "format"
-#include "raylib.h"
 #include <climits>
 
 namespace {
 
-UI ui = UI(Vec2{.x = 25, .y = 25});
+UI ui = UI(Vec2F{.x = 25, .y = 25});
 
 bool PARTICLES_COLLAPSED = false;
 bool EMITTER_COLLAPSED = false;

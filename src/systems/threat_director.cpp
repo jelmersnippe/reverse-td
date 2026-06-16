@@ -1,6 +1,7 @@
 #include "threat_director.hpp"
 
 #include "core/entity_pool.hpp"
+#include "core/random.hpp"
 #include "entities/enemy.hpp"
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
@@ -12,7 +13,7 @@ Spawner* get_random_spawner(EntityPool<Spawner>& spawners) {
     if (spawners.data.size() <= 0) return nullptr;
 
     while (true) {
-        const int spawner_index = GetRandomValue(0, spawners.data.size() - 1);
+        const int spawner_index = random_int(0, (int)spawners.data.size() - 1);
 
         Slot<Spawner>& slot = spawners.data[spawner_index];
 
@@ -57,12 +58,12 @@ void create_spawner(EntityPool<Spawner>& spawners) {
 
     if (parent_spawner == nullptr) return;
 
-    const float random_x = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
-    const int x_negative = GetRandomValue(0, 1);
-    const float random_y = GetRandomValue(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
-    const int y_negative = GetRandomValue(0, 1);
+    const float random_x = random_float(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
+    const int x_negative = random_int(0, 1);
+    const float random_y = random_float(MIN_SPAWNER_RANGE, MAX_SPAWNER_RANGE);
+    const int y_negative = random_int(0, 1);
 
-    Vector2 offset = {.x = random_x, .y = random_y};
+    Vec2F offset = {.x = random_x, .y = random_y};
     if (x_negative == 1) offset.x = -random_x;
     if (y_negative == 1) offset.y = -random_y;
 
@@ -102,12 +103,12 @@ void UpdateThreatDirector(GameState& state) {
     if (director.time_to_next_spawner_spread <= 0) {
         create_spawner(state.spawners);
 
-        director.time_to_next_spawner_spread = GetRandomValue(20, 40);
+        director.time_to_next_spawner_spread = random_float(20, 40);
     }
 
     if (director.time_to_next_rally <= 0) {
         rally_spawners(state);
-        director.time_to_next_rally = GetRandomValue(20, 40);
+        director.time_to_next_rally = random_float(20, 40);
     }
 
     if (director.threat > 1) director.threat = 1;

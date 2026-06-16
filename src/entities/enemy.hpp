@@ -4,7 +4,6 @@
 #include "globals.hpp"
 
 #include "core/health.hpp"
-#include "raylib.h"
 #include "systems/targeting.hpp"
 #include <cstdint>
 #include <optional>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "raylib.h"
 #include <cmath>
 
 #ifndef PI
@@ -34,6 +35,18 @@ struct Vec2 {
         x = x - vec.x;
         y = y - vec.y;
     }
+    void operator*=(const int& value) {
+        x = x * value;
+        y = y * value;
+    }
+    void operator+=(const int& value) {
+        x = x + value;
+        y = y + value;
+    }
+    void operator-=(const int& value) {
+        x = x - value;
+        y = y - value;
+    }
 
     Vec2 operator*(const int& value) const { return Vec2{.x = x * value, .y = y * value}; }
     Vec2 operator/(const int& value) { return Vec2{.x = x / value, .y = y / value}; }
@@ -58,7 +71,15 @@ struct Vec2 {
         Vec2 dif = other - *this;
         return std::sqrt(dif.x * dif.x + dif.y * dif.y);
     }
+
+    Vector2 to_raylib() const { return Vector2{.x = (float)this->x, .y = (float)this->y}; }
+
+    static Vec2 from_raylib(const Vector2& v);
 };
+
+inline Vec2 Vec2::from_raylib(const Vector2& v) {
+    return Vec2{.x = (int)v.x, .y = (int)v.y};
+}
 
 struct Vec2F {
     float x = 0;
@@ -81,6 +102,19 @@ struct Vec2F {
         y = y - vec.y;
     }
 
+    void operator*=(const float& value) {
+        x = x * value;
+        y = y * value;
+    }
+    void operator+=(const float& value) {
+        x = x + value;
+        y = y + value;
+    }
+    void operator-=(const float& value) {
+        x = x - value;
+        y = y - value;
+    }
+
     Vec2F operator*(const float& value) const { return Vec2F{.x = x * value, .y = y * value}; }
     Vec2F operator/(const float& value) const { return Vec2F{.x = x / value, .y = y / value}; }
 
@@ -98,13 +132,26 @@ struct Vec2F {
         return atan2f(direction.y, direction.x) * RAD2DEG;
     }
 
+    Vec2F rotate_to(float angle) const {
+        const float rad = angle * DEG2RAD;
+        return {.x = cosf(rad) * this->x - sinf(rad) * this->y, .y = sinf(rad) * this->x + cosf(rad) * this->y};
+    }
+
     float distance_to(Vec2F other) const {
         Vec2F dif = other - *this;
         return std::sqrt(dif.x * dif.x + dif.y * dif.y);
     }
 
     Vec2F direction_to(Vec2F position) const { return position - *this; }
+
+    Vector2 to_raylib() const { return Vector2{.x = this->x, .y = this->y}; }
+
+    static Vec2F from_raylib(const Vector2& v);
 };
+
+inline Vec2F Vec2F::from_raylib(const Vector2& v) {
+    return Vec2F{.x = v.x, .y = v.y};
+}
 
 struct Rect {
     Vec2F position;

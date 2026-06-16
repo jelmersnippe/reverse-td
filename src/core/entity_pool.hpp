@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <vector>
 
-const uint32_t INVALID_INDEX = SIZE_MAX;
-const uint32_t INVALID_GENERATION = UINT32_MAX;
+const uint32_t INVALID_INDEX = INT32_MAX;
+const uint32_t INVALID_GENERATION = INT32_MAX;
 struct EntityHandle {
     size_t index = INVALID_INDEX;
     uint32_t generation = INVALID_GENERATION;

@@ -2,7 +2,6 @@
 #include "core/gui.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/particle_scene.hpp"
 #include "scenes/test_scene.hpp"
