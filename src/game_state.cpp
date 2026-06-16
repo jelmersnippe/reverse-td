@@ -21,8 +21,11 @@ void kill_entity(GameState& state, Targetable& target) {
             const int value = killed_enemy->value;
             const Vec2F position = killed_enemy->position;
 
-            DestroyEntity(state.enemies, target.handle);
-            state.threat_director.threat += 0.005f;
+            killed_enemy->dead = true;
+            state.threat_director.threat += 0.002f;
+
+            DEATH_EMITTER.position = killed_enemy->position;
+            killed_enemy->particles.play(DEATH_EMITTER);
 
             CreateEntity(state.pickups, Pickup{.position = position, .value = value});
             break;

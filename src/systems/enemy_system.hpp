@@ -11,6 +11,7 @@ inline float MAX_IDLE_TIME = 5.0;
 inline float MIN_RALLY_IDLE_TIME = 0.5;
 inline float MAX_RALLY_IDLE_TIME = 2.0;
 inline float WANDER_SPEED_MODIFIER = 0.5;
+inline float WANDER_AROUND_RALLY = 100.0;
 
 void UpdateEnemies(GameState& state);
 void DrawEnemies(const EntityPool<Enemy>& enemies);

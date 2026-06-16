@@ -16,6 +16,14 @@ inline Emitter HIT_EMITTER = Emitter{.position = {.x = 0, .y = 0},
                                      .duration = 0,
                                      .burst = 10};
 
+inline Emitter DEATH_EMITTER = Emitter{.position = {.x = 0, .y = 0},
+                                       .direction = {.x = 0, .y = 0},
+                                       .spread = 360,
+                                       .particle_template = HIT_PARTICLE,
+                                       .rate = 0,
+                                       .duration = 0,
+                                       .burst = 30};
+
 inline const ParticleTemplate MUZZLE_SMOKE_PARTICLE = ParticleTemplate({
     .speed = {.start = {.min = 60, .max = 80}, .end = {.min = 5, .max = 20}},
     .size = {.start = {.min = 2, .max = 4}, .end = {.min = 0, .max = 1}},

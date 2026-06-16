@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/entity_pool.hpp"
-#include "core/key.hpp"
 #include "core/particles.hpp"
 #include "globals.hpp"
 
@@ -72,6 +71,9 @@ struct Enemy {
     int value = 1;
 
     ParticleSystem particles{};
+
+    bool dead = false;
+    float time_dead = 0.0f;
 };
 
 inline const Enemy melee_enemy = {.color = ORANGE,

@@ -22,7 +22,7 @@ bool Update(Projectile& projectile, GameState& state) {
 
     if ((projectile.flags & TARGET_ENEMY) == TARGET_ENEMY) {
         for (Slot<Enemy>& enemy : state.enemies.data) {
-            if (!enemy.alive) continue;
+            if (!enemy.alive || enemy.ref.dead) continue;
 
             hit = collision_point_circle(projectile.position, enemy.ref.position, enemy.ref.size);
 

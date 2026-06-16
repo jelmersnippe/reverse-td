@@ -12,7 +12,7 @@ struct Weapon {
     Vec2F position = {};
     Vec2F offset = {.x = 14.0f, .y = 6.0f};
     Vec2F current_knockback{};
-    float spread = 10;
+    float spread = 5;
     Vec2F recoil = {.x = -6, .y = 0};
     float recovery_time = 0.2f;
     int damage = 25;

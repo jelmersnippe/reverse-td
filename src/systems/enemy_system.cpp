@@ -110,20 +110,23 @@ Vec2F get_wander_direction(Enemy& enemy, const Vec2F center, const float range, 
     return enemy.position.direction_to(enemy.target_position).normalized();
 }
 
-const float WANDER_AROUND_RALLY = 100.0;
 void UpdateEnemies(GameState& state) {
     for (Slot<Enemy>& slot : state.enemies.data) {
         if (!slot.alive) continue;
-
         Enemy& enemy = slot.ref;
-
-        std::optional<Targetable> target =
-            find_closest_target(enemy.position, state.targetables, TARGET_TOWER | TARGET_PLAYER);
 
         const float delta_time = GetFrameTime();
 
-        enemy.time_since_last_attack += delta_time;
+        if (enemy.dead) {
+            enemy.time_dead += delta_time;
+            if (enemy.time_dead > 1.5f) {
+                DestroyEntity(state.enemies, slot.handle);
+                return;
+            }
+        };
+
         if (enemy.hit_flash_remaining > 0.0f) enemy.hit_flash_remaining -= delta_time;
+
         Vec2F velocity = {};
 
         if (enemy.knockback.active) {
@@ -138,7 +141,12 @@ void UpdateEnemies(GameState& state) {
             }
 
             if (enemy.knockback.time_active >= enemy.knockback.recovery_time) enemy.knockback.active = false;
-        } else {
+        } else if (!enemy.dead) {
+            std::optional<Targetable> target =
+                find_closest_target(enemy.position, state.targetables, TARGET_TOWER | TARGET_PLAYER);
+
+            enemy.time_since_last_attack += delta_time;
+
             switch (enemy.state) {
                 case EnemyState::Wander: {
                     Spawner* home = GetEntity(state.spawners, enemy.home);
@@ -236,10 +244,30 @@ void UpdateEnemies(GameState& state) {
     }
 }
 
+void draw_debug_info(const Enemy& enemy) {
+    std::string state_text;
+    switch (enemy.state) {
+        case EnemyState::Attack:
+            state_text = "Attack";
+            break;
+        case EnemyState::Rally:
+            state_text = "Rally";
+            break;
+        case EnemyState::Seek:
+            state_text = "Seek";
+            break;
+        default:
+            state_text = "Wander";
+            break;
+    }
+    render_text(state_text, enemy.position, 12, BLACK);
+}
+
 void DrawEnemies(const EntityPool<Enemy>& enemies) {
     for (const Slot<Enemy>& enemy : enemies.data) {
         if (!enemy.alive) continue;
         Shader flash_shader = get_shader("flash");
+
         if (enemy.ref.hit_flash_remaining > 0) {
             float flash_color[3] = {1.0f, 1.0f, 1.0f};
             float flash_volume = 1.0f;
@@ -252,29 +280,18 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
             BeginShaderMode(flash_shader);
         }
 
+        Color color = enemy.ref.color;
+        if (enemy.ref.dead) color.a = (255 * 0.4f);
+
         render_sprite(SpriteInfo("enemy", {.x = 16, .y = 16}), enemy.ref.position,
-                      {.x = enemy.ref.size, .y = enemy.ref.size}, 0, enemy.ref.color);
+                      {.x = enemy.ref.size, .y = enemy.ref.size}, 0, color);
 
         if (enemy.ref.hit_flash_remaining > 0) EndShaderMode();
 
-        DrawHealth(enemy.ref.position - Vec2F{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
-
-        std::string state_text;
-        switch (enemy.ref.state) {
-            case EnemyState::Attack:
-                state_text = "Attack";
-                break;
-            case EnemyState::Rally:
-                state_text = "Rally";
-                break;
-            case EnemyState::Seek:
-                state_text = "Seek";
-                break;
-            default:
-                state_text = "Wander";
-                break;
+        if (!enemy.ref.dead) {
+            DrawHealth(enemy.ref.position - Vec2F{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
+            draw_debug_info(enemy.ref);
         }
-        render_text(state_text, enemy.ref.position, 12, BLACK);
 
         enemy.ref.particles.draw();
     }
