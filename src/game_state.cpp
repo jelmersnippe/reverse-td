@@ -1,6 +1,9 @@
+#include "game_state.hpp"
+
 #include "core/entity_pool.hpp"
 #include "core/random.hpp"
 #include "entities/enemy.hpp"
+#include "entities/pickup.hpp"
 #include "entities/spawner.hpp"
 #include "globals.hpp"
 #include "systems/targeting.hpp"
@@ -49,7 +52,8 @@ void kill_entity(GameState& state, Targetable& target) {
             break;
         }
         case TARGET_NONE:
-            return;
+        default:
+            break;
     }
 }
 

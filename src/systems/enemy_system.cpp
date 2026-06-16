@@ -220,7 +220,7 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
         if (!enemy.alive) continue;
 
         render_sprite(SpriteInfo("enemy", {.x = 16, .y = 16}), enemy.ref.position,
-                      {.x = enemy.ref.size, .y = enemy.ref.size});
+                      {.x = enemy.ref.size, .y = enemy.ref.size}, 0, enemy.ref.color);
         DrawHealth(enemy.ref.position - Vec2F{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
 
         std::string state_text;

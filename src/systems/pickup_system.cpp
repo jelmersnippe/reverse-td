@@ -29,7 +29,7 @@ void UpdatePickups(GameState& state) {
         };
 
         pickup.ref.position +=
-            active_player->position.direction_to(pickup.ref.position).normalized() * PICKUP_SPEED * delta_time;
+            pickup.ref.position.direction_to(active_player->position).normalized() * PICKUP_SPEED * delta_time;
 
         if (pickup.ref.position.distance_to(active_player->position) < 5) {
             state.currency += pickup.ref.value;

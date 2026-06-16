@@ -71,9 +71,11 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
                       tower.ref.position.angle_to(Vec2F{tower.ref.target_position}) + 90);
 
         if (tower.ref.scrapping) {
-            render_rectangle({.x = tower.ref.position.x, .y = tower.ref.position.y + 7.5f}, {.x = 30, .y = 5}, BLACK);
-            render_rectangle({.x = tower.ref.position.x, .y = tower.ref.position.y + 7.5f},
-                             {.x = 30 * ((float)tower.ref.scrap_time / (float)tower.ref.time_to_scrap), .y = 5}, WHITE);
+            const Vec2F scrap_bar_top_left = {.x = tower.ref.position.x - 15, .y = tower.ref.position.y + 10};
+            render_rectangle(scrap_bar_top_left, {.x = 30, .y = 5}, BLACK, false);
+            render_rectangle(scrap_bar_top_left,
+                             {.x = 30 * ((float)tower.ref.scrap_time / (float)tower.ref.time_to_scrap), .y = 5}, WHITE,
+                             false);
 
             render_text("Scrapping..", tower.ref.position + Vec2F{0, 20}, 12, BLACK);
         } else {

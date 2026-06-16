@@ -148,7 +148,7 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
     for (const Slot<Spawner>& spawner : spawners.data) {
         if (!spawner.alive) continue;
 
-        render_rectangle(spawner.ref.position, {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}, BLACK, true);
+        render_rectangle(spawner.ref.position, {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}, BLACK, true, true);
         render_text("Spawner", spawner.ref.position, 12, BLACK);
 
         std::string state_text;

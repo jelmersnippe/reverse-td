@@ -61,20 +61,20 @@ void DrawUi(GameState& state) {
     // TOWER COST UI
     const Vec2F tower_center = Vec2F{.x = SCREEN_CENTER.x, .y = SCREEN_HEIGHT - 50};
 
-    render_rectangle(tower_center, {.x = TOWER_SIZE, .y = TOWER_SIZE}, BLACK, true);
+    render_rectangle(tower_center, {.x = TOWER_SIZE, .y = TOWER_SIZE}, BLACK, true, true);
     DrawCircle(tower_center.x, tower_center.y, TOWER_SIZE * 0.15, BLUE);
 
     render_text("Tower", tower_center, 12, BLACK);
     Color cost_color = BLACK;
     if (state.currency < 10) cost_color = RED;
-    render_text("10 [RMB]", tower_center + Vec2F{.x = 0, .y = 8}, 12, cost_color);
+    render_text("10 [RMB]", tower_center + Vec2F{.x = 0, .y = 15}, 12, cost_color);
 
     // INFO AT TOP
     const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
     render_text(difficulty_text, {.x = SCREEN_CENTER.x, .y = 40}, 20, BLACK);
 
     const std::string currency_text = std::format("Currency: {}", state.currency);
-    render_text(currency_text, {.x = SCREEN_CENTER.x, .y = 30}, 20, BLACK);
+    render_text(currency_text, {.x = SCREEN_CENTER.x, .y = 70}, 20, BLACK);
 
     // POINTER TO SPAWNER
     Player* player = GetEntity(state.players, state.active_player);

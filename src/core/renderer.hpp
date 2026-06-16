@@ -38,8 +38,8 @@ inline void render_sprite(SpriteInfo info, Vec2F center, Vec2F size, float angle
     DrawTexturePro(sprite, source, dest, origin, angle, color);
 }
 
-inline void render_rectangle(Vec2F center, Vec2F size, Color color, bool outline_only = false) {
-    Vec2F top_left = center - size * 0.5f;
+inline void render_rectangle(Vec2F position, Vec2F size, Color color, bool centered = true, bool outline_only = false) {
+    Vec2F top_left = centered ? position - size * 0.5f : position;
     if (outline_only) {
         DrawRectangleLines(top_left.x, top_left.y, size.x, size.y, color);
     } else {
