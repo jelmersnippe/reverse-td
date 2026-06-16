@@ -59,7 +59,7 @@ void attack_melee(Enemy& enemy, Targetable& target, GameState& state) {
     // Out of range -> keep moving
     if (enemy.time_since_last_attack < enemy.attack_cooldown) return;
 
-    apply_damage(state, target, enemy.damage);
+    apply_damage(state, target, enemy.damage, enemy.position.direction_to(target.position));
     enemy.time_since_last_attack = 0;
 }
 
@@ -215,6 +215,8 @@ void UpdateEnemies(GameState& state) {
         }
 
         enemy.position += velocity * delta_time;
+
+        enemy.particles.update(delta_time);
     }
 }
 
@@ -257,5 +259,7 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
                 break;
         }
         render_text(state_text, enemy.ref.position, 12, BLACK);
+
+        enemy.ref.particles.draw();
     }
 }

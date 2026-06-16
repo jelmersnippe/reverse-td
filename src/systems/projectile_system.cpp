@@ -1,6 +1,5 @@
 #include "projectile_system.hpp"
 
-#include "core/asset_manager.hpp"
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "core/renderer.hpp"
@@ -29,8 +28,8 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_ENEMY, .handle = enemy.handle, .position = {}};
-            apply_damage(state, target, projectile.damage);
+            Targetable target = {.flags = TARGET_ENEMY, .handle = enemy.handle, .position = enemy.ref.position};
+            apply_damage(state, target, projectile.damage, projectile.position.direction_to(target.position));
 
             return true;
         }
@@ -47,8 +46,8 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_SPAWNER, .handle = spawner.handle, .position = {}};
-            apply_damage(state, target, projectile.damage);
+            Targetable target = {.flags = TARGET_SPAWNER, .handle = spawner.handle, .position = spawner.ref.position};
+            apply_damage(state, target, projectile.damage, projectile.position.direction_to(target.position));
 
             return true;
         }
@@ -65,8 +64,8 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_TOWER, .handle = tower.handle, .position = {}};
-            apply_damage(state, target, projectile.damage);
+            Targetable target = {.flags = TARGET_TOWER, .handle = tower.handle, .position = tower.ref.position};
+            apply_damage(state, target, projectile.damage, projectile.position.direction_to(target.position));
 
             return true;
         }
@@ -83,8 +82,8 @@ bool Update(Projectile& projectile, GameState& state) {
 
             if (!hit) continue;
 
-            Targetable target = {.flags = TARGET_PLAYER, .handle = player.handle, .position = {}};
-            apply_damage(state, target, projectile.damage);
+            Targetable target = {.flags = TARGET_PLAYER, .handle = player.handle, .position = player.ref.position};
+            apply_damage(state, target, projectile.damage, projectile.position.direction_to(target.position));
 
             return true;
         }

@@ -4,8 +4,10 @@
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "core/renderer.hpp"
+#include "core/sound.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "raylib.h"
 #include "systems/targeting.hpp"
 #include <format>
 
@@ -44,6 +46,8 @@ void Update(Slot<Tower>& slot, GameState& state) {
                                          .damage = tower.damage,
                                          .flags = TARGET_ENEMY | TARGET_SPAWNER});
         tower.time_since_last_attack = 0;
+
+        play_sound("tower_shot");
     }
 }
 

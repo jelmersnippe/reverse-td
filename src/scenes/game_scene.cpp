@@ -1,5 +1,6 @@
 #include "scenes/game_scene.hpp"
 
+#include "blueprints/particles.hpp"
 #include "core/camera.hpp"
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
@@ -7,6 +8,7 @@
 #include "core/particles.hpp"
 #include "core/random.hpp"
 #include "core/renderer.hpp"
+#include "core/sound.hpp"
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
@@ -26,35 +28,6 @@
 #include <format>
 
 namespace {
-
-const ParticleTemplate MUZZLE_SMOKE_PARTICLE = ParticleTemplate({
-    .speed = {.start = {.min = 60, .max = 80}, .end = {.min = 5, .max = 20}},
-    .size = {.start = {.min = 2, .max = 4}, .end = {.min = 0, .max = 1}},
-    .color = {.start = WHITE, .end = Color(255, 255, 255, 0)},
-    .lifetime = {.min = 0.1f, .max = 0.3f},
-});
-Emitter MUZZLE_SMOKE_EMITTER = Emitter{.position = {.x = 0, .y = 0},
-                                       .direction = {.x = 0, .y = 0},
-                                       .spread = 40,
-                                       .particle_template = MUZZLE_SMOKE_PARTICLE,
-                                       .rate = 0,
-                                       .duration = 0,
-                                       .burst = 30};
-
-ParticleTemplate MUZZLE_FLASH_PARTICLE = ParticleTemplate({
-    .display = {.type = ParticleDisplayType::Sprite, .sprite_info = {"muzzle_flash", {.x = 16, .y = 16}}},
-    .speed = {.start = {.min = 0, .max = 0}, .end = {.min = 0, .max = 0}},
-    .size = {.start = {.min = 32, .max = 32}, .end = {.min = 32, .max = 32}},
-    .color = {.start = WHITE, .end = WHITE},
-    .lifetime = {.min = 0.03f, .max = 0.08f},
-});
-Emitter MUZZLE_FLASH_EMITTER = Emitter{.position = {.x = 0, .y = 0},
-                                       .direction = {.x = 0, .y = 0},
-                                       .spread = 5,
-                                       .particle_template = MUZZLE_FLASH_PARTICLE,
-                                       .rate = 0,
-                                       .duration = 0,
-                                       .burst = 1};
 
 ParticleSystem particles{};
 
@@ -202,7 +175,7 @@ void UpdateInputs(GameState& state) {
             auto barrel_end_pos = active_player->position + (direction * 30);
             CreateEntity(state.projectiles, Projectile{.direction = direction,
                                                        .position = barrel_end_pos,
-                                                       .life_time = 2.0,
+                                                       .life_time = 1.0,
                                                        .damage = active_player->damage,
                                                        .flags = TARGET_SPAWNER | TARGET_ENEMY});
             active_player->time_since_last_shot = 0;
@@ -213,11 +186,11 @@ void UpdateInputs(GameState& state) {
             MUZZLE_FLASH_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
             particles.play(MUZZLE_FLASH_EMITTER);
 
-            // MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
-            // MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
-            // particles.play(MUZZLE_SMOKE_EMITTER);
+            MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
+            MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
+            particles.play(MUZZLE_SMOKE_EMITTER);
 
-            PlaySound(get_sound("pistol"));
+            play_sound("pistol");
         }
     }
 

@@ -52,7 +52,7 @@ struct GameState {
     }
 };
 
-void apply_damage(GameState& state, Targetable& target, int amount);
+void apply_damage(GameState& state, Targetable& target, int amount, Vec2F direction);
 
 struct CollisionResult {
     bool collided = false;

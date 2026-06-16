@@ -1,7 +1,10 @@
 #include "game_state.hpp"
 
+#include "blueprints/particles.hpp"
 #include "core/entity_pool.hpp"
+#include "core/particles.hpp"
 #include "core/random.hpp"
+#include "core/sound.hpp"
 #include "entities/enemy.hpp"
 #include "entities/pickup.hpp"
 #include "entities/spawner.hpp"
@@ -57,8 +60,10 @@ void kill_entity(GameState& state, Targetable& target) {
     }
 }
 
-void apply_damage(GameState& state, Targetable& target, int amount) {
+void apply_damage(GameState& state, Targetable& target, int amount, Vec2F direction) {
     Health* health = nullptr;
+    HIT_EMITTER.direction = direction;
+
     switch (target.flags) {
         case TARGET_ENEMY: {
             Enemy* enemy = GetEntity(state.enemies, target.handle);
@@ -77,6 +82,9 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
             enemy->state = EnemyState::Seek;
             enemy->home = EntityHandle{};
             enemy->hit_flash_remaining = 0.1f;
+
+            HIT_EMITTER.position = enemy->position;
+            enemy->particles.play(HIT_EMITTER);
             break;
         }
         case TARGET_SPAWNER: {
@@ -89,6 +97,9 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
 
             spawner->state = SpawnerState::UnderAttack;
             spawner->time_since_last_damage_taken = 0;
+
+            HIT_EMITTER.position = spawner->position;
+            spawner->particles.play(HIT_EMITTER);
             break;
         }
         case TARGET_PLAYER: {
@@ -97,6 +108,7 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
 
             health = &player->health;
             player->time_since_last_damage_taken = 0;
+            play_sound("player_damage");
             break;
         }
         case TARGET_TOWER: {

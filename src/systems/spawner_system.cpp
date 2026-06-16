@@ -134,6 +134,8 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
             enemy->home = EntityHandle{};
         }
     }
+
+    spawner.particles.update(delta_time);
 }
 
 void UpdateSpawners(GameState& state) {
@@ -171,5 +173,7 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
         }
 
         DrawHealth(spawner.ref.position - Vec2F{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
+
+        spawner.ref.particles.draw();
     }
 }
