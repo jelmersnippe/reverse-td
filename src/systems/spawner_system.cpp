@@ -10,6 +10,7 @@
 #include "systems/threat_director.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
 
@@ -42,7 +43,7 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
     int max_spawn = spawner.max_spawn;
     if (spawner.state == SpawnerState::UnderAttack) {
         spawn_count += 1;
-        max_spawn = max_spawn * 0.5;
+        max_spawn = std::floor(max_spawn * 0.5);
     }
 
     const int limited_count = std::min(max_spawn - active_count, spawn_count);
@@ -99,13 +100,13 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     }
 
     for (const size_t index : active_entities_to_remove) {
-        spawner.active_enemies.erase(spawner.active_enemies.begin() + index);
+        spawner.active_enemies.erase(spawner.active_enemies.begin() + (int)index);
     }
 
     if (spawner.state == SpawnerState::Rallying) {
         // Max enemies and all rallied
         const bool max_enemies_rallied =
-            resolved_enemies.size() == spawner.max_spawn &&
+            (int)resolved_enemies.size() == spawner.max_spawn &&
             std::ranges::all_of(resolved_enemies, [](Enemy* enemy) { return enemy->rallied; });
 
         for (Enemy* enemy : resolved_enemies) {
@@ -148,8 +149,7 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
         if (!spawner.alive) continue;
 
         render_rectangle(spawner.ref.position, {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}, BLACK, true);
-        const int text_width = MeasureText("Spawner", 12);
-        DrawText("Spawner", spawner.ref.position.x - text_width / 2, spawner.ref.position.y, 12, BLACK);
+        render_text("Spawner", spawner.ref.position, 12, BLACK);
 
         std::string state_text;
         switch (spawner.ref.state) {
@@ -163,10 +163,10 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
                 state_text = "Idle";
                 break;
         }
-        DrawText(state_text.c_str(), spawner.ref.position.x - text_width / 2, spawner.ref.position.y + 20, 12, BLACK);
+        render_text(state_text, spawner.ref.position + Vec2F{.x = 0, .y = 20}, 12, BLACK);
 
         if (spawner.ref.state == SpawnerState::Rallying) {
-            DrawCircle(spawner.ref.rally_position.x, spawner.ref.rally_position.y, 5, BLACK);
+            render_circle(spawner.ref.position, 5, BLACK);
             // DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
         }
 

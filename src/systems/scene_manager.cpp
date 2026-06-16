@@ -1,4 +1,5 @@
 #include "systems/scene_manager.hpp"
+#include "raylib.h"
 #include <cassert>
 
 void SceneManager::SetScene(GameState& state, const Scene& scene) {

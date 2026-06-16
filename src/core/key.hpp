@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 
@@ -142,12 +143,14 @@ inline constexpr std::array<const char*, (std::size_t)Mouse::COUNT> MouseNames =
 
 inline const char* key_to_string(Key k) {
     auto i = (size_t)k;
-    if (i >= KeyNames.size()) return "Invalid";
+    assert(i < KeyNames.size() && "key_to_string key out of range");
+
     return KeyNames[i];
 }
 
 inline const char* mouse_to_string(Mouse m) {
     auto i = (size_t)m;
-    if (i >= MouseNames.size()) "Invalid";
+    assert(i < MouseNames.size() && "mouse_to_string mouse out of range");
+
     return MouseNames[i];
 }

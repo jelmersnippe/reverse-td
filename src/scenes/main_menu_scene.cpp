@@ -2,9 +2,9 @@
 #include "core/gui.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "raylib.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/particle_scene.hpp"
-#include "scenes/test_scene.hpp"
 #include "scenes/ui_scene.hpp"
 #include "systems/scene_manager.hpp"
 
@@ -35,9 +35,6 @@ void Update(GameState& state) {
     if (ui.begin_button("btn_start", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
     ui.text("txt_start", "Start", BUTTONTEXT_STYLE);
     ui.end_button();
-    if (ui.begin_button("btn_test", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, TEST_SCENE);
-    ui.text("txt_test", "Test", BUTTONTEXT_STYLE);
-    ui.end_button();
     if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
     ui.text("txt_ui", "Ui", BUTTONTEXT_STYLE);
     ui.end_button();
@@ -52,7 +49,7 @@ void Update(GameState& state) {
     ui.end_ui();
 }
 
-void Draw(GameState& state) {
+void Draw(GameState&) {
     ClearBackground(GRAY);
 
     ui.draw();

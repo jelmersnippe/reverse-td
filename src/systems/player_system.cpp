@@ -1,9 +1,9 @@
 #include "player_system.hpp"
 
+#include "core/camera.hpp"
 #include "core/renderer.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include <cmath>
 
 void Update(Player& player, GameState& state) {
     const float delta_time = GetFrameTime();
@@ -74,7 +74,7 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
     for (const Slot<Player>& player : players.data) {
         if (!player.alive) continue;
 
-        const Vector2 mouse_position = GetScreenToWorld2D(GetMousePosition(), camera);
+        const Vec2F mouse_position = get_mouse_world_position(camera);
         float mouse_angle = player.ref.position.angle_to(Vec2F{.x = mouse_position.x, .y = mouse_position.y});
         bool flipped = mouse_angle > 90 || mouse_angle < -90;
 
@@ -96,8 +96,7 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         DrawHealth(health_position, player.ref.health);
 
         if (player.ref.regenerating) {
-            const int text_width = MeasureText("Regenerating", 10);
-            DrawText("Regenerating", health_position.x - text_width / 2, health_position.y - 10, 10, BLACK);
+            render_text("Regenerating", health_position - Vec2F{.x = 0, .y = -5}, 10, BLACK);
         }
     }
 }

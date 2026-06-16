@@ -2,6 +2,7 @@
 #include "core/data.hpp"
 #include "core/input.hpp"
 #include "core/key.hpp"
+#include "raylib.h"
 #include <algorithm>
 #include <cassert>
 #include <unordered_map>

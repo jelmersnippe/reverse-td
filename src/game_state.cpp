@@ -1,4 +1,3 @@
-#include "game_state.hpp"
 #include "core/entity_pool.hpp"
 #include "core/random.hpp"
 #include "entities/enemy.hpp"
@@ -114,7 +113,7 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
 }
 
 // Checks against all towers and spawners
-CollisionResult check_player_collision(GameState& state, Vector2 position) {
+CollisionResult check_player_collision(GameState& state, Vec2F position) {
     const Rectangle player_rect = {.x = position.x - PLAYER_SIZE / 2,
                                    .y = position.y - PLAYER_SIZE / 2,
                                    .width = PLAYER_SIZE,

@@ -3,6 +3,7 @@
 #include "core/asset_manager.hpp"
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
+#include "core/renderer.hpp"
 #include "entities/projectile.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
@@ -107,26 +108,19 @@ void DrawProjectiles(const EntityPool<Projectile>& projectiles) {
     for (const Slot<Projectile>& projectile : projectiles.data) {
         if (!projectile.alive) continue;
 
-        Texture2D sprite;
+        std::string sprite_name;
         float scale = 2;
         switch (projectile.ref.type) {
             case ProjectileType::Enemy:
-                sprite = get_sprite("enemy_projectile");
+                sprite_name = "enemy_projectile";
                 break;
             case ProjectileType::Player:
-                sprite = get_sprite("player_projectile");
+                sprite_name = "player_projectile";
                 scale = 4;
                 break;
         }
 
-        Rectangle source = {.x = 0, .y = 0, .width = (float)sprite.width, .height = (float)sprite.height};
-        Rectangle dest = {.x = projectile.ref.position.x,
-                          .y = projectile.ref.position.y,
-                          .width = sprite.width * scale,
-                          .height = sprite.height * scale};
-        Vector2 origin = {.x = dest.width * 0.5f, .y = dest.height * 0.5f};
-
-        DrawTexturePro(sprite, source, dest, origin,
-                       atan2f(projectile.ref.direction.y, projectile.ref.direction.x) * RAD2DEG, WHITE);
+        render_sprite(SpriteInfo(sprite_name, {16, 16}), projectile.ref.position, {.x = 16 * scale, .y = 16 * scale},
+                      projectile.ref.direction.angle());
     }
 }

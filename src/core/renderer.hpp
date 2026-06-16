@@ -50,3 +50,14 @@ inline void render_rectangle(Vec2F center, Vec2F size, Color color, bool outline
 inline void render_triangle(Vec2F point_a, Vec2F point_b, Vec2F point_c, Color color) {
     DrawTriangle(point_a.to_raylib(), point_b.to_raylib(), point_c.to_raylib(), color);
 }
+
+inline void render_circle(Vec2F center, float radius, Color color) {
+    DrawCircle(center.x, center.y, radius, color);
+}
+
+inline void render_text(std::string text, Vec2F center, int font_size, Color color) {
+    const int text_width = MeasureText(text.c_str(), font_size);
+    const Vec2F top_left = center - Vec2F{.x = text_width * 0.5f, .y = font_size * 0.5f};
+
+    DrawText(text.c_str(), top_left.x, top_left.y, font_size, color);
+}

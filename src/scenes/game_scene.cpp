@@ -19,6 +19,7 @@
 #include "systems/spawner_system.hpp"
 #include "systems/targeting.hpp"
 
+#include "raylib.h"
 #include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
 #include <algorithm>
@@ -59,32 +60,27 @@ ParticleSystem particles{};
 void DrawUi(GameState& state) {
     // TOWER COST UI
     const Vec2F tower_center = Vec2F{.x = SCREEN_CENTER.x, .y = SCREEN_HEIGHT - 50};
-    const Vec2F tower_top_left = tower_center - Vec2F{.x = TOWER_SIZE / 4, .y = TOWER_SIZE / 4};
 
     render_rectangle(tower_center, {.x = TOWER_SIZE, .y = TOWER_SIZE}, BLACK, true);
     DrawCircle(tower_center.x, tower_center.y, TOWER_SIZE * 0.15, BLUE);
 
-    const int tower_text_width = MeasureText("Tower", 12);
-    const int cost_text_width = MeasureText("10 [RMB]", 12);
-    DrawText("Tower", tower_center.x - tower_text_width / 2, tower_top_left.y - 12, 12, BLACK);
+    render_text("Tower", tower_center, 12, BLACK);
     Color cost_color = BLACK;
     if (state.currency < 10) cost_color = RED;
-    DrawText("10 [RMB]", SCREEN_CENTER.x - cost_text_width / 2, tower_top_left.y + TOWER_SIZE / 2 + 8, 12, cost_color);
+    render_text("10 [RMB]", tower_center + Vec2F{.x = 0, .y = 8}, 12, cost_color);
 
     // INFO AT TOP
     const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
-    const int difficulty_text_width = MeasureText(difficulty_text.c_str(), 20);
-    DrawText(difficulty_text.c_str(), SCREEN_WIDTH / 2 - difficulty_text_width / 2, 30, 20, BLACK);
+    render_text(difficulty_text, {.x = SCREEN_CENTER.x, .y = 40}, 20, BLACK);
 
     const std::string currency_text = std::format("Currency: {}", state.currency);
-    const int currency_text_width = MeasureText(currency_text.c_str(), 20);
-    DrawText(currency_text.c_str(), SCREEN_WIDTH / 2 - currency_text_width / 2, 60, 20, BLACK);
+    render_text(currency_text, {.x = SCREEN_CENTER.x, .y = 30}, 20, BLACK);
 
     // POINTER TO SPAWNER
     Player* player = GetEntity(state.players, state.active_player);
     if (player != nullptr) {
-        std::optional<Targetable> closest_spawner =
-            find_closest_target(Vec2F{state.camera.target.x, state.camera.target.y}, state.targetables, TARGET_SPAWNER);
+        std::optional<Targetable> closest_spawner = find_closest_target(
+            Vec2F{.x = state.camera.target.x, .y = state.camera.target.y}, state.targetables, TARGET_SPAWNER);
 
         if (closest_spawner.has_value() &&
             !collision_point_rect(
@@ -228,8 +224,10 @@ void UpdateInputs(GameState& state) {
 }
 void Update(GameState& state) {
     Player* active_player = GetEntity(state.players, state.active_player);
-    if (active_player != nullptr)
-        state.camera.target = Vector2{.x = active_player->position.x, .y = active_player->position.y};
+    if (active_player != nullptr) {
+        state.camera.target.x = active_player->position.x;
+        state.camera.target.y = active_player->position.y;
+    }
 
     state.targetables = build_targetables(state);
 
@@ -249,8 +247,8 @@ void Destroy(GameState& state) {
 }
 
 struct InitialSpawnerPlacement {
-    Vector2 min_distance;
-    Vector2 max_distance;
+    Vec2F min_distance;
+    Vec2F max_distance;
     int count;
     int initial_enemy_spawn_count;
 };
@@ -291,7 +289,8 @@ void Init(GameState& state) {
 
     Player player = {.position = SCREEN_CENTER};
     state.active_player = CreateEntity(state.players, player);
-    state.camera.target = Vector2{.x = player.position.x, .y = player.position.y};
+    state.camera.target.x = player.position.x;
+    state.camera.target.y = player.position.y;
 }
 
 } // namespace

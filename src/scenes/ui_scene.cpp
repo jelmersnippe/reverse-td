@@ -249,7 +249,7 @@ void horizontal_layout3() {
     // END - GREEN
 }
 
-void Update(GameState& state) {
+void Update(GameState&) {
     ui.begin_ui();
 
     // START - RED
@@ -275,7 +275,7 @@ void Update(GameState& state) {
     ui.end_ui();
 }
 
-void Draw(GameState& state) {
+void Draw(GameState&) {
     ClearBackground(GRAY);
 
     ui.draw();

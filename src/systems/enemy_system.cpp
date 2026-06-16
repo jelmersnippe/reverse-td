@@ -49,7 +49,7 @@ Vec2F get_separation_direction(Enemy& enemy, Targetable& target, GameState& stat
     return (seek + separation).normalized();
 }
 
-Vec2F get_simple_follow_direction(Enemy& enemy, Targetable& target, GameState& state) {
+Vec2F get_simple_follow_direction(Enemy& enemy, Targetable& target, GameState&) {
     return enemy.position.direction_to(target.position).normalized();
 }
 
@@ -238,6 +238,6 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
                 state_text = "Wander";
                 break;
         }
-        DrawText(state_text.c_str(), enemy.ref.position.x, enemy.ref.position.y, 12, BLACK);
+        render_text(state_text, enemy.ref.position, 12, BLACK);
     }
 }

@@ -5,6 +5,7 @@
 #include "core/input.hpp"
 #include "core/particles.hpp"
 #include "format"
+#include "raylib.h"
 #include <climits>
 
 namespace {
@@ -202,7 +203,7 @@ void update_ui() {
     ui.end_ui();
 }
 
-void Update(GameState& state) {
+void Update(GameState&) {
     update_ui();
 
     if (input_frame.is_mouse_pressed(Mouse::Left)) {
@@ -214,7 +215,7 @@ void Update(GameState& state) {
     particle_system.update(GetFrameTime());
 }
 
-void Draw(GameState& state) {
+void Draw(GameState&) {
     ClearBackground(GRAY);
 
     particle_system.draw();

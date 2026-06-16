@@ -132,6 +132,8 @@ struct Vec2F {
         return atan2f(direction.y, direction.x) * RAD2DEG;
     }
 
+    float angle() const { return atan2f(this->y, this->x) * RAD2DEG; }
+
     Vec2F rotate_to(float angle) const {
         const float rad = angle * DEG2RAD;
         return {.x = cosf(rad) * this->x - sinf(rad) * this->y, .y = sinf(rad) * this->x + cosf(rad) * this->y};
