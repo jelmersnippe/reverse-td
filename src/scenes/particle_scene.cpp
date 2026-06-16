@@ -192,8 +192,7 @@ void update_ui() {
         ui_number_variable("lifetime max", PARTICLE_TEMPLATE.lifetime.max,
                            {.min = PARTICLE_TEMPLATE.lifetime.min, .max = MAXFLOAT}, 0.1f);
 
-        ui_number_variable("gravity x", PARTICLE_TEMPLATE.gravity.x, {.min = -MAXFLOAT, .max = MAXFLOAT});
-        ui_number_variable("gravity y", PARTICLE_TEMPLATE.gravity.y, {.min = -MAXFLOAT, .max = MAXFLOAT});
+        ui_number_variable("rotation", PARTICLE_TEMPLATE.rotation, {.min = -360, .max = 360});
     }
 
     ui.end_layout();

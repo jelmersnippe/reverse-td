@@ -12,11 +12,12 @@ struct FlipInfo {
 };
 
 struct SpriteInfo {
-    std::string name;
-    Vec2 size;
+    std::string name = "";
+    Vec2 size = {};
     int frame = 0;
     FlipInfo should_flip;
 
+    SpriteInfo() = default;
     SpriteInfo(std::string name, Vec2 size, int frame = 0, FlipInfo should_flip = {.x = false, .y = false})
         : name(std::move(name)), size(size), frame(frame), should_flip(should_flip) {}
 };

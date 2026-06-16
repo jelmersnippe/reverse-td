@@ -41,19 +41,20 @@ Emitter MUZZLE_SMOKE_EMITTER = Emitter{.position = {.x = 0, .y = 0},
                                        .duration = 0,
                                        .burst = 30};
 
-const ParticleTemplate MUZZLE_FLASH_PARTICLE = ParticleTemplate({
-    .speed = {.start = {.min = 150, .max = 300}, .end = {.min = 50, .max = 100}},
-    .size = {.start = {.min = 14, .max = 20}, .end = {.min = 0, .max = 2}},
-    .color = {.start = Color(255, 255, 180, 255), .end = Color(255, 100, 20, 0)},
+ParticleTemplate MUZZLE_FLASH_PARTICLE = ParticleTemplate({
+    .display = {.type = ParticleDisplayType::Sprite, .sprite_info = {"muzzle_flash", {.x = 16, .y = 16}}},
+    .speed = {.start = {.min = 0, .max = 0}, .end = {.min = 0, .max = 0}},
+    .size = {.start = {.min = 32, .max = 32}, .end = {.min = 32, .max = 32}},
+    .color = {.start = WHITE, .end = WHITE},
     .lifetime = {.min = 0.03f, .max = 0.08f},
 });
 Emitter MUZZLE_FLASH_EMITTER = Emitter{.position = {.x = 0, .y = 0},
                                        .direction = {.x = 0, .y = 0},
-                                       .spread = 20,
+                                       .spread = 5,
                                        .particle_template = MUZZLE_FLASH_PARTICLE,
                                        .rate = 0,
                                        .duration = 0,
-                                       .burst = 10};
+                                       .burst = 1};
 
 ParticleSystem particles{};
 
@@ -206,13 +207,15 @@ void UpdateInputs(GameState& state) {
                                                        .flags = TARGET_SPAWNER | TARGET_ENEMY});
             active_player->time_since_last_shot = 0;
 
+            MUZZLE_FLASH_PARTICLE.rotation = direction.angle();
+            MUZZLE_FLASH_PARTICLE.display.sprite_info.frame = random_int(0, 3);
+            MUZZLE_FLASH_EMITTER.particle_template = MUZZLE_FLASH_PARTICLE;
             MUZZLE_FLASH_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
-            MUZZLE_FLASH_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
             particles.play(MUZZLE_FLASH_EMITTER);
 
-            MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
-            MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
-            particles.play(MUZZLE_SMOKE_EMITTER);
+            // MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
+            // MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
+            // particles.play(MUZZLE_SMOKE_EMITTER);
 
             PlaySound(get_sound("pistol"));
         }

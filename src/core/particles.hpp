@@ -4,9 +4,12 @@
 #include "core/entity_pool.hpp"
 #include "core/random.hpp"
 #include "core/renderer.hpp"
+#include "raylib.h"
 
 #include <algorithm>
+#include <iostream>
 #include <numbers>
+#include <utility>
 
 template <typename T> struct Range {
     T min;
@@ -24,25 +27,37 @@ template <typename T> struct ChangeOverLifetime {
     T end;
 };
 
+enum class ParticleDisplayType {
+    Sprite,
+    Rectangle,
+    Circle
+};
+struct ParticleDisplay {
+    ParticleDisplayType type;
+    SpriteInfo sprite_info = {};
+};
+
 struct ParticleTemplate {
+    ParticleDisplay display = {.type = ParticleDisplayType::Rectangle};
     ChangeOverLifetime<Range<float>> speed;
     ChangeOverLifetime<Range<float>> size;
     ChangeOverLifetime<Color> color;
     Range<float> lifetime;
-    Vec2F gravity = {.x = 0, .y = 0};
+    float rotation = 0;
 };
 
 struct Particle {
-    Particle(Vec2F position, Vec2F direction, Vec2F gravity, ChangeOverLifetime<float> speed,
+    Particle(ParticleDisplay display, Vec2F position, Vec2F direction, float rotation, ChangeOverLifetime<float> speed,
              ChangeOverLifetime<float> size, ChangeOverLifetime<Color> color, float lifetime)
-        : position(position), velocity(direction * speed.start), gravity(gravity), speed_config(speed),
-          speed(speed_config.start), size_config(size), size(size_config.start), color_config(color),
-          color(color_config.start), lifetime(lifetime) {}
+        : display(std::move(display)), position(position), velocity(direction * speed.start), rotation(rotation),
+          speed_config(speed), speed(speed_config.start), size_config(size), size(size_config.start),
+          color_config(color), color(color_config.start), lifetime(lifetime) {}
+
+    ParticleDisplay display;
 
     Vec2F position;
     Vec2F velocity;
-
-    Vec2F gravity;
+    float rotation;
 
     ChangeOverLifetime<float> speed_config;
     float speed;
@@ -58,7 +73,6 @@ struct Particle {
 
     void update(const float delta_time) {
         age += delta_time;
-        velocity += gravity * delta_time;
 
         const float t = std::ranges::clamp(age / lifetime, 0.0f, 1.0f);
 
@@ -126,7 +140,7 @@ struct Emitter {
         float lifetime = particle_template.lifetime.get_random();
 
         float base_angle = std::atan2(direction.y, direction.x);
-        float spread_rad = spread * ((float)std::numbers::pi / 180.0f);
+        float spread_rad = spread * DEG2RAD;
         float angle_offset = random_float(-spread_rad, spread_rad);
         float angle = base_angle + angle_offset;
 
@@ -151,8 +165,8 @@ struct Emitter {
             }
         }
 
-        CreateEntity(pool,
-                     Particle(particle_pos, dir, {.x = 0, .y = 0}, speed, size, particle_template.color, lifetime));
+        CreateEntity(pool, Particle(particle_template.display, particle_pos, dir, particle_template.rotation, speed,
+                                    size, particle_template.color, lifetime));
     }
 };
 
@@ -190,7 +204,18 @@ struct ParticleSystem {
 
             const Particle& particle = slot.ref;
 
-            render_rectangle(particle.position, {.x = particle.size, .y = particle.size}, particle.color);
+            switch (particle.display.type) {
+                case ParticleDisplayType::Sprite:
+                    render_sprite(particle.display.sprite_info, particle.position,
+                                  {.x = particle.size, .y = particle.size}, particle.rotation, particle.color);
+                    break;
+                case ParticleDisplayType::Rectangle:
+                    render_rectangle(particle.position, {.x = particle.size, .y = particle.size}, particle.color);
+                    break;
+                case ParticleDisplayType::Circle:
+                    render_circle(particle.position, particle.size, particle.color);
+                    break;
+            }
         }
     }
 };
