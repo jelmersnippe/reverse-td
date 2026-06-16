@@ -126,92 +126,108 @@ void UpdateEnemies(GameState& state) {
         if (enemy.hit_flash_remaining > 0.0f) enemy.hit_flash_remaining -= delta_time;
         Vec2F velocity = {};
 
-        switch (enemy.state) {
-            case EnemyState::Wander: {
-                Spawner* home = GetEntity(state.spawners, enemy.home);
+        if (enemy.knockback.active) {
+            enemy.knockback.time_active += delta_time;
 
-                if (enemy.position.distance_to(target->position) < enemy.aggro_range) {
-                    enemy.state = EnemyState::Seek;
-                    if (home != nullptr) home->state = SpawnerState::UnderAttack;
-                    break;
-                }
-
-                Vec2F wander_center = enemy.position;
-
-                // TODO: If no home -> attempt a seek every x seconds
-                if (home != nullptr) wander_center = home->position;
-
-                velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
-                           (enemy.speed * WANDER_SPEED_MODIFIER);
-
-                break;
+            if (enemy.knockback.decays_over_time) {
+                velocity = enemy.knockback.direction *
+                           (1 - (enemy.knockback.time_active / enemy.knockback.recovery_time)) *
+                           enemy.knockback.strength;
+            } else {
+                velocity = enemy.knockback.direction * enemy.knockback.strength;
             }
-            case EnemyState::Rally: {
-                Spawner* home = GetEntity(state.spawners, enemy.home);
-                if (home == nullptr) {
-                    enemy.state = EnemyState::Seek;
+
+            if (enemy.knockback.time_active >= enemy.knockback.recovery_time) enemy.knockback.active = false;
+        } else {
+            switch (enemy.state) {
+                case EnemyState::Wander: {
+                    Spawner* home = GetEntity(state.spawners, enemy.home);
+
+                    if (enemy.position.distance_to(target->position) < enemy.aggro_range) {
+                        enemy.state = EnemyState::Seek;
+                        if (home != nullptr) home->state = SpawnerState::UnderAttack;
+                        break;
+                    }
+
+                    Vec2F wander_center = enemy.position;
+
+                    // TODO: If no home -> attempt a seek every x seconds
+                    if (home != nullptr) wander_center = home->position;
+
+                    velocity = get_wander_direction(enemy, wander_center, WANDER_RANGE, MIN_IDLE_TIME, MAX_IDLE_TIME) *
+                               (enemy.speed * WANDER_SPEED_MODIFIER);
+
                     break;
                 }
+                case EnemyState::Rally: {
+                    Spawner* home = GetEntity(state.spawners, enemy.home);
+                    if (home == nullptr) {
+                        enemy.state = EnemyState::Seek;
+                        break;
+                    }
 
-                if (enemy.position.distance_to(target->position) < enemy.aggro_range) {
-                    enemy.state = EnemyState::Seek;
-                    if (home != nullptr) home->state = SpawnerState::UnderAttack;
+                    if (enemy.position.distance_to(target->position) < enemy.aggro_range) {
+                        enemy.state = EnemyState::Seek;
+                        if (home != nullptr) home->state = SpawnerState::UnderAttack;
+                        break;
+                    }
+
+                    if (!enemy.rallied && enemy.position.distance_to(home->rally_position) < WANDER_AROUND_RALLY) {
+                        enemy.rallied = true;
+                        enemy.target_position = enemy.position;
+                        // Enforce immediate wander when they arrive
+                        enemy.remaining_idle_time = 0;
+                    }
+
+                    if (enemy.rallied) {
+                        velocity = get_wander_direction(enemy, home->rally_position, WANDER_AROUND_RALLY,
+                                                        MIN_RALLY_IDLE_TIME, MAX_RALLY_IDLE_TIME);
+                    } else {
+                        velocity = enemy.position.direction_to(home->rally_position).normalized();
+                    }
+
+                    velocity *= enemy.speed;
                     break;
                 }
+                case EnemyState::Seek: {
+                    if (!target.has_value()) {
+                        enemy.state = EnemyState::Wander;
+                        break;
+                    }
 
-                if (!enemy.rallied && enemy.position.distance_to(home->rally_position) < WANDER_AROUND_RALLY) {
-                    enemy.rallied = true;
-                    enemy.target_position = enemy.position;
-                    // Enforce immediate wander when they arrive
-                    enemy.remaining_idle_time = 0;
+                    enemy.target = target.value();
+
+                    velocity =
+                        seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state) *
+                        enemy.speed;
+
+                    // -5 so the enemy does not immediately flip back to seek next frame
+                    if (enemy.target->position.distance_to(enemy.position) < enemy.size * 2 + enemy.range - 5) {
+                        enemy.state = EnemyState::Attack;
+                    }
+                    break;
                 }
+                case EnemyState::Attack: {
+                    if (!target.has_value()) {
+                        enemy.state = EnemyState::Wander;
+                        break;
+                    }
 
-                if (enemy.rallied) {
-                    velocity = get_wander_direction(enemy, home->rally_position, WANDER_AROUND_RALLY,
-                                                    MIN_RALLY_IDLE_TIME, MAX_RALLY_IDLE_TIME);
-                } else {
-                    velocity = enemy.position.direction_to(home->rally_position).normalized();
+                    enemy.target = target.value();
+
+                    if (enemy.target->position.distance_to(enemy.position) > enemy.size * 2 + enemy.range) {
+                        enemy.state = EnemyState::Seek;
+                        break;
+                    }
+
+                    AttackBehaviorFn attack_behavior =
+                        attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
+                    if (attack_behavior != nullptr) attack_behavior(enemy, enemy.target.value(), state);
+                    break;
                 }
-
-                velocity *= enemy.speed;
-                break;
+                default:
+                    break;
             }
-            case EnemyState::Seek: {
-                if (!target.has_value()) {
-                    enemy.state = EnemyState::Wander;
-                    break;
-                }
-
-                enemy.target = target.value();
-
-                velocity = seek_behavior_table[static_cast<size_t>(enemy.seek_behavior)](enemy, target.value(), state) *
-                           enemy.speed;
-
-                // -5 so the enemy does not immediately flip back to seek next frame
-                if (enemy.target->position.distance_to(enemy.position) < enemy.size * 2 + enemy.range - 5) {
-                    enemy.state = EnemyState::Attack;
-                }
-                break;
-            }
-            case EnemyState::Attack: {
-                if (!target.has_value()) {
-                    enemy.state = EnemyState::Wander;
-                    break;
-                }
-
-                enemy.target = target.value();
-
-                if (enemy.target->position.distance_to(enemy.position) > enemy.size * 2 + enemy.range) {
-                    enemy.state = EnemyState::Seek;
-                    break;
-                }
-
-                AttackBehaviorFn attack_behavior = attack_behavior_table[static_cast<size_t>(enemy.attack_behavior)];
-                if (attack_behavior != nullptr) attack_behavior(enemy, enemy.target.value(), state);
-                break;
-            }
-            default:
-                break;
         }
 
         enemy.position += velocity * delta_time;

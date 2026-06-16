@@ -82,6 +82,12 @@ void apply_damage(GameState& state, Targetable& target, int amount, Vec2F direct
             enemy->state = EnemyState::Seek;
             enemy->home = EntityHandle{};
             enemy->hit_flash_remaining = 0.1f;
+            enemy->knockback = {.active = true,
+                                .decays_over_time = true,
+                                .direction = direction,
+                                .strength = 10,
+                                .recovery_time = 0.5f,
+                                .time_active = 0.0f};
 
             HIT_EMITTER.position = enemy->position;
             enemy->particles.play(HIT_EMITTER);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/entity_pool.hpp"
+#include "core/key.hpp"
 #include "core/particles.hpp"
 #include "globals.hpp"
 
@@ -29,6 +30,17 @@ enum class AttackBehavior : uint32_t {
     Count
 };
 
+struct Knockback {
+    bool active = false;
+    bool decays_over_time = false;
+
+    Vec2F direction;
+    float strength;
+
+    float recovery_time;
+    float time_active = 0;
+};
+
 struct Enemy {
     Color color = RED;
     EnemyState state = EnemyState::Wander;
@@ -36,6 +48,7 @@ struct Enemy {
     SeekBehavior seek_behavior = SeekBehavior::SimpleFollow;
     AttackBehavior attack_behavior = AttackBehavior::Melee;
     Vec2F position = {};
+    Knockback knockback = {};
     // Used for wander+rally
     Vec2F target_position = {};
     bool rallied = false;
