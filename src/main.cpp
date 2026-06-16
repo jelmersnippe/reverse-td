@@ -23,6 +23,7 @@ int main() {
 
     load_sprites();
     load_sounds();
+    load_shaders();
 
     KeyMaps::init();
 
@@ -49,6 +50,7 @@ int main() {
 
     unload_sounds();
     unload_sprites();
+    unload_shaders();
 
     CloseWindow();
 

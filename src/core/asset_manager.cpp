@@ -79,3 +79,36 @@ Sound get_sound(const std::string& sound_name) {
 
     return sound->second;
 }
+
+void load_shaders() {
+    const std::filesystem::path target_path{"res/shaders"};
+
+    try {
+        for (std::filesystem::directory_entry const& dir_entry : std::filesystem::directory_iterator{target_path}) {
+            if (!std::filesystem::is_regular_file(dir_entry.path())) { continue; }
+
+            const std::string shader_name = dir_entry.path().stem().string();
+
+            const Shader shader = LoadShader(nullptr, dir_entry.path().string().data());
+
+            std::cout << "Loaded shader: " << shader_name << std::endl;
+
+            shaders.insert(std::make_pair(shader_name, shader));
+        }
+    } catch (std::filesystem::filesystem_error const& ex) {
+        std::cout << "Error occured during file operation!\n" << ex.what() << std::endl;
+    }
+}
+
+void unload_shaders() {
+    for (const auto& [_, shader] : shaders) {
+        UnloadShader(shader);
+    }
+}
+
+Shader get_shader(const std::string& shader_name) {
+    const auto shader = shaders.find(shader_name);
+    assert(shader != nullptr && std::format("Could not find shader with name {}", shader_name).c_str());
+
+    return shader->second;
+}

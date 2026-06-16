@@ -76,6 +76,7 @@ void apply_damage(GameState& state, Targetable& target, int amount) {
 
             enemy->state = EnemyState::Seek;
             enemy->home = EntityHandle{};
+            enemy->hit_flash_remaining = 0.1f;
             break;
         }
         case TARGET_SPAWNER: {

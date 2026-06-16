@@ -42,6 +42,8 @@ struct Enemy {
     std::optional<Targetable> target = std::nullopt;
     Health health = Health(BASE_ENEMY_HEALTH);
 
+    float hit_flash_remaining = 0;
+
     float remaining_idle_time = 0;
 
     float speed = 100;

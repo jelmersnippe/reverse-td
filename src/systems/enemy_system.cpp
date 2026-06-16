@@ -1,6 +1,7 @@
 #include "enemy_system.hpp"
 
 #include "array"
+#include "core/asset_manager.hpp"
 #include "core/entity_pool.hpp"
 #include "core/random.hpp"
 #include "core/renderer.hpp"
@@ -9,6 +10,7 @@
 #include "entities/spawner.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "raylib.h"
 #include "systems/targeting.hpp"
 #include <optional>
 
@@ -121,6 +123,7 @@ void UpdateEnemies(GameState& state) {
         const float delta_time = GetFrameTime();
 
         enemy.time_since_last_attack += delta_time;
+        if (enemy.hit_flash_remaining > 0.0f) enemy.hit_flash_remaining -= delta_time;
         Vec2F velocity = {};
 
         switch (enemy.state) {
@@ -218,9 +221,24 @@ void UpdateEnemies(GameState& state) {
 void DrawEnemies(const EntityPool<Enemy>& enemies) {
     for (const Slot<Enemy>& enemy : enemies.data) {
         if (!enemy.alive) continue;
+        Shader flash_shader = get_shader("flash");
+        if (enemy.ref.hit_flash_remaining > 0) {
+            float flash_color[3] = {1.0f, 1.0f, 1.0f};
+            float flash_volume = 1.0f;
+
+            int volume_loc = GetShaderLocation(flash_shader, "volume");
+            int color_loc = GetShaderLocation(flash_shader, "color");
+
+            SetShaderValue(flash_shader, volume_loc, &flash_volume, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(flash_shader, color_loc, flash_color, SHADER_UNIFORM_VEC3);
+            BeginShaderMode(flash_shader);
+        }
 
         render_sprite(SpriteInfo("enemy", {.x = 16, .y = 16}), enemy.ref.position,
                       {.x = enemy.ref.size, .y = enemy.ref.size}, 0, enemy.ref.color);
+
+        if (enemy.ref.hit_flash_remaining > 0) EndShaderMode();
+
         DrawHealth(enemy.ref.position - Vec2F{.x = 0, .y = enemy.ref.size + 20}, enemy.ref.health);
 
         std::string state_text;
