@@ -55,7 +55,7 @@ void build_tower(GameState& state, Vec2F position) {
         return;
     }
     if (std::ranges::any_of(state.enemies.data, [to_place_top_left, tower_size](const Slot<Enemy>& enemy_ref) {
-            return enemy_ref.alive &&
+            return enemy_ref.alive && !enemy_ref.ref.dead &&
                    collision_point_rect(enemy_ref.ref.position, {.position = to_place_top_left, .size = tower_size});
         })) {
         return;
@@ -67,31 +67,6 @@ void build_tower(GameState& state, Vec2F position) {
 
 void Update(Slot<Tower>& slot, GameState& state) {
     Tower& tower = slot.ref;
-
-    const Vec2F mouse_position = get_mouse_world_position(state.camera);
-    Player* active_player = GetEntity(state.players, state.active_player);
-
-    if (input_frame.is_key_pressed(Key::X)) {
-        for (auto& slot : state.towers.data) {
-            if (!slot.alive) continue;
-
-            if (slot.ref.scrapping) continue;
-
-            const bool is_hovered =
-                collision_point_rect(mouse_position, {.position =
-                                                          {
-                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
-                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
-                                                          },
-                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
-
-            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
-
-            slot.ref.scrapping = true;
-        }
-    }
-
-    if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
 
     const float delta_time = GetFrameTime();
 
@@ -132,6 +107,31 @@ void Update(Slot<Tower>& slot, GameState& state) {
 }
 
 void UpdateTowers(GameState& state) {
+    const Vec2F mouse_position = get_mouse_world_position(state.camera);
+    Player* active_player = GetEntity(state.players, state.active_player);
+
+    if (input_frame.is_key_pressed(Key::X)) {
+        for (auto& slot : state.towers.data) {
+            if (!slot.alive) continue;
+
+            if (slot.ref.scrapping) continue;
+
+            const bool is_hovered =
+                collision_point_rect(mouse_position, {.position =
+                                                          {
+                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
+                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
+                                                          },
+                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
+
+            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
+
+            slot.ref.scrapping = true;
+        }
+    }
+
+    if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
+
     for (Slot<Tower>& tower : state.towers.data) {
         if (!tower.alive) continue;
 

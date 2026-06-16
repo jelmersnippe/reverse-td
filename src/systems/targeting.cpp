@@ -17,7 +17,7 @@ std::vector<Targetable> build_targetables(const GameState& state) {
 
     for (uint32_t i = 0; i < state.enemies.data.size(); i++) {
         const Slot<Enemy>& enemy = state.enemies.data[i];
-        if (!enemy.alive) continue;
+        if (!enemy.alive || enemy.ref.dead) continue;
 
         targetables.push_back(Targetable{.flags = TARGET_ENEMY,
                                          .handle = {.index = i, .generation = enemy.generation},
