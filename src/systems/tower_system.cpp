@@ -3,6 +3,7 @@
 #include "core/camera.hpp"
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
+#include "core/input.hpp"
 #include "core/renderer.hpp"
 #include "core/sound.hpp"
 #include "game_state.hpp"
@@ -11,8 +12,87 @@
 #include "systems/targeting.hpp"
 #include <format>
 
+void build_tower(GameState& state, Vec2F position) {
+    if (state.currency < TOWER_COST) return;
+
+    const Vec2F to_place_top_left = {.x = position.x - TOWER_SIZE / 2, .y = position.y - TOWER_SIZE / 2};
+    const Vec2F tower_size = {.x = TOWER_SIZE, .y = TOWER_SIZE};
+
+    if (std::ranges::any_of(state.towers.data, [position](const Slot<Tower>& tower_ref) {
+            return tower_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
+                                                          .y = position.y - TOWER_SIZE / 2,
+                                                          .width = TOWER_SIZE,
+                                                          .height = TOWER_SIZE},
+                                                         {.x = tower_ref.ref.position.x - TOWER_SIZE / 2,
+                                                          .y = tower_ref.ref.position.y - TOWER_SIZE / 2,
+                                                          .width = TOWER_SIZE,
+                                                          .height = TOWER_SIZE});
+        })) {
+        return;
+    }
+    if (std::ranges::any_of(state.spawners.data, [position](const Slot<Spawner>& spawner_ref) {
+            return spawner_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
+                                                            .y = position.y - TOWER_SIZE / 2,
+                                                            .width = TOWER_SIZE,
+                                                            .height = TOWER_SIZE},
+                                                           {.x = spawner_ref.ref.position.x - SPAWNER_SIZE / 2,
+                                                            .y = spawner_ref.ref.position.y - SPAWNER_SIZE / 2,
+                                                            .width = SPAWNER_SIZE,
+                                                            .height = SPAWNER_SIZE});
+        })) {
+        return;
+    }
+    if (std::ranges::any_of(state.players.data, [position](const Slot<Player>& player_ref) {
+            return player_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
+                                                           .y = position.y - TOWER_SIZE / 2,
+                                                           .width = TOWER_SIZE,
+                                                           .height = TOWER_SIZE},
+                                                          {.x = player_ref.ref.position.x - PLAYER_SIZE / 2,
+                                                           .y = player_ref.ref.position.y - PLAYER_SIZE / 2,
+                                                           .width = PLAYER_SIZE,
+                                                           .height = PLAYER_SIZE});
+        })) {
+        return;
+    }
+    if (std::ranges::any_of(state.enemies.data, [to_place_top_left, tower_size](const Slot<Enemy>& enemy_ref) {
+            return enemy_ref.alive &&
+                   collision_point_rect(enemy_ref.ref.position, {.position = to_place_top_left, .size = tower_size});
+        })) {
+        return;
+    }
+
+    CreateEntity(state.towers, Tower{.position = position});
+    state.currency -= TOWER_COST;
+}
+
 void Update(Slot<Tower>& slot, GameState& state) {
     Tower& tower = slot.ref;
+
+    const Vec2F mouse_position = get_mouse_world_position(state.camera);
+    Player* active_player = GetEntity(state.players, state.active_player);
+
+    if (input_frame.is_key_pressed(Key::X)) {
+        for (auto& slot : state.towers.data) {
+            if (!slot.alive) continue;
+
+            if (slot.ref.scrapping) continue;
+
+            const bool is_hovered =
+                collision_point_rect(mouse_position, {.position =
+                                                          {
+                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
+                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
+                                                          },
+                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
+
+            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
+
+            slot.ref.scrapping = true;
+        }
+    }
+
+    if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
+
     const float delta_time = GetFrameTime();
 
     tower.time_since_last_attack += delta_time;

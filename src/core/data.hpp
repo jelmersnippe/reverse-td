@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include <algorithm>
 #include <cmath>
 
 #ifndef PI
@@ -134,7 +135,7 @@ struct Vec2F {
 
     float angle() const { return atan2f(this->y, this->x) * RAD2DEG; }
 
-    Vec2F rotate_to(float angle) const {
+    Vec2F rotate(float angle) const {
         const float rad = angle * DEG2RAD;
         return {.x = cosf(rad) * this->x - sinf(rad) * this->y, .y = sinf(rad) * this->x + cosf(rad) * this->y};
     }
@@ -148,12 +149,18 @@ struct Vec2F {
 
     Vector2 to_raylib() const { return Vector2{.x = this->x, .y = this->y}; }
 
-    static Vec2F from_raylib(const Vector2& v);
-};
+    void clamp(Vec2F min, Vec2F max) {
+        this->x = std::clamp(this->x, min.x, max.y);
+        this->y = std::clamp(this->y, min.x, max.y);
+    }
 
-inline Vec2F Vec2F::from_raylib(const Vector2& v) {
-    return Vec2F{.x = v.x, .y = v.y};
-}
+    static Vec2F from_raylib(const Vector2& v) { return Vec2F{.x = v.x, .y = v.y}; }
+
+    static Vec2F from_angle(float angle) {
+        float rad = angle * DEG2RAD;
+        return Vec2F{.x = cosf(rad), .y = sinf(rad)};
+    }
+};
 
 struct Rect {
     Vec2F position;

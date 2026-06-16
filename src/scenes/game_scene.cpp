@@ -1,14 +1,11 @@
 #include "scenes/game_scene.hpp"
 
-#include "blueprints/particles.hpp"
 #include "core/camera.hpp"
 #include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "core/input.hpp"
-#include "core/particles.hpp"
 #include "core/random.hpp"
 #include "core/renderer.hpp"
-#include "core/sound.hpp"
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
@@ -24,12 +21,9 @@
 #include "raylib.h"
 #include "systems/threat_director.hpp"
 #include "systems/tower_system.hpp"
-#include <algorithm>
 #include <format>
 
 namespace {
-
-ParticleSystem particles{};
 
 void DrawUi(GameState& state) {
     // TOWER COST UI
@@ -62,9 +56,9 @@ void DrawUi(GameState& state) {
                 Rect{.position = get_world_position({.x = 0, .y = 0}, state.camera), .size = SCREEN_SIZE})) {
             float angle = player->position.angle_to(closest_spawner->position);
 
-            Vec2F point_a = Vec2F{.x = 200, .y = 0}.rotate_to(angle) + SCREEN_CENTER;
-            Vec2F point_b = Vec2F{.x = 160, .y = -10}.rotate_to(angle) + SCREEN_CENTER;
-            Vec2F point_c = Vec2F{.x = 160, .y = 10}.rotate_to(angle) + SCREEN_CENTER;
+            Vec2F point_a = Vec2F{.x = 200, .y = 0}.rotate(angle) + SCREEN_CENTER;
+            Vec2F point_b = Vec2F{.x = 160, .y = -10}.rotate(angle) + SCREEN_CENTER;
+            Vec2F point_c = Vec2F{.x = 160, .y = 10}.rotate(angle) + SCREEN_CENTER;
 
             render_triangle(point_a, point_b, point_c, BLACK);
         }
@@ -83,123 +77,13 @@ void Draw(GameState& state) {
     DrawTowers(state.towers, state.camera);
     DrawPickups(state.pickups);
 
-    particles.draw();
-
     EndMode2D();
 
     DrawUi(state);
 }
 
-void build_tower(GameState& state, Vec2F position) {
-    if (state.currency < TOWER_COST) return;
-
-    const Vec2F to_place_top_left = {.x = position.x - TOWER_SIZE / 2, .y = position.y - TOWER_SIZE / 2};
-    const Vec2F tower_size = {.x = TOWER_SIZE, .y = TOWER_SIZE};
-
-    if (std::ranges::any_of(state.towers.data, [position](const Slot<Tower>& tower_ref) {
-            return tower_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
-                                                          .y = position.y - TOWER_SIZE / 2,
-                                                          .width = TOWER_SIZE,
-                                                          .height = TOWER_SIZE},
-                                                         {.x = tower_ref.ref.position.x - TOWER_SIZE / 2,
-                                                          .y = tower_ref.ref.position.y - TOWER_SIZE / 2,
-                                                          .width = TOWER_SIZE,
-                                                          .height = TOWER_SIZE});
-        })) {
-        return;
-    }
-    if (std::ranges::any_of(state.spawners.data, [position](const Slot<Spawner>& spawner_ref) {
-            return spawner_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
-                                                            .y = position.y - TOWER_SIZE / 2,
-                                                            .width = TOWER_SIZE,
-                                                            .height = TOWER_SIZE},
-                                                           {.x = spawner_ref.ref.position.x - SPAWNER_SIZE / 2,
-                                                            .y = spawner_ref.ref.position.y - SPAWNER_SIZE / 2,
-                                                            .width = SPAWNER_SIZE,
-                                                            .height = SPAWNER_SIZE});
-        })) {
-        return;
-    }
-    if (std::ranges::any_of(state.players.data, [position](const Slot<Player>& player_ref) {
-            return player_ref.alive && CheckCollisionRecs({.x = position.x - TOWER_SIZE / 2,
-                                                           .y = position.y - TOWER_SIZE / 2,
-                                                           .width = TOWER_SIZE,
-                                                           .height = TOWER_SIZE},
-                                                          {.x = player_ref.ref.position.x - PLAYER_SIZE / 2,
-                                                           .y = player_ref.ref.position.y - PLAYER_SIZE / 2,
-                                                           .width = PLAYER_SIZE,
-                                                           .height = PLAYER_SIZE});
-        })) {
-        return;
-    }
-    if (std::ranges::any_of(state.enemies.data, [to_place_top_left, tower_size](const Slot<Enemy>& enemy_ref) {
-            return enemy_ref.alive &&
-                   collision_point_rect(enemy_ref.ref.position, {.position = to_place_top_left, .size = tower_size});
-        })) {
-        return;
-    }
-
-    CreateEntity(state.towers, Tower{.position = position});
-    state.currency -= TOWER_COST;
-}
-
 void UpdateInputs(GameState& state) {
-    const Vec2F mouse_position = get_mouse_world_position(state.camera);
-    Player* active_player = GetEntity(state.players, state.active_player);
-
-    if (input_frame.is_key_pressed(Key::X)) {
-        for (auto& slot : state.towers.data) {
-            if (!slot.alive) continue;
-
-            if (slot.ref.scrapping) continue;
-
-            const bool is_hovered =
-                collision_point_rect(mouse_position, {.position =
-                                                          {
-                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
-                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
-                                                          },
-                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
-
-            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
-
-            slot.ref.scrapping = true;
-        }
-    }
     if (input_frame.is_key_pressed(Key::Escape)) SCENE_MANAGER.PushScene(state, PAUSE_SCENE);
-    if (input_frame.is_mouse_down(Mouse::Left)) {
-        if (active_player->time_since_last_shot >= TIME_BETWEEN_SHOTS) {
-            const Vec2F direction =
-                active_player->position.direction_to(get_mouse_world_position(state.camera)).normalized();
-            // TODO: Get this from the pistol?
-            auto barrel_end_pos = active_player->position + (direction * 30);
-            CreateEntity(state.projectiles, Projectile{.direction = direction,
-                                                       .position = barrel_end_pos,
-                                                       .life_time = 1.0,
-                                                       .damage = active_player->damage,
-                                                       .flags = TARGET_SPAWNER | TARGET_ENEMY});
-            active_player->time_since_last_shot = 0;
-
-            MUZZLE_FLASH_PARTICLE.rotation = direction.angle();
-            MUZZLE_FLASH_PARTICLE.display.sprite_info.frame = random_int(0, 3);
-            MUZZLE_FLASH_EMITTER.particle_template = MUZZLE_FLASH_PARTICLE;
-            MUZZLE_FLASH_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
-            particles.play(MUZZLE_FLASH_EMITTER);
-
-            MUZZLE_SMOKE_EMITTER.position = Vec2F{.x = barrel_end_pos.x, .y = barrel_end_pos.y};
-            MUZZLE_SMOKE_EMITTER.direction = Vec2F{.x = direction.x, .y = direction.y};
-            particles.play(MUZZLE_SMOKE_EMITTER);
-
-            play_sound("pistol");
-        }
-    }
-
-    if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
-
-    if (input_frame.is_key_down(Key::W)) active_player->direction += {.x = 0, .y = -1};
-    if (input_frame.is_key_down(Key::S)) active_player->direction += {.x = 0, .y = 1};
-    if (input_frame.is_key_down(Key::A)) active_player->direction += {.x = -1, .y = 0};
-    if (input_frame.is_key_down(Key::D)) active_player->direction += {.x = 1, .y = 0};
 }
 void Update(GameState& state) {
     Player* active_player = GetEntity(state.players, state.active_player);
@@ -218,7 +102,6 @@ void Update(GameState& state) {
     UpdateTowers(state);
     UpdateThreatDirector(state);
     UpdatePickups(state);
-    particles.update(GetFrameTime());
 }
 
 void Destroy(GameState& state) {

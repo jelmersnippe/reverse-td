@@ -2,6 +2,7 @@
 
 #include "core/animation_player.hpp"
 #include "core/health.hpp"
+#include "entities/weapon.hpp"
 
 struct Player {
     AnimationPlayer animation_player =
@@ -9,8 +10,9 @@ struct Player {
     Vec2F position = {};
     Vec2F direction = {};
     Health health = Health(100);
-    int damage = 25;
-    float time_since_last_shot = 0;
+    Weapon weapon = {.sprite = {"pistol", {.x = 16, .y = 16}},
+                     .sound_name = "pistol",
+                     .projectile_spawn_point = Vec2F{.x = 16, .y = -2.0f}};
     float speed = 200;
     float attacking_speed_modifier = 0.5;
 
