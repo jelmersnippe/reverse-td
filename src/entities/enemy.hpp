@@ -81,8 +81,8 @@ inline const Enemy melee_enemy = {.color = ORANGE,
                                   .attack_behavior = AttackBehavior::Melee,
                                   .health = Health(50),
                                   .speed = 175,
-                                  .size = 25,
-                                  .damage = 15,
+                                  .size = 32,
+                                  .damage = 7,
                                   .attack_cooldown = 2};
 
 inline const Enemy fast_enemy = {
@@ -91,8 +91,8 @@ inline const Enemy fast_enemy = {
     .attack_behavior = AttackBehavior::Melee,
     .health = Health(30),
     .speed = 250,
-    .size = 20,
-    .damage = 10,
+    .size = 24,
+    .damage = 4,
     .attack_cooldown = 2,
 };
 
@@ -103,8 +103,8 @@ inline const Enemy ranged_enemy = {
     .health = Health(40),
     .speed = 150,
     .range = 300,
-    .size = 20,
-    .damage = 12,
+    .size = 32,
+    .damage = 5,
     .attack_cooldown = 1,
 };
 
@@ -115,7 +115,7 @@ inline const Enemy tank_enemy = {
     .health = Health(250),
     .speed = 100,
     .range = 15,
-    .size = 50,
+    .size = 64,
     .damage = 30,
     .attack_cooldown = 4,
 };
