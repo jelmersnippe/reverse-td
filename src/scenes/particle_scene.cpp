@@ -6,6 +6,7 @@
 #include "core/particles.hpp"
 #include "format"
 #include "raylib.h"
+#include "scenes/main_menu_scene.hpp"
 #include <climits>
 
 namespace {
@@ -204,7 +205,12 @@ void update_ui() {
     ui.end_ui();
 }
 
-void Update(GameState&) {
+void Update(GameState& state) {
+    if (input_frame.is_key_pressed(Key::Escape)) {
+        SCENE_MANAGER.PushScene(state, MAIN_MENU_SCENE);
+        return;
+    }
+
     update_ui();
 
     if (input_frame.is_mouse_pressed(Mouse::Left)) {

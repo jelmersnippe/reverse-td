@@ -1,8 +1,10 @@
 #include "scenes/ui_scene.hpp"
 
 #include "core/gui.hpp"
+#include "core/input.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "scenes/main_menu_scene.hpp"
 
 namespace {
 const UI::ElementStyle BUTTON_STYLE = {.direction = UI::LayoutDirection::Vertical,
@@ -249,7 +251,12 @@ void horizontal_layout3() {
     // END - GREEN
 }
 
-void Update(GameState&) {
+void Update(GameState& state) {
+    if (input_frame.is_key_pressed(Key::Escape)) {
+        SCENE_MANAGER.PushScene(state, MAIN_MENU_SCENE);
+        return;
+    }
+
     ui.begin_ui();
 
     // START - RED
