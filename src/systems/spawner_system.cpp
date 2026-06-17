@@ -85,23 +85,15 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     }
 
     std::vector<Enemy*> resolved_enemies;
-    std::vector<size_t> active_entities_to_remove = {};
 
-    for (size_t i = 0; i < spawner.active_enemies.size(); i++) {
-        const EntityHandle handle = spawner.active_enemies[i];
+    std::erase_if(spawner.active_enemies, [&enemies, &resolved_enemies](const EntityHandle& handle) {
         Enemy* enemy = GetEntity(enemies, handle);
 
-        if (enemy == nullptr || !enemy->home.IsValid()) {
-            active_entities_to_remove.push_back(i);
-            continue;
-        }
+        if (enemy == nullptr || !enemy->home.IsValid()) { return true; }
 
         resolved_enemies.push_back(enemy);
-    }
-
-    for (const size_t index : active_entities_to_remove) {
-        spawner.active_enemies.erase(spawner.active_enemies.begin() + (int)index);
-    }
+        return false;
+    });
 
     if (spawner.state == SpawnerState::Rallying) {
         // Max enemies and all rallied

@@ -149,11 +149,16 @@ void UpdateEnemies(GameState& state) {
 
             enemy.time_since_last_attack += delta_time;
 
+            if (!target.has_value()) {
+                enemy.state = EnemyState::Wander;
+                break;
+            }
+
             switch (enemy.state) {
                 case EnemyState::Wander: {
                     Spawner* home = GetEntity(state.spawners, enemy.home);
 
-                    if (enemy.position.distance_to(target->position) < enemy.aggro_range) {
+                    if (target.has_value() && enemy.position.distance_to(target->position) < enemy.aggro_range) {
                         enemy.state = EnemyState::Seek;
                         if (home != nullptr) home->state = SpawnerState::UnderAttack;
                         break;
@@ -200,11 +205,6 @@ void UpdateEnemies(GameState& state) {
                     break;
                 }
                 case EnemyState::Seek: {
-                    if (!target.has_value()) {
-                        enemy.state = EnemyState::Wander;
-                        break;
-                    }
-
                     enemy.target = target.value();
 
                     velocity =
