@@ -40,7 +40,7 @@ void unload_sprites() {
 
 Texture2D get_sprite(const std::string& sprite_name) {
     const auto sprite = sprites.find(sprite_name);
-    assert(sprite != nullptr && std::format("Could not find sprite with name {}", sprite_name).c_str());
+    assert(sprite != sprites.end() && std::format("Could not find sprite with name {}", sprite_name).c_str());
 
     return sprite->second;
 }
@@ -75,7 +75,7 @@ void unload_sounds() {
 
 Sound get_sound(const std::string& sound_name) {
     const auto sound = sounds.find(sound_name);
-    assert(sound != nullptr && std::format("Could not find sound with name {}", sound_name).c_str());
+    assert(sound != sounds.end() && std::format("Could not find sound with name {}", sound_name).c_str());
 
     return sound->second;
 }
@@ -108,7 +108,7 @@ void unload_shaders() {
 
 Shader get_shader(const std::string& shader_name) {
     const auto shader = shaders.find(shader_name);
-    assert(shader != nullptr && std::format("Could not find shader with name {}", shader_name).c_str());
+    assert(shader != shaders.end() && std::format("Could not find shader with name {}", shader_name).c_str());
 
     return shader->second;
 }
