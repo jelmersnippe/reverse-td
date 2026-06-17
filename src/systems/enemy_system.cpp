@@ -131,13 +131,15 @@ void UpdateEnemies(GameState& state) {
 
         if (enemy.knockback.active) {
             enemy.knockback.time_active += delta_time;
+            // Knockback strength is less for larger enemies
+            const float size_modifier = 32.0f / enemy.size;
+            const float knockback_strength = enemy.knockback.strength * size_modifier * size_modifier;
+            const Vec2F knockback = enemy.knockback.direction * knockback_strength;
 
             if (enemy.knockback.decays_over_time) {
-                velocity = enemy.knockback.direction *
-                           (1 - (enemy.knockback.time_active / enemy.knockback.recovery_time)) *
-                           enemy.knockback.strength;
+                velocity = knockback * (1 - (enemy.knockback.time_active / enemy.knockback.recovery_time));
             } else {
-                velocity = enemy.knockback.direction * enemy.knockback.strength;
+                velocity = knockback;
             }
 
             if (enemy.knockback.time_active >= enemy.knockback.recovery_time) enemy.knockback.active = false;
