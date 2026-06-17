@@ -124,16 +124,16 @@ struct InitialSpawnerPlacement {
 const std::array<InitialSpawnerPlacement, 3> initial_spawner_placements = {{
     InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 0.5f, .y = SCREEN_HEIGHT * 0.5f},
                             .max_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-                            .count = 1,
+                            .count = 3,
                             .initial_enemy_spawn_count = 3},
-    // InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-    //                         .max_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
-    //                         .count = 5,
-    //                         .initial_enemy_spawn_count = 1},
-    // InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 1.5f, .y = SCREEN_HEIGHT * 1.5f},
-    //                         .max_distance = {.x = SCREEN_WIDTH * 3, .y = SCREEN_HEIGHT * 3},
-    //                         .count = 8,
-    //                         .initial_enemy_spawn_count = 0},
+    InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
+                            .max_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
+                            .count = 5,
+                            .initial_enemy_spawn_count = 1},
+    InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 1.5f, .y = SCREEN_HEIGHT * 1.5f},
+                            .max_distance = {.x = SCREEN_WIDTH * 3, .y = SCREEN_HEIGHT * 3},
+                            .count = 8,
+                            .initial_enemy_spawn_count = 0},
 }};
 
 void Init(GameState& state) {
