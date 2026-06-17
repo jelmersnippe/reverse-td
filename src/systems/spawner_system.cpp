@@ -69,6 +69,9 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     Spawner& spawner = spawner_slot.ref;
 
     const float delta_time = GetFrameTime();
+
+    spawner.health.update();
+
     spawner.time_since_last_spawn += delta_time;
     spawner.time_since_last_damage_taken += delta_time;
 

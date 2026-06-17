@@ -1,4 +1,5 @@
 #include "systems/scene_manager.hpp"
+#include "core/input.hpp"
 #include "raylib.h"
 #include <cassert>
 
@@ -32,6 +33,8 @@ void SceneManager::Update(GameState& state) {
     BeginDrawing();
 
     if (current_scene.draw != nullptr) current_scene.draw(state);
+
+    render_sprite({"crosshair", {16, 16}}, input_frame.state.mouse_position, {32, 32});
 
     EndDrawing();
 }

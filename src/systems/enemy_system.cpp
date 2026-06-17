@@ -127,6 +127,8 @@ void UpdateEnemies(GameState& state) {
 
         if (enemy.hit_flash_remaining > 0.0f) enemy.hit_flash_remaining -= delta_time;
 
+        enemy.health.update();
+
         Vec2F velocity = {};
 
         if (enemy.knockback.active) {

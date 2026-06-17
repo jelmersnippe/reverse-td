@@ -39,7 +39,7 @@ void DrawUi(GameState& state) {
     render_text("10 [RMB]", tower_center + Vec2F{.x = 0, .y = 15}, 12, cost_color);
 
     // INFO AT TOP
-    const std::string difficulty_text = std::format("Difficulty scale: {}", state.threat_director.threat);
+    const std::string difficulty_text = std::format("Difficulty scale: {:.3f}", state.threat_director.threat);
     render_text(difficulty_text, {.x = SCREEN_CENTER.x, .y = 40}, 20, BLACK);
 
     const std::string currency_text = std::format("Currency: {}", state.currency);

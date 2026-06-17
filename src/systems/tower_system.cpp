@@ -68,6 +68,8 @@ void build_tower(GameState& state, Vec2F position) {
 void Update(Slot<Tower>& slot, GameState& state) {
     Tower& tower = slot.ref;
 
+    tower.health.update();
+
     const float delta_time = GetFrameTime();
 
     tower.time_since_last_attack += delta_time;

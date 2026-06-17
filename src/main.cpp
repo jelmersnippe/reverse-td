@@ -19,6 +19,7 @@ int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Reverse Tiddy");
     SetExitKey(KEY_NULL);
     SetTargetFPS(TARGET_FPS);
+    HideCursor();
     InitAudioDevice();
 
     load_sprites();

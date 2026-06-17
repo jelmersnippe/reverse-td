@@ -11,6 +11,8 @@
 void Update(Player& player, GameState& state) {
     const float delta_time = GetFrameTime();
 
+    player.health.update();
+
     if (input_frame.is_key_down(Key::W)) player.direction += {.x = 0, .y = -1};
     if (input_frame.is_key_down(Key::S)) player.direction += {.x = 0, .y = 1};
     if (input_frame.is_key_down(Key::A)) player.direction += {.x = -1, .y = 0};
