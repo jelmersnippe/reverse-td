@@ -26,7 +26,7 @@ struct AnimationPlayer {
     void play(int begin_frame = 0) {
         if (this->playing) return;
 
-        assert(begin_frame <= info.frame_count && "Can't select a begin frame that's higher than the frame count");
+        assert(begin_frame < info.frame_count && "Can't select a begin frame that's higher than the frame count");
         this->begin_frame = begin_frame;
         this->current_frame = begin_frame;
 

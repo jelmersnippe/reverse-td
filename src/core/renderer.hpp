@@ -24,7 +24,7 @@ struct SpriteInfo {
 
 inline void render_sprite(SpriteInfo info, Vec2F center, Vec2F size, float angle = 0, Color color = WHITE) {
     Texture2D sprite = get_sprite(info.name);
-    Vec2 sprite_top_left = info.size * info.frame;
+    Vec2 sprite_top_left = {.x = info.size.x * info.frame, .y = 0};
     Rectangle source = {.x = (float)sprite_top_left.x,
                         .y = (float)sprite_top_left.y,
                         .width = (float)info.size.x,
