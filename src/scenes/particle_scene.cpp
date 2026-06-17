@@ -140,16 +140,18 @@ void update_ui() {
         if (EMITTER.type == EmitterType::Circle) {
             ui_number_variable("radius", EMITTER.radius, {.min = 0, .max = 360}, 0.1f);
         } else if (EMITTER.type == EmitterType::Box) {
-            ui_number_variable("box size x", EMITTER.box_size.x, {.min = 0, .max = MAXFLOAT});
-            ui_number_variable("box size y", EMITTER.box_size.y, {.min = 0, .max = MAXFLOAT});
+            ui_number_variable("box size x", EMITTER.box_size.x, {.min = 0, .max = std::numeric_limits<float>::max()});
+            ui_number_variable("box size y", EMITTER.box_size.y, {.min = 0, .max = std::numeric_limits<float>::max()});
         }
 
-        ui_number_variable("direction x", EMITTER.direction.x, {.min = -MAXFLOAT, .max = MAXFLOAT}, 0.1f);
-        ui_number_variable("direction y", EMITTER.direction.y, {.min = -MAXFLOAT, .max = MAXFLOAT}, 0.1f);
+        ui_number_variable("direction x", EMITTER.direction.x,
+                           {.min = -std::numeric_limits<float>::max(), .max = std::numeric_limits<float>::max()}, 0.1f);
+        ui_number_variable("direction y", EMITTER.direction.y,
+                           {.min = -std::numeric_limits<float>::max(), .max = std::numeric_limits<float>::max()}, 0.1f);
 
         ui_number_variable("spread", EMITTER.spread, {.min = 0, .max = 360}, 1.0f);
 
-        ui_number_variable("rate", EMITTER.rate, {.min = 0, .max = MAXFLOAT}, 0.1f);
+        ui_number_variable("rate", EMITTER.rate, {.min = 0, .max = std::numeric_limits<float>::max()}, 0.1f);
         ui_number_variable("burst", EMITTER.burst, {.min = 0, .max = INT_MAX});
     }
 
@@ -169,20 +171,20 @@ void update_ui() {
         ui_number_variable("speed start min", PARTICLE_TEMPLATE.speed.start.min,
                            {.min = 0, .max = PARTICLE_TEMPLATE.speed.start.max});
         ui_number_variable("speed start max", PARTICLE_TEMPLATE.speed.start.max,
-                           {.min = PARTICLE_TEMPLATE.speed.start.min, .max = MAXFLOAT});
+                           {.min = PARTICLE_TEMPLATE.speed.start.min, .max = std::numeric_limits<float>::max()});
         ui_number_variable("speed end min", PARTICLE_TEMPLATE.speed.end.min,
                            {.min = 0, .max = PARTICLE_TEMPLATE.speed.end.max});
         ui_number_variable("speed end max", PARTICLE_TEMPLATE.speed.end.max,
-                           {.min = PARTICLE_TEMPLATE.speed.end.min, .max = MAXFLOAT});
+                           {.min = PARTICLE_TEMPLATE.speed.end.min, .max = std::numeric_limits<float>::max()});
 
         ui_number_variable("size start min", PARTICLE_TEMPLATE.size.start.min,
                            {.min = 0, .max = PARTICLE_TEMPLATE.size.start.max});
         ui_number_variable("size start max", PARTICLE_TEMPLATE.size.start.max,
-                           {.min = PARTICLE_TEMPLATE.size.start.min, .max = MAXFLOAT});
+                           {.min = PARTICLE_TEMPLATE.size.start.min, .max = std::numeric_limits<float>::max()});
         ui_number_variable("size end min", PARTICLE_TEMPLATE.size.end.min,
                            {.min = 0, .max = PARTICLE_TEMPLATE.size.end.max});
         ui_number_variable("size end max", PARTICLE_TEMPLATE.size.end.max,
-                           {.min = PARTICLE_TEMPLATE.size.end.min, .max = MAXFLOAT});
+                           {.min = PARTICLE_TEMPLATE.size.end.min, .max = std::numeric_limits<float>::max()});
 
         ui_color_variable("color start", PARTICLE_TEMPLATE.color.start);
         ui_color_variable("color end", PARTICLE_TEMPLATE.color.end);
@@ -190,7 +192,7 @@ void update_ui() {
         ui_number_variable("lifetime min", PARTICLE_TEMPLATE.lifetime.min,
                            {.min = 0, .max = PARTICLE_TEMPLATE.lifetime.max}, 0.1f);
         ui_number_variable("lifetime max", PARTICLE_TEMPLATE.lifetime.max,
-                           {.min = PARTICLE_TEMPLATE.lifetime.min, .max = MAXFLOAT}, 0.1f);
+                           {.min = PARTICLE_TEMPLATE.lifetime.min, .max = std::numeric_limits<float>::max()}, 0.1f);
 
         ui_number_variable("rotation", PARTICLE_TEMPLATE.rotation, {.min = -360, .max = 360});
     }
