@@ -70,9 +70,6 @@ void Update(Player& player, GameState& state) {
     float mouse_angle = player.position.angle_to(mouse_position);
     bool flipped = mouse_angle > 90 || mouse_angle < -90;
 
-    // TODO: Should show a death state / restart the game
-    if (player.health.current <= 0) { state.should_exit = true; }
-
     if (player.weapon.time_since_last_shot < player.weapon.recovery_time) {
         player.weapon.current_knockback =
             (player.weapon.recoil * (1 - (player.weapon.time_since_last_shot / player.weapon.recovery_time)));

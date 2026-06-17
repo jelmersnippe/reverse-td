@@ -1,11 +1,9 @@
-#include "scenes/main_menu_scene.hpp"
+#include "scenes/controls_scene.hpp"
+
 #include "core/gui.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
-#include "raylib.h"
-#include "scenes/controls_scene.hpp"
-#include "scenes/particle_scene.hpp"
-#include "scenes/ui_scene.hpp"
+#include "scenes/game_scene.hpp"
 #include "systems/scene_manager.hpp"
 
 namespace {
@@ -30,19 +28,15 @@ void Update(GameState& state) {
                                          .width = SCREEN_WIDTH,
                                          .height = SCREEN_HEIGHT});
 
-    ui.text("txt_title", "REVERSE TIDDY", {.font_size = 40});
+    ui.text("txt_howto", "How to play", {.font_size = 40});
 
-    if (ui.begin_button("btn_start", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, CONTROLS_SCENE);
+    ui.text("txt_movement", "Use <W> <A> <S> <D> to move", {.font_size = 24});
+    ui.text("txt_shoot", "Use <left mouse> to shoot", {.font_size = 24});
+    ui.text("txt_tower", "Use <right mouse> to place a tower", {.font_size = 24});
+    ui.text("txt_scrap", "Use <X> to scrap", {.font_size = 24});
+
+    if (ui.begin_button("btn_start", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, GAME_SCENE);
     ui.text("txt_start", "Start", BUTTONTEXT_STYLE);
-    ui.end_button();
-    if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
-    ui.text("txt_ui", "Ui", BUTTONTEXT_STYLE);
-    ui.end_button();
-    if (ui.begin_button("btn_particle", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, PARTICLE_SCENE);
-    ui.text("txt_particle", "Particle", BUTTONTEXT_STYLE);
-    ui.end_button();
-    if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
-    ui.text("txt_quit", "Quit", BUTTONTEXT_STYLE);
     ui.end_button();
 
     ui.end_layout();
@@ -56,5 +50,4 @@ void Draw(GameState&) {
 }
 } // namespace
 
-const Scene MAIN_MENU_SCENE = {
-    .name = "Main Menu", .init = nullptr, .update = Update, .draw = Draw, .destroy = nullptr};
+const Scene CONTROLS_SCENE = {.name = "Controls", .init = nullptr, .update = Update, .draw = Draw, .destroy = nullptr};

@@ -110,27 +110,29 @@ void UpdateTowers(GameState& state) {
     const Vec2F mouse_position = get_mouse_world_position(state.camera);
     Player* active_player = GetEntity(state.players, state.active_player);
 
-    if (input_frame.is_key_pressed(Key::X)) {
-        for (auto& slot : state.towers.data) {
-            if (!slot.alive) continue;
+    if (active_player != nullptr) {
+        if (input_frame.is_key_pressed(Key::X)) {
+            for (auto& slot : state.towers.data) {
+                if (!slot.alive) continue;
 
-            if (slot.ref.scrapping) continue;
+                if (slot.ref.scrapping) continue;
 
-            const bool is_hovered =
-                collision_point_rect(mouse_position, {.position =
-                                                          {
-                                                              .x = slot.ref.position.x - TOWER_SIZE / 2,
-                                                              .y = slot.ref.position.y - TOWER_SIZE / 2,
-                                                          },
-                                                      .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
+                const bool is_hovered =
+                    collision_point_rect(mouse_position, {.position =
+                                                              {
+                                                                  .x = slot.ref.position.x - TOWER_SIZE / 2,
+                                                                  .y = slot.ref.position.y - TOWER_SIZE / 2,
+                                                              },
+                                                          .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
 
-            if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
+                if (!is_hovered || active_player->position.distance_to(slot.ref.position) > PLAYER_RANGE) continue;
 
-            slot.ref.scrapping = true;
+                slot.ref.scrapping = true;
+            }
         }
-    }
 
-    if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
+        if (input_frame.is_mouse_pressed(Mouse::Right)) { build_tower(state, mouse_position); }
+    }
 
     for (Slot<Tower>& tower : state.towers.data) {
         if (!tower.alive) continue;

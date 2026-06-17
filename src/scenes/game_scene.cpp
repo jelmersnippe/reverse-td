@@ -9,6 +9,7 @@
 #include "entities/player.hpp"
 #include "game_state.hpp"
 #include "globals.hpp"
+#include "scenes/game_over_scene.hpp"
 #include "scenes/pause_scene.hpp"
 #include "systems/enemy_system.hpp"
 #include "systems/pickup_system.hpp"
@@ -27,7 +28,7 @@ namespace {
 
 void DrawUi(GameState& state) {
     // TOWER COST UI
-    const Vec2F tower_center = Vec2F{.x = SCREEN_CENTER.x, .y = SCREEN_HEIGHT - 50};
+    const Vec2F tower_center = Vec2F{.x = SCREEN_CENTER.x, .y = SCREEN_HEIGHT - TOWER_SIZE};
 
     render_rectangle(tower_center, {.x = TOWER_SIZE, .y = TOWER_SIZE}, BLACK, true, true);
     DrawCircle(tower_center.x, tower_center.y, TOWER_SIZE * 0.15, BLUE);
@@ -102,6 +103,11 @@ void Update(GameState& state) {
     UpdateTowers(state);
     UpdateThreatDirector(state);
     UpdatePickups(state);
+
+    const bool all_enemies_dead = state.enemies.free_indices.size() == state.enemies.data.size() &&
+                                  state.spawners.free_indices.size() == state.spawners.data.size();
+    // TODO: Better check?
+    if (all_enemies_dead || active_player == nullptr) { SCENE_MANAGER.SetScene(state, GAME_OVER_SCENE); }
 }
 
 void Destroy(GameState& state) {
@@ -115,20 +121,20 @@ struct InitialSpawnerPlacement {
     int initial_enemy_spawn_count;
 };
 
-const std::array<InitialSpawnerPlacement, 3> initial_spawner_placements = {
-    {InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 0.5f, .y = SCREEN_HEIGHT * 0.5f},
-                             .max_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-                             .count = 3,
-                             .initial_enemy_spawn_count = 3},
-     InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
-                             .max_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
-                             .count = 5,
-                             .initial_enemy_spawn_count = 1},
-     InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 1.5f, .y = SCREEN_HEIGHT * 1.5f},
-                             .max_distance = {.x = SCREEN_WIDTH * 3, .y = SCREEN_HEIGHT * 3},
-                             .count = 8,
-                             .initial_enemy_spawn_count = 0}},
-};
+const std::array<InitialSpawnerPlacement, 3> initial_spawner_placements = {{
+    InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 0.5f, .y = SCREEN_HEIGHT * 0.5f},
+                            .max_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
+                            .count = 1,
+                            .initial_enemy_spawn_count = 3},
+    // InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH, .y = SCREEN_HEIGHT},
+    //                         .max_distance = {.x = SCREEN_WIDTH * 2, .y = SCREEN_HEIGHT * 2},
+    //                         .count = 5,
+    //                         .initial_enemy_spawn_count = 1},
+    // InitialSpawnerPlacement{.min_distance = {.x = SCREEN_WIDTH * 1.5f, .y = SCREEN_HEIGHT * 1.5f},
+    //                         .max_distance = {.x = SCREEN_WIDTH * 3, .y = SCREEN_HEIGHT * 3},
+    //                         .count = 8,
+    //                         .initial_enemy_spawn_count = 0},
+}};
 
 void Init(GameState& state) {
     state.Reset();
