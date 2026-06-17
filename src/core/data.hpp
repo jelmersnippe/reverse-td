@@ -128,8 +128,8 @@ struct Vec2F {
         return {.x = x / len, .y = y / len};
     }
 
-    float angle_to(Vec2F position) const {
-        Vec2F direction = position - *this;
+    float angle_to(Vec2F other) const {
+        Vec2F direction = other - *this;
         return atan2f(direction.y, direction.x) * RAD2DEG;
     }
 

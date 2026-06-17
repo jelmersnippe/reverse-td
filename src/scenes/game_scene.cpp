@@ -55,6 +55,8 @@ void DrawUi(GameState& state) {
             !collision_point_rect(
                 closest_spawner->position,
                 Rect{.position = get_world_position({.x = 0, .y = 0}, state.camera), .size = SCREEN_SIZE})) {
+
+            float distance = player->position.distance_to(closest_spawner->position);
             float angle = player->position.angle_to(closest_spawner->position);
 
             Vec2F point_a = Vec2F{.x = 200, .y = 0}.rotate(angle) + SCREEN_CENTER;
@@ -62,6 +64,8 @@ void DrawUi(GameState& state) {
             Vec2F point_c = Vec2F{.x = 160, .y = 10}.rotate(angle) + SCREEN_CENTER;
 
             render_triangle(point_a, point_b, point_c, BLACK);
+            render_text(std::format("{}", static_cast<int>(distance)),
+                        Vec2F{.x = 130, .y = 0}.rotate(angle) + SCREEN_CENTER, 14, BLACK);
         }
     }
 }
