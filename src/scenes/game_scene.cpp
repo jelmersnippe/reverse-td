@@ -111,7 +111,7 @@ void Update(GameState& state) {
     const bool all_enemies_dead = state.enemies.free_indices.size() == state.enemies.data.size() &&
                                   state.spawners.free_indices.size() == state.spawners.data.size();
     // TODO: Better check?
-    if (all_enemies_dead || active_player == nullptr) { SCENE_MANAGER.SetScene(state, GAME_OVER_SCENE); }
+    if (all_enemies_dead || active_player == nullptr) { SCENE_MANAGER.PushScene(state, GAME_OVER_SCENE); }
 }
 
 void Destroy(GameState& state) {
