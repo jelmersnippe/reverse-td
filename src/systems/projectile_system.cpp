@@ -39,10 +39,7 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Spawner>& spawner : state.spawners.data) {
             if (!spawner.alive) continue;
 
-            const Vec2F spawner_top_left = {.x = spawner.ref.position.x - SPAWNER_SIZE / 2,
-                                            .y = spawner.ref.position.y - SPAWNER_SIZE / 2};
-            hit = collision_point_rect(projectile.position,
-                                       {.position = spawner_top_left, .size = {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE}});
+            hit = collision_point_collider(projectile.position, spawner.ref.collider);
 
             if (!hit) continue;
 
@@ -75,10 +72,7 @@ bool Update(Projectile& projectile, GameState& state) {
         for (Slot<Player>& player : state.players.data) {
             if (!player.alive) continue;
 
-            const Vec2F player_top_left = {.x = player.ref.position.x - TOWER_SIZE / 2,
-                                           .y = player.ref.position.y - TOWER_SIZE / 2};
-            hit = collision_point_rect(projectile.position,
-                                       {.position = player_top_left, .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
+            hit = collision_point_collider(projectile.position, player.ref.collider);
 
             if (!hit) continue;
 
@@ -102,9 +96,9 @@ void UpdateProjectiles(GameState& state) {
     }
 }
 
-void DrawProjectiles(const EntityPool<Projectile>& projectiles) {
+void DrawProjectiles(const GameState& state) {
     // TODO: Cull stuff outside of the screen
-    for (const Slot<Projectile>& projectile : projectiles.data) {
+    for (const Slot<Projectile>& projectile : state.projectiles.data) {
         if (!projectile.alive) continue;
 
         std::string sprite_name;
@@ -119,7 +113,8 @@ void DrawProjectiles(const EntityPool<Projectile>& projectiles) {
                 break;
         }
 
-        render_sprite(SpriteInfo(sprite_name, {16, 16}), projectile.ref.position, {.x = 16 * scale, .y = 16 * scale},
-                      projectile.ref.direction.angle());
+        render_sprite(
+            SpriteInfo(sprite_name, {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = scale, .y = scale}),
+            projectile.ref.position, projectile.ref.direction.angle());
     }
 }

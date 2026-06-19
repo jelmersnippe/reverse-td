@@ -3,12 +3,10 @@
 #include "core/data.hpp"
 #include "core/renderer.hpp"
 #include <cassert>
-#include <string>
 #include <utility>
 
 struct AnimationInfo {
-    std::string sprite_name;
-    Vec2 sprite_size;
+    SpriteInfo sprite;
     int frame_count;
     float time_per_frame = 0.2f;
 };
@@ -52,9 +50,11 @@ struct AnimationPlayer {
         }
     }
 
-    void draw(Vec2F center, Vec2F size, bool flip_x = false) const {
-        render_sprite(
-            SpriteInfo(this->info.sprite_name, this->info.sprite_size, this->current_frame, {.x = flip_x, .y = false}),
-            center, size);
+    void draw(Vec2F center, bool flip_x = false) const {
+        SpriteInfo info_to_render = this->info.sprite;
+        info_to_render.should_flip.x = flip_x;
+        info_to_render.frame = this->current_frame;
+
+        render_sprite(info_to_render, center);
     }
 };

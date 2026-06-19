@@ -130,25 +130,23 @@ void UpdatePlayers(GameState& state) {
     }
 }
 
-void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
-    for (const Slot<Player>& player : players.data) {
+void DrawPlayers(const GameState& state) {
+    for (const Slot<Player>& player : state.players.data) {
         if (!player.alive) continue;
 
-        const Vec2F mouse_position = get_mouse_world_position(camera);
+        const Vec2F mouse_position = get_mouse_world_position(state.camera);
         Vec2F direction = player.ref.position.direction_to(mouse_position);
         bool flipped = direction.x < 0;
 
         player.ref.weapon.particles.draw();
 
         // Player
-        player.ref.animation_player.draw(Vec2F{.x = player.ref.position.x, .y = player.ref.position.y},
-                                         {.x = PLAYER_SIZE, .y = PLAYER_SIZE}, flipped);
+        player.ref.animation_player.draw(Vec2F{.x = player.ref.position.x, .y = player.ref.position.y}, flipped);
 
         // Gun
         SpriteInfo info = player.ref.weapon.sprite;
-        Vec2F render_size = {.x = info.size.x * 2.0f, .y = info.size.y * 2.0f};
         info.should_flip.y = flipped;
-        render_sprite(info, player.ref.weapon.position, render_size, player.ref.weapon.angle, WHITE);
+        render_sprite(info, player.ref.weapon.position, player.ref.weapon.angle, WHITE);
 
         // Health
         const Vec2F health_position = player.ref.position - Vec2F{.x = 0, .y = PLAYER_SIZE};
@@ -157,5 +155,13 @@ void DrawPlayers(const EntityPool<Player>& players, const Camera2D& camera) {
         if (player.ref.regenerating) {
             render_text("Regenerating", health_position - Vec2F{.x = 0, .y = -5}, 10, BLACK);
         }
+    }
+}
+
+void DrawPlayersDebug(const GameState& state) {
+    if (!state.debug_enabled) return;
+
+    for (const Slot<Player>& player : state.players.data) {
+        player.ref.collider.draw(player.ref.position);
     }
 }

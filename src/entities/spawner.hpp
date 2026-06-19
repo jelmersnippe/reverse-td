@@ -1,8 +1,10 @@
 #pragma once
 
+#include "core/collision.hpp"
 #include "core/entity_pool.hpp"
 #include "core/health.hpp"
 #include "core/particles.hpp"
+#include "globals.hpp"
 #include <vector>
 
 enum class SpawnerState {
@@ -16,6 +18,7 @@ const float RESET_TIME = 10;
 
 struct Spawner {
     Vec2F position = {};
+    Collider collider = Collider({.x = 0, .y = 0}, SPAWNER_SIZE * 0.8f);
     float angle = 0;
     Health health = Health(500);
     float spawn_cooldown = 10;

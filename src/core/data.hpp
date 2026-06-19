@@ -88,6 +88,7 @@ struct Vec2F {
 
     Vec2F operator+(const Vec2F& vec) const { return Vec2F{.x = x + vec.x, .y = y + vec.y}; }
     Vec2F operator*(const Vec2F& vec) const { return Vec2F{.x = x * vec.x, .y = y * vec.y}; }
+    Vec2F operator/(const Vec2F& vec) const { return Vec2F{.x = x / vec.x, .y = y / vec.y}; }
     Vec2F operator-(const Vec2F& vec) const { return Vec2F{.x = x - vec.x, .y = y - vec.y}; }
 
     void operator+=(const Vec2F& vec) {
@@ -156,6 +157,8 @@ struct Vec2F {
 
     static Vec2F from_raylib(const Vector2& v) { return Vec2F{.x = v.x, .y = v.y}; }
 
+    static Vec2F from_vec2(const Vec2& v) { return Vec2F{.x = static_cast<float>(v.x), .y = static_cast<float>(v.y)}; }
+
     static Vec2F from_angle(float angle) {
         float rad = angle * DEG2RAD;
         return Vec2F{.x = cosf(rad), .y = sinf(rad)};
@@ -165,4 +168,6 @@ struct Vec2F {
 struct Rect {
     Vec2F position;
     Vec2F size;
+
+    Rect operator*(const float& value) const { return Rect{.position = position * value, .size = size * value}; }
 };

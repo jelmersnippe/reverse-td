@@ -12,17 +12,26 @@ struct FlipInfo {
 };
 
 struct SpriteInfo {
-    std::string name = "";
-    Vec2 size = {};
+    std::string name;
+    Vec2 size;
+    Vec2 pivot_point;
+    Vec2F scale;
     int frame = 0;
     FlipInfo should_flip;
 
     SpriteInfo() = default;
-    SpriteInfo(std::string name, Vec2 size, int frame = 0, FlipInfo should_flip = {.x = false, .y = false})
-        : name(std::move(name)), size(size), frame(frame), should_flip(should_flip) {}
+    SpriteInfo(std::string name, Vec2 size, Vec2 pivot_point, Vec2F scale, int frame = 0,
+               FlipInfo should_flip = {.x = false, .y = false})
+        : name(std::move(name)), size(size), pivot_point(pivot_point), scale(scale), frame(frame),
+          should_flip(should_flip) {}
+
+    SpriteInfo(std::string name, Vec2 size, Vec2F scale, int frame = 0, FlipInfo should_flip = {.x = false, .y = false})
+        : name(std::move(name)), size(size), scale(scale), frame(frame), should_flip(should_flip) {
+        this->pivot_point = size * 0.5f;
+    }
 };
 
-inline void render_sprite(SpriteInfo info, Vec2F center, Vec2F size, float angle = 0, Color color = WHITE) {
+inline void render_sprite(SpriteInfo info, Vec2F center, float angle = 0, Color color = WHITE) {
     Texture2D sprite = get_sprite(info.name);
     Vec2 sprite_top_left = {.x = info.size.x * info.frame, .y = 0};
     Rectangle source = {.x = (float)sprite_top_left.x,
@@ -30,8 +39,12 @@ inline void render_sprite(SpriteInfo info, Vec2F center, Vec2F size, float angle
                         .width = (float)info.size.x,
                         .height = (float)info.size.y};
 
-    Rectangle dest = {.x = center.x, .y = center.y, .width = size.x, .height = size.y};
-    Vector2 origin = {.x = size.x * 0.5f, .y = size.y * 0.5f};
+    Rectangle dest = {.x = center.x,
+                      .y = center.y,
+                      .width = (float)info.size.x * info.scale.x,
+                      .height = (float)info.size.y * info.scale.y};
+    Vector2 origin = {.x = static_cast<float>(info.pivot_point.x) * info.scale.x,
+                      .y = static_cast<float>(info.pivot_point.y) * info.scale.y};
 
     if (info.should_flip.x) { source.width = -info.size.x; }
     if (info.should_flip.y) { source.height = -info.size.y; }
@@ -52,8 +65,12 @@ inline void render_triangle(Vec2F point_a, Vec2F point_b, Vec2F point_c, Color c
     DrawTriangle(point_a.to_raylib(), point_b.to_raylib(), point_c.to_raylib(), color);
 }
 
-inline void render_circle(Vec2F center, float radius, Color color) {
-    DrawCircle(center.x, center.y, radius, color);
+inline void render_circle(Vec2F center, float radius, Color color, bool outline_only = false) {
+    if (outline_only) {
+        DrawCircleLines(center.x, center.y, radius, color);
+    } else {
+        DrawCircle(center.x, center.y, radius, color);
+    }
 }
 
 inline void render_text(std::string text, Vec2F center, int font_size, Color color) {

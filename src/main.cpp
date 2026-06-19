@@ -33,6 +33,8 @@ int main() {
     SCENE_MANAGER.PushScene(state, MAIN_MENU_SCENE);
 
     while (!state.should_exit && !WindowShouldClose()) {
+        input_frame.update();
+
         for (size_t i = 0; i < input_frame.state.key_pressed.size(); i++) {
             if (input_frame.state.key_pressed[i]) std::cout << "Pressed: " << key_to_string((Key)i) << std::endl;
         }
@@ -40,7 +42,7 @@ int main() {
             if (input_frame.state.mouse_pressed[i]) std::cout << "Pressed: " << mouse_to_string((Mouse)i) << std::endl;
         }
 
-        input_frame.update();
+        if (input_frame.is_key_pressed(Key::F1)) state.debug_enabled = !state.debug_enabled;
 
         SCENE_MANAGER.Update(state);
     }

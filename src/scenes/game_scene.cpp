@@ -75,12 +75,15 @@ void Draw(GameState& state) {
 
     BeginMode2D(state.camera);
 
-    DrawEnemies(state.enemies);
-    DrawPlayers(state.players, state.camera);
-    DrawProjectiles(state.projectiles);
-    DrawSpawners(state.spawners);
-    DrawTowers(state.towers, state.camera);
-    DrawPickups(state.pickups);
+    DrawEnemies(state);
+    DrawPlayers(state);
+    DrawProjectiles(state);
+    DrawSpawners(state);
+    DrawTowers(state);
+    DrawPickups(state);
+
+    DrawSpawnersDebug(state);
+    DrawPlayersDebug(state);
 
     EndMode2D();
 

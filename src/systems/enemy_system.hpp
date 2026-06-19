@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/entity_pool.hpp"
-#include "entities/enemy.hpp"
 struct GameState;
 
 inline float PERSONAL_SPACE = 50;
@@ -14,4 +12,4 @@ inline float WANDER_SPEED_MODIFIER = 0.5;
 inline float WANDER_AROUND_RALLY = 100.0;
 
 void UpdateEnemies(GameState& state);
-void DrawEnemies(const EntityPool<Enemy>& enemies);
+void DrawEnemies(const GameState& state);

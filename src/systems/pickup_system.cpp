@@ -38,10 +38,11 @@ void UpdatePickups(GameState& state) {
     }
 }
 
-void DrawPickups(const EntityPool<Pickup>& pickups) {
-    for (const Slot<Pickup>& pickup : pickups.data) {
+void DrawPickups(const GameState& state) {
+    for (const Slot<Pickup>& pickup : state.pickups.data) {
         if (!pickup.alive) continue;
 
-        render_sprite({"lifeforce", {.x = 16, .y = 16}}, pickup.ref.position, {.x = 16, .y = 16}, pickup.ref.angle);
+        render_sprite({"lifeforce", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = 1, .y = 1}},
+                      pickup.ref.position, pickup.ref.angle);
     }
 }

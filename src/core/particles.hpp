@@ -7,8 +7,6 @@
 #include "raylib.h"
 
 #include <algorithm>
-#include <iostream>
-#include <numbers>
 #include <utility>
 
 template <typename T> struct Range {
@@ -205,10 +203,14 @@ struct ParticleSystem {
             const Particle& particle = slot.ref;
 
             switch (particle.display.type) {
-                case ParticleDisplayType::Sprite:
-                    render_sprite(particle.display.sprite_info, particle.position,
-                                  {.x = particle.size, .y = particle.size}, particle.rotation, particle.color);
+                case ParticleDisplayType::Sprite: {
+                    SpriteInfo info_to_render = particle.display.sprite_info;
+                    Vec2F scale = Vec2F{.x = particle.size, .y = particle.size} / Vec2F::from_vec2(info_to_render.size);
+                    info_to_render.scale = scale;
+
+                    render_sprite(info_to_render, particle.position, particle.rotation, particle.color);
                     break;
+                }
                 case ParticleDisplayType::Rectangle:
                     render_rectangle(particle.position, {.x = particle.size, .y = particle.size}, particle.color);
                     break;

@@ -1,16 +1,24 @@
 #pragma once
 
 #include "core/animation_player.hpp"
+#include "core/collision.hpp"
 #include "core/health.hpp"
 #include "entities/weapon.hpp"
 
+const float PLAYER_SCALE = 3;
+
 struct Player {
-    AnimationPlayer animation_player =
-        AnimationPlayer({.sprite_name = "player", .sprite_size = {.x = 16, .y = 16}, .frame_count = 4});
+    AnimationPlayer animation_player = AnimationPlayer({
+        .sprite = SpriteInfo("player", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = 8, .y = 9},
+                             {.x = PLAYER_SCALE, .y = PLAYER_SCALE}),
+        .frame_count = 4,
+    });
     Vec2F position = {};
     Vec2F direction = {};
+    Collider collider =
+        Collider(Rect{.position = Vec2F{.x = -3, .y = -3}, .size = Vec2F{.x = 5, .y = 8}} * PLAYER_SCALE);
     Health health = Health(100);
-    Weapon weapon = {.sprite = {"pistol", {.x = 16, .y = 16}},
+    Weapon weapon = {.sprite = {"pistol", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = 2, .y = 2}},
                      .sound_name = "pistol",
                      .projectile_spawn_point = Vec2F{.x = 16, .y = -2.0f}};
     float speed = 200;

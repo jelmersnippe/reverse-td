@@ -16,6 +16,7 @@ struct Targetable;
 const int STARTING_CURRENCY = 10;
 
 struct GameState {
+    bool debug_enabled = false;
     bool should_exit = false;
 
     EntityHandle active_player = {};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/particles.hpp"
+#include "globals.hpp"
 
 inline ParticleTemplate HIT_PARTICLE = ParticleTemplate({
     .speed = {.start = {.min = 80, .max = 120}, .end = {.min = 10, .max = 20}},
@@ -39,7 +40,10 @@ inline Emitter MUZZLE_SMOKE_EMITTER = Emitter{.position = {.x = 0, .y = 0},
                                               .burst = 30};
 
 inline ParticleTemplate MUZZLE_FLASH_PARTICLE = ParticleTemplate({
-    .display = {.type = ParticleDisplayType::Sprite, .sprite_info = {"muzzle_flash", {.x = 16, .y = 16}}},
+    .display = {.type = ParticleDisplayType::Sprite,
+                .sprite_info = {"muzzle_flash",
+                                {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE},
+                                {.x = 2, .y = 2}}},
     .speed = {.start = {.min = 0, .max = 0}, .end = {.min = 0, .max = 0}},
     .size = {.start = {.min = 32, .max = 32}, .end = {.min = 32, .max = 32}},
     .color = {.start = WHITE, .end = WHITE},

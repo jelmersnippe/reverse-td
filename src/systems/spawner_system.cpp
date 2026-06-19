@@ -142,13 +142,24 @@ void UpdateSpawners(GameState& state) {
     }
 }
 
-void DrawSpawners(const EntityPool<Spawner>& spawners) {
-    for (const Slot<Spawner>& spawner : spawners.data) {
+void DrawSpawners(const GameState& state) {
+    for (const Slot<Spawner>& spawner : state.spawners.data) {
         if (!spawner.alive) continue;
 
-        render_sprite({"spawner", {.x = 16, .y = 16}}, spawner.ref.position, {.x = SPAWNER_SIZE, .y = SPAWNER_SIZE},
-                      spawner.ref.angle);
+        render_sprite(
+            {"spawner", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = SPAWNER_SCALE, .y = SPAWNER_SCALE}},
+            spawner.ref.position, spawner.ref.angle);
 
+        DrawHealth(spawner.ref.position - Vec2F{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
+
+        spawner.ref.particles.draw();
+    }
+}
+
+void DrawSpawnersDebug(const GameState& state) {
+    if (!state.debug_enabled) return;
+
+    for (const Slot<Spawner>& spawner : state.spawners.data) {
         std::string state_text;
         switch (spawner.ref.state) {
             case SpawnerState::Rallying:
@@ -162,16 +173,13 @@ void DrawSpawners(const EntityPool<Spawner>& spawners) {
                 break;
         }
 
-        // TODO: Debug toggle
-        // render_text(state_text, spawner.ref.position + Vec2F{.x = 0, .y = 20}, 12, BLACK);
+        render_text(state_text, spawner.ref.position + Vec2F{.x = 0, .y = 20}, 12, BLACK);
 
-        // if (spawner.ref.state == SpawnerState::Rallying) {
-        //     render_circle(spawner.ref.position, 5, BLACK);
-        //     // DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
-        // }
+        if (spawner.ref.state == SpawnerState::Rallying) {
+            render_circle(spawner.ref.position, 5, BLACK);
+            // DrawLineDashed(spawner.ref.position, spawner.ref.rally_position, 10, 10, BLACK);
+        }
 
-        DrawHealth(spawner.ref.position - Vec2F{.x = 0, .y = SPAWNER_SIZE / 2 + 10}, spawner.ref.health);
-
-        spawner.ref.particles.draw();
+        if (state.debug_enabled) { spawner.ref.collider.draw(spawner.ref.position); }
     }
 }

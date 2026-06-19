@@ -149,15 +149,18 @@ int GetScrapValue(const Tower& tower) {
     return std::floor(default_scrap_value * modifier);
 }
 
-void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
-    const Vec2F mouse_position = get_mouse_world_position(camera);
-    const Vec2F tower_size = Vec2F{.x = TOWER_SIZE, .y = TOWER_SIZE};
-    for (const Slot<Tower>& tower : towers.data) {
+void DrawTowers(const GameState& state) {
+    const Vec2F mouse_position = get_mouse_world_position(state.camera);
+    for (const Slot<Tower>& tower : state.towers.data) {
         if (!tower.alive) continue;
 
-        render_sprite({"turret_base", {16, 16}}, tower.ref.position, tower_size);
-        render_sprite({"regular_turret", {16, 16}}, tower.ref.position, tower_size,
-                      tower.ref.position.angle_to(Vec2F{tower.ref.target_position}));
+        render_sprite(
+            {"turret_base", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, {.x = TOWER_SCALE, .y = TOWER_SCALE}},
+            tower.ref.position);
+        render_sprite({"regular_turret",
+                       {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE},
+                       {.x = TOWER_SCALE, .y = TOWER_SCALE}},
+                      tower.ref.position, tower.ref.position.angle_to(Vec2F{tower.ref.target_position}));
 
         if (tower.ref.scrapping) {
             const Vec2F scrap_bar_top_left = {.x = tower.ref.position.x - 15, .y = tower.ref.position.y + 10};
@@ -170,11 +173,11 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
         } else {
             const Vec2F tower_top_left = {.x = tower.ref.position.x - TOWER_SIZE / 2,
                                           .y = tower.ref.position.y - TOWER_SIZE / 2};
-            const bool is_hovered =
-                collision_point_rect(mouse_position, {.position = tower_top_left, .size = tower_size});
+            const bool is_hovered = collision_point_rect(
+                mouse_position, {.position = tower_top_left, .size = {.x = TOWER_SIZE, .y = TOWER_SIZE}});
 
-            if (is_hovered &&
-                Vec2F{.x = camera.target.x, .y = camera.target.y}.distance_to(tower.ref.position) < PLAYER_RANGE) {
+            if (is_hovered && Vec2F{.x = state.camera.target.x, .y = state.camera.target.y}.distance_to(
+                                  tower.ref.position) < PLAYER_RANGE) {
                 std::string scrap_text = std::format("[x] Scrap for: {}", GetScrapValue(tower.ref));
                 render_text(scrap_text, tower.ref.position + Vec2F{.x = 0, .y = 20}, 12, BLACK);
             }

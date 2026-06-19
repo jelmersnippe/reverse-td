@@ -35,12 +35,16 @@ void Update(GameState& state) {
     if (ui.begin_button("btn_start", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, CONTROLS_SCENE);
     ui.text("txt_start", "Start", BUTTONTEXT_STYLE);
     ui.end_button();
-    if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
-    ui.text("txt_ui", "Ui", BUTTONTEXT_STYLE);
-    ui.end_button();
-    if (ui.begin_button("btn_particle", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, PARTICLE_SCENE);
-    ui.text("txt_particle", "Particle", BUTTONTEXT_STYLE);
-    ui.end_button();
+
+    if (state.debug_enabled) {
+        if (ui.begin_button("btn_ui", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, UI_SCENE);
+        ui.text("txt_ui", "Ui", BUTTONTEXT_STYLE);
+        ui.end_button();
+        if (ui.begin_button("btn_particle", BUTTON_STYLE)) SCENE_MANAGER.SetScene(state, PARTICLE_SCENE);
+        ui.text("txt_particle", "Particle", BUTTONTEXT_STYLE);
+        ui.end_button();
+    }
+
     if (ui.begin_button("btn_quit", BUTTON_STYLE)) state.should_exit = true;
     ui.text("txt_quit", "Quit", BUTTONTEXT_STYLE);
     ui.end_button();

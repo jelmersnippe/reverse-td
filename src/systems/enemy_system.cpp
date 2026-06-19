@@ -267,8 +267,8 @@ void draw_debug_info(const Enemy& enemy) {
     render_text(state_text, enemy.position, 12, BLACK);
 }
 
-void DrawEnemies(const EntityPool<Enemy>& enemies) {
-    for (const Slot<Enemy>& enemy : enemies.data) {
+void DrawEnemies(const GameState& state) {
+    for (const Slot<Enemy>& enemy : state.enemies.data) {
         if (!enemy.alive) continue;
         Shader flash_shader = get_shader("flash");
 
@@ -287,8 +287,10 @@ void DrawEnemies(const EntityPool<Enemy>& enemies) {
         Color color = enemy.ref.color;
         if (enemy.ref.dead) color.a = (255 * 0.4f);
 
-        render_sprite(SpriteInfo("enemy", {.x = 16, .y = 16}), enemy.ref.position,
-                      {.x = enemy.ref.size, .y = enemy.ref.size}, 0, color);
+        const Vec2F scale =
+            Vec2F{.x = enemy.ref.size, .y = enemy.ref.size} / Vec2F{.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE};
+        render_sprite(SpriteInfo("enemy", {.x = DEFAULT_SPRITE_SIZE, .y = DEFAULT_SPRITE_SIZE}, scale),
+                      enemy.ref.position, 0, color);
 
         if (enemy.ref.hit_flash_remaining > 0) EndShaderMode();
 
