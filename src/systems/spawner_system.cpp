@@ -12,7 +12,7 @@
 #include <cassert>
 #include <cmath>
 
-Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
+Enemy get_spawn_option(const std::vector<SpawnOption>& spawn_table) {
 
     const float rng = random_float(0, 1);
     float weight = 0;
@@ -30,7 +30,7 @@ Enemy get_spawn_option(std::vector<SpawnOption>& spawn_table) {
     return melee_enemy;
 };
 
-void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector<SpawnOption>& spawn_table,
+void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const ThreatDirector threat_director,
                    const int count) {
     Spawner& spawner = spawner_slot.ref;
 
@@ -49,7 +49,8 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
     const int limited_count = std::min(max_spawn - active_count, spawn_count);
 
     for (int i = 0; i < limited_count; i++) {
-        Enemy new_enemy = get_spawn_option(spawn_table);
+        Enemy new_enemy = get_spawn_option(threat_director.spawn_table);
+        new_enemy.health = Health(new_enemy.health.max * (1.0f + threat_director.threat));
 
         const float random_x = random_float(-SPAWNER_OFFSET, SPAWNER_OFFSET);
         const float random_y = random_float(-SPAWNER_OFFSET, SPAWNER_OFFSET);
@@ -65,7 +66,7 @@ void spawn_enemies(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std:
     spawner.time_since_last_spawn = 0;
 }
 
-void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector<SpawnOption>& spawn_table) {
+void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, const ThreatDirector threat_director) {
     Spawner& spawner = spawner_slot.ref;
 
     const float delta_time = GetFrameTime();
@@ -76,7 +77,7 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     spawner.time_since_last_damage_taken += delta_time;
 
     if (!spawner.initial_spawn_happened) {
-        spawn_enemies(spawner_slot, enemies, spawn_table, spawner.initial_spawn);
+        spawn_enemies(spawner_slot, enemies, threat_director, spawner.initial_spawn);
         spawner.initial_spawn_happened = true;
     }
 
@@ -84,7 +85,7 @@ void Update(Slot<Spawner>& spawner_slot, EntityPool<Enemy>& enemies, std::vector
     if (spawner.state == SpawnerState::UnderAttack) spawn_cooldown *= spawner.under_attack_spawn_modifier;
 
     if (spawner.time_since_last_spawn >= spawn_cooldown) {
-        spawn_enemies(spawner_slot, enemies, spawn_table, spawner.spawn_amount);
+        spawn_enemies(spawner_slot, enemies, threat_director, spawner.spawn_amount);
     }
 
     std::vector<Enemy*> resolved_enemies;
@@ -137,7 +138,7 @@ void UpdateSpawners(GameState& state) {
     for (Slot<Spawner>& spawner : state.spawners.data) {
         if (!spawner.alive) continue;
 
-        Update(spawner, state.enemies, state.threat_director.spawn_table);
+        Update(spawner, state.enemies, state.threat_director);
     }
 }
 
