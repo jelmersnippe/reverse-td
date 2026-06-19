@@ -67,7 +67,9 @@ void create_spawner(EntityPool<Spawner>& spawners) {
     if (x_negative == 1) offset.x = -random_x;
     if (y_negative == 1) offset.y = -random_y;
 
-    CreateEntity(spawners, Spawner{.position = parent_spawner->position + offset, .initial_spawn = 0});
+    CreateEntity(
+        spawners,
+        Spawner{.position = parent_spawner->position + offset, .angle = random_float(0, 359), .initial_spawn = 0});
 }
 
 void UpdateThreatDirector(GameState& state) {

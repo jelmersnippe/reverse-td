@@ -16,6 +16,7 @@ const float RESET_TIME = 10;
 
 struct Spawner {
     Vec2F position = {};
+    float angle = 0;
     Health health = Health(500);
     float spawn_cooldown = 10;
     int spawn_amount = 1;

@@ -27,7 +27,7 @@ void kill_entity(GameState& state, Targetable& target) {
             DEATH_EMITTER.position = killed_enemy->position;
             killed_enemy->particles.play(DEATH_EMITTER);
 
-            CreateEntity(state.pickups, Pickup{.position = position, .value = value});
+            CreateEntity(state.pickups, Pickup{.position = position, .angle = random_float(0, 359), .value = value});
             break;
         }
         case TARGET_SPAWNER: {
@@ -42,9 +42,10 @@ void kill_entity(GameState& state, Targetable& target) {
             for (int i = 0; i < value; i++) {
                 float random_x = random_float(-25, 25);
                 float random_y = random_float(-25, 25);
-                CreateEntity(
-                    state.pickups,
-                    Pickup{.position = Vec2F{.x = position.x + random_x, .y = position.y + random_y}, .value = 1});
+                CreateEntity(state.pickups,
+                             Pickup{.position = Vec2F{.x = position.x + random_x, .y = position.y + random_y},
+                                    .angle = random_float(0, 359),
+                                    .value = 1});
             }
             state.threat_director.threat += 0.03f;
             break;

@@ -42,6 +42,6 @@ void DrawPickups(const EntityPool<Pickup>& pickups) {
     for (const Slot<Pickup>& pickup : pickups.data) {
         if (!pickup.alive) continue;
 
-        render_rectangle(pickup.ref.position, {.x = 5, .y = 5}, PINK);
+        render_sprite({"lifeforce", {.x = 16, .y = 16}}, pickup.ref.position, {.x = 16, .y = 16}, pickup.ref.angle);
     }
 }

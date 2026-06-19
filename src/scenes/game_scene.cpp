@@ -154,6 +154,7 @@ void Init(GameState& state) {
             if (negative_y) random_y = -random_y;
 
             CreateEntity(state.spawners, {.position = {.x = random_x, .y = random_y},
+                                          .angle = random_float(0, 359),
                                           .spawn_amount = 1,
                                           .initial_spawn = placement.initial_enemy_spawn_count});
         }

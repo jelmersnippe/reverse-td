@@ -7,5 +7,6 @@
 struct Pickup {
     std::optional<Targetable> target = std::nullopt;
     Vec2F position;
+    float angle;
     int value;
 };

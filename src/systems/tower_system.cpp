@@ -155,8 +155,9 @@ void DrawTowers(const EntityPool<Tower>& towers, const Camera2D& camera) {
     for (const Slot<Tower>& tower : towers.data) {
         if (!tower.alive) continue;
 
-        render_sprite({"turret", {16, 16}}, tower.ref.position, tower_size,
-                      tower.ref.position.angle_to(Vec2F{tower.ref.target_position}) + 90);
+        render_sprite({"turret_base", {16, 16}}, tower.ref.position, tower_size);
+        render_sprite({"regular_turret", {16, 16}}, tower.ref.position, tower_size,
+                      tower.ref.position.angle_to(Vec2F{tower.ref.target_position}));
 
         if (tower.ref.scrapping) {
             const Vec2F scrap_bar_top_left = {.x = tower.ref.position.x - 15, .y = tower.ref.position.y + 10};
