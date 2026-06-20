@@ -2,6 +2,7 @@
 
 #include "core/entity_pool.hpp"
 #include "core/particles.hpp"
+#include "core/transform.hpp"
 #include "globals.hpp"
 
 #include "core/health.hpp"
@@ -41,12 +42,12 @@ struct Knockback {
 };
 
 struct Enemy {
+    Transform2D transform;
     Color color = RED;
     EnemyState state = EnemyState::Wander;
     EntityHandle home = {};
     SeekBehavior seek_behavior = SeekBehavior::SimpleFollow;
     AttackBehavior attack_behavior = AttackBehavior::Melee;
-    Vec2F position = {};
     Knockback knockback = {};
     // Used for wander+rally
     Vec2F target_position = {};

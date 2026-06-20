@@ -1,12 +1,11 @@
 #pragma once
 
-#include "core/data.hpp"
+#include "core/transform.hpp"
 #include "systems/targeting.hpp"
 #include <optional>
 
 struct Pickup {
+    Transform2D transform;
     std::optional<Targetable> target = std::nullopt;
-    Vec2F position;
-    float angle;
     int value;
 };

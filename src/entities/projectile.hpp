@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/transform.hpp"
 #include "systems/targeting.hpp"
 
 enum class ProjectileType {
@@ -9,8 +10,7 @@ enum class ProjectileType {
 
 struct Projectile {
     ProjectileType type = ProjectileType::Player;
-    Vec2F direction = {};
-    Vec2F position = {};
+    Transform2D transform;
     float life_time = 0;
     float time_alive = 0;
     float speed = 1500;
